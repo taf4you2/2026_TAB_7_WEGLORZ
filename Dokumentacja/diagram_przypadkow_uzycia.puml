@@ -1,0 +1,67 @@
+@startuml diagram_przypadkow_uzycia
+title Diagram Przypadków Użycia – System Sprzedaży Biletów Narciarskich
+
+left to right direction
+skinparam actorStyle awesome
+
+actor "Narciarz" as Narciarz
+actor "Kasjer" as Kasjer
+actor "Zarządca" as Zarzadca
+actor "System Wyciągów" as SystemWyciagow <<system>>
+
+rectangle "System Sprzedaży Biletów Narciarskich" {
+
+    ' --- Kasjer ---
+    usecase "Sprzedaj bilet" as UC1
+    usecase "Sprzedaj karnet" as UC2
+    usecase "Zablokuj bilet" as UC3
+    usecase "Wydrukuj bilet" as UC4
+    usecase "Wydaj karnet" as UC4b
+
+    ' --- System Wyciągów ---
+    usecase "Zarejestruj przejazd wyciągiem" as UC5
+    usecase "Weryfikuj ważność biletu / karnetu" as UC6
+
+    ' --- Zarządca ---
+    usecase "Zdefiniuj rozkład wyciągów" as UC7
+    usecase "Generuj raport zarządczy" as UC8
+    usecase "Generuj raport operacyjny" as UC9
+
+    ' --- Narciarz ---
+    usecase "Wydrukuj raport przejazdów" as UC10
+    usecase "Sprawdź rozkład wyciągów" as UC13
+
+    ' --- Zwrot karnetu ---
+    usecase "Zwróć karnet" as UC11
+    usecase "Zarejestruj zwrot kaucji" as UC12
+}
+
+' Kasjer
+Kasjer --> UC1
+Kasjer --> UC2
+Kasjer --> UC3
+UC1 .> UC4 : <<include>>
+UC2 .> UC4b : <<include>>
+
+' System Wyciągów
+SystemWyciagow --> UC5
+UC5 .> UC6 : <<include>>
+
+' Zarządca
+Zarzadca --> UC7
+Zarzadca --> UC8
+Zarzadca --> UC9
+
+' Narciarz
+Narciarz --> UC10
+Narciarz --> UC13
+
+' Zwrot karnetu
+Narciarz --> UC11
+Kasjer --> UC11
+UC11 .> UC12 : <<include>>
+
+' Powiązania między aktorami a przypadkami
+Narciarz ..> UC5 : inicjuje
+
+@enduml

@@ -4,64 +4,95 @@ title Diagram Przypadków Użycia – System Sprzedaży Biletów Narciarskich
 left to right direction
 skinparam actorStyle awesome
 
+' Definiuje aktorów.
+actor "Narciarz Zalogowany" as NarciarzZalogowany
 actor "Narciarz" as Narciarz
-actor "Kasjer" as Kasjer
-actor "Zarządca" as Zarzadca
-actor "System Wyciągów" as SystemWyciagow <<system>>
+NarciarzZalogowany -|> Narciarz
 
+actor "Kasjer" as Kasjer
+actor "System Wyciągów" as SystemWyciagow <<system>>
+actor "Zarządca" as Zarzadca
+
+' Tworzy główny obszar systemu.
 rectangle "System Sprzedaży Biletów Narciarskich" {
 
-    ' --- Kasjer ---
-    usecase "Sprzedaj bilet" as UC1
-    usecase "Sprzedaj karnet" as UC2
-    usecase "Zablokuj bilet" as UC3
-    usecase "Wydrukuj bilet" as UC4
-    usecase "Wydaj karnet" as UC4b
+    ' Grupuje przypadki użycia strefy online.
+    rectangle "Strefa Online" {
+        usecase "Kup bilet/karnet online" as UC_KupOnline
+        usecase "Zarezerwuj karnet online" as UC_RezerwujOnline
+        usecase "Przypisz posiadany karnet do konta" as UC_PrzypiszKarnet
+        usecase "Śledź pełną historię zjazdów" as UC_HistoriaZalogowany
+    }
 
-    ' --- System Wyciągów ---
-    usecase "Zarejestruj przejazd wyciągiem" as UC5
-    usecase "Weryfikuj ważność biletu / karnetu" as UC6
+    ' Grupuje ogólnodostępne przypadki użycia informacyjne.
+    rectangle "Strefa Informacyjna" {
+        usecase "Sprawdź historię po numerze karnetu" as UC_HistoriaNumer
+        usecase "Sprawdź rozkład wyciągów" as UC_Rozklad
+    }
 
-    ' --- Zarządca ---
-    usecase "Zdefiniuj rozkład wyciągów" as UC7
-    usecase "Generuj raport zarządczy" as UC8
-    usecase "Generuj raport operacyjny" as UC9
+    ' Grupuje przypadki użycia związane z obsługą stacjonarną.
+    rectangle "Obsługa Kasowa i Zwroty" {
+        usecase "Sprzedaj bilet/karnet w kasie" as UC_SprzedazKasa
+        usecase "Wydaj zarezerwowany karnet" as UC_WydajZarezerwowany
+        usecase "Wydrukuj bilet" as UC_DrukujBilet
+        usecase "Wydaj fizyczny karnet" as UC_WydajKarnet
+        usecase "Pobierz kaucję" as UC_PobierzKaucje
+        usecase "Zablokuj bilet" as UC_Zablokuj
+        usecase "Przypisz karnet do emaila" as UC_PodajEmail
+        usecase "Zwróć karnet" as UC_ZwrocKarnet
+        usecase "Zwróć kaucję" as UC_ZwrocKaucje
+    }
 
-    ' --- Narciarz ---
-    usecase "Wydrukuj raport przejazdów" as UC10
-    usecase "Sprawdź rozkład wyciągów" as UC13
+    ' Grupuje przypadki użycia integracji wyciągów.
+    rectangle "Obsługa Wyciągów" {
+        usecase "Zarejestruj przejazd wyciągiem (Jeździ)" as UC_Jazda
+        usecase "Weryfikuj ważność biletu / karnetu" as UC_Weryfikuj
+    }
 
-    ' --- Zwrot karnetu ---
-    usecase "Zwróć karnet" as UC11
-    usecase "Zarejestruj zwrot kaucji" as UC12
+    ' Grupuje przypadki użycia zarządcze.
+    rectangle "Zarządzanie" {
+        usecase "Zdefiniuj rozkład wyciągów" as UC_ZdefiniujRozklad
+        usecase "Generuj raport zarządczy" as UC_RaportZarzadczy
+        usecase "Generuj raport operacyjny" as UC_RaportOperacyjny
+    }
 }
 
-' Kasjer
-Kasjer --> UC1
-Kasjer --> UC2
-Kasjer --> UC3
-UC1 .> UC4 : <<include>>
-UC2 .> UC4b : <<include>>
+' Przypisuje relacje Narciarza Zalogowanego.
+NarciarzZalogowany --> UC_KupOnline
+NarciarzZalogowany --> UC_RezerwujOnline
+NarciarzZalogowany --> UC_PrzypiszKarnet
+NarciarzZalogowany --> UC_HistoriaZalogowany
 
-' System Wyciągów
-SystemWyciagow --> UC5
-UC5 .> UC6 : <<include>>
+' Przypisuje relacje podstawowego Narciarza.
+Narciarz --> UC_SprzedazKasa
+Narciarz --> UC_WydajZarezerwowany
+Narciarz --> UC_HistoriaNumer
+Narciarz --> UC_Rozklad
+Narciarz --> UC_ZwrocKarnet
+Narciarz ..> UC_Jazda : inicjuje
+Narciarz --> UC_PodajEmail
 
-' Zarządca
-Zarzadca --> UC7
-Zarzadca --> UC8
-Zarzadca --> UC9
+' Przypisuje relacje Kasjera.
+Kasjer --> UC_SprzedazKasa
+Kasjer --> UC_WydajZarezerwowany
+Kasjer --> UC_Zablokuj
+Kasjer --> UC_ZwrocKarnet
 
-' Narciarz
-Narciarz --> UC10
-Narciarz --> UC13
+' Przypisuje relacje Systemu Wyciągów.
+SystemWyciagow --> UC_Jazda
 
-' Zwrot karnetu
-Narciarz --> UC11
-Kasjer --> UC11
-UC11 .> UC12 : <<include>>
+' Przypisuje relacje Zarządcy.
+Zarzadca --> UC_ZdefiniujRozklad
+Zarzadca --> UC_RaportZarzadczy
+Zarzadca --> UC_RaportOperacyjny
 
-' Powiązania między aktorami a przypadkami
-Narciarz ..> UC5 : inicjuje
+' Definiuje zależności include i extend.
+UC_SprzedazKasa .> UC_DrukujBilet : <<include>>
+UC_SprzedazKasa .> UC_WydajKarnet : <<include>>
+UC_WydajZarezerwowany .> UC_WydajKarnet : <<include>>
+UC_WydajZarezerwowany .> UC_PobierzKaucje : <<include>>
+UC_SprzedazKasa <.. UC_PodajEmail : <<extend>>
+UC_ZwrocKarnet .> UC_ZwrocKaucje : <<include>>
+UC_Jazda .> UC_Weryfikuj : <<include>>
 
 @enduml

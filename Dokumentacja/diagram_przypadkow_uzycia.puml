@@ -14,40 +14,40 @@ NarciarzOffline -up-|> Narciarz
 actor "Kasjer" as Kasjer
 actor "Bramka / Serwer" as Bramka
 actor "Administrator" as Admin
-actor "Superadministrator" as SuperAdmin
+actor "PlanistaTrasy" as SuperAdmin
 
 package "System stacji narciarskiej" {
-    
+
     ' Przypadki użycia dla operacji online
     usecase "Założenie konta" as UC_Konto
     usecase "Rezerwacja i zakup online" as UC_KupOnline
     usecase "Przegląd historii zjazdów" as UC_Historia
-    
+
     ' Przypadki użycia dla operacji stacjonarnych
     usecase "Zakup karnetu w kasie" as UC_KupKasa
     usecase "Przypisanie stacjonarnego zakupu\ndo konta (po e-mailu)" as UC_Przypisz
-    
+
     usecase "Wydanie zaprogramowanej karty\ni pobranie kaucji" as UC_WydanieKarty
     usecase "Zwrot fizycznej karty\ni oddanie kaucji" as UC_ZwrotKarty
-    
+
     ' Przypadki użycia dla operacji kasjerskich
     usecase "Ręczne zablokowanie karnetu" as UC_BlokadaReczna
     usecase "Generowanie raportu zmianowego" as UC_RaportZmianowy
-    
+
     ' Przypadki użycia dla operacji na wyciągu (bramki)
     usecase "Odbicie karty na bramce" as UC_Odbicie
     usecase "Weryfikacja ważności nośnika" as UC_Weryfikacja
     usecase "Nałożenie blokady (anti-passback)" as UC_AntiPassback
     usecase "Odmowa dostępu" as UC_Odmowa
     usecase "Całkowita blokada (próba oszustwa)" as UC_BlokadaOszustwo
-    
+
     ' Przypadki użycia dla ról zarządczych
     usecase "Definiowanie harmonogramów wyciągów" as UC_Harmonogram
     usecase "Kształtowanie polityki cenowej\n(taryfikatory, pule, sezony)" as UC_Cenniki
     usecase "Zarządzanie zapasami kart" as UC_PulaKart
     usecase "Zarządzanie kontami kasjerów" as UC_KontaKasjerow
     usecase "Analiza raportów zarządczych\ni statystyk (heatmapy)" as UC_RaportyAdmin
-    
+
     usecase "Mapowanie infrastruktury\n(dodawanie wyciągów i tras)" as UC_Infrastruktura
 }
 
@@ -68,7 +68,6 @@ Kasjer --> UC_KupKasa
 Kasjer --> UC_WydanieKarty
 Kasjer --> UC_ZwrotKarty
 Kasjer --> UC_BlokadaReczna
-Kasjer --> UC_RaportZmianowy
 
 ' Łączy logikę bramek
 UC_Odbicie .> UC_Weryfikacja : <<include>>
@@ -84,7 +83,7 @@ Admin --> UC_Cenniki
 Admin --> UC_PulaKart
 Admin --> UC_KontaKasjerow
 Admin --> UC_RaportyAdmin
-
+Admin --> UC_RaportZmianowy
 SuperAdmin --> UC_Infrastruktura
 
 @enduml

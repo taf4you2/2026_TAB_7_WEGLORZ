@@ -1,0 +1,304 @@
+@startuml
+' Konfiguruje wygląd diagramu.
+hide circle
+skinparam linetype ortho
+
+' ==========================================
+' SŁOWNIKI
+' ==========================================
+
+' Inicjalizuje tabelę dla statusów karty.
+entity "slownik_status_karty" {
+  * id : integer
+  --
+  nazwa : varchar
+}
+
+' Inicjalizuje tabelę dla statusów karnetu.
+entity "slownik_status_karnetu" {
+  * id : integer
+  --
+  nazwa : varchar
+}
+
+' Inicjalizuje tabelę dla typów operacji.
+entity "slownik_typ_operacji" {
+  * id : integer
+  --
+  nazwa : varchar
+}
+
+' Inicjalizuje tabelę dla sezonów.
+entity "slownik_sezon" {
+  * id : integer
+  --
+  nazwa : varchar
+}
+
+' Inicjalizuje tabelę dla trudności tras.
+entity "slownik_trudnosc_trasy" {
+  * id : integer
+  --
+  nazwa : varchar
+}
+
+' Inicjalizuje tabelę dla statusów rezerwacji.
+entity "slownik_status_rezerwacji" {
+  * id : integer
+  --
+  nazwa : varchar
+}
+
+' Inicjalizuje tabelę dla wyników weryfikacji.
+entity "slownik_wynik_weryfikacji" {
+  * id : integer
+  --
+  nazwa : varchar
+}
+
+' Inicjalizuje tabelę dla rodzajów raportów.
+entity "rodzaj_raportu" {
+  * id : integer
+  --
+  nazwa : varchar
+  opis : text
+}
+
+
+' ==========================================
+' UŻYTKOWNICY I PRACOWNICY
+' ==========================================
+
+' Generuje tabelę dla klientów systemu.
+entity "uzytkownik" {
+  * id : integer
+  --
+  email : varchar
+  haslo_hash : varchar
+  data_utworzenia : timestamp
+}
+
+' Generuje tabelę dla personelu kasowego.
+entity "kasjer" {
+  * id : integer
+  --
+  login : varchar
+  haslo_hash : varchar
+  czy_aktywny : boolean
+}
+
+' Generuje tabelę dla personelu administracyjnego.
+entity "administrator" {
+  * id : integer
+  --
+  login : varchar
+  haslo_hash : varchar
+  czy_aktywny : boolean
+}
+
+' Generuje tabelę dla zarządców infrastruktury.
+entity "planista_tras" {
+  * id : integer
+  --
+  login : varchar
+  haslo_hash : varchar
+  czy_aktywny : boolean
+}
+
+
+' ==========================================
+' INFRASTRUKTURA
+' ==========================================
+
+' Tworzy definicję wyciągów.
+entity "wyciag" {
+  * id : integer
+  --
+  nazwa : varchar
+  lokalizacja : varchar
+  dlugosc : decimal
+  planista_id : integer
+}
+
+' Tworzy definicję tras.
+entity "trasa" {
+  * id : integer
+  --
+  nazwa : varchar
+  lokalizacja : varchar
+  dlugosc : decimal
+  trudnosc_id : integer
+  planista_id : integer
+}
+
+' Tworzy tabelę łącznikową dla wyciągów i tras.
+entity "wyciag_trasa" {
+  * wyciag_id : integer
+  * trasa_id : integer
+}
+
+' Tworzy ramy czasowe działania.
+entity "harmonogram" {
+  * id : integer
+  --
+  wyciag_id : integer
+  dzien_tygodnia : integer
+  godzina_otwarcia : time
+  godzina_zamkniecia : time
+}
+
+
+' ==========================================
+' KARTY I KARNETY
+' ==========================================
+
+' Ewidencjonuje fizyczne układy.
+entity "karta" {
+  * id : varchar
+  --
+  status_id : integer
+  stan_fizyczny : varchar
+  data_dodania_do_puli : timestamp
+}
+
+' Parametryzuje wartości usług.
+entity "taryfa" {
+  * id : integer
+  --
+  nazwa : varchar
+  sezon_id : integer
+  cena : decimal
+  limit_puli : integer
+}
+
+' Wiąże nabywcę z usługą i kartą.
+entity "karnet" {
+  * id : integer
+  --
+  karta_id : varchar
+  taryfa_id : integer
+  rezerwacja_id : integer
+  status_id : integer
+  data_waznosci_od : timestamp
+  data_waznosci_do : timestamp
+  powod_blokady : text
+}
+
+
+' ==========================================
+' REZERWACJE I TRANSAKCJE
+' ==========================================
+
+' Zapisuje dyspozycje zamówień.
+entity "rezerwacja" {
+  * id : integer
+  --
+  numer_rezerwacji : varchar
+  uzytkownik_id : integer
+  data_rezerwacji : timestamp
+  status_id : integer
+}
+
+' Odnotowuje przepływy finansowe.
+entity "transakcja" {
+  * id : integer
+  --
+  rezerwacja_id : integer
+  kasjer_id : integer
+  typ_operacji_id : integer
+  kwota : decimal
+  data_transakcji : timestamp
+}
+
+
+' ==========================================
+' BRAMKI I KONTROLA DOSTĘPU
+' ==========================================
+
+' Rozmieszcza urządzenia na wyciągach.
+entity "bramka" {
+  * id : integer
+  --
+  wyciag_id : integer
+  nazwa : varchar
+  czy_aktywna : boolean
+}
+
+' Zapisuje autoryzacje przejść.
+entity "odbicie_bramka" {
+  * id : integer
+  --
+  karta_id : varchar
+  bramka_id : integer
+  czas_odbicia : timestamp
+  blokada_czasowa_do : timestamp
+  wynik_weryfikacji_id : integer
+}
+
+
+' ==========================================
+' RAPORTOWANIE
+' ==========================================
+
+' Oblicza sumy dla rozliczeń kasjerskich.
+entity "raport_zmianowy" {
+  * id : integer
+  --
+  kasjer_id : integer
+  data_rozpoczecia : timestamp
+  data_zakonczenia : timestamp
+  suma_przychody : decimal
+  suma_zwroty_kaucji : decimal
+  liczba_wydanych_kart : integer
+}
+
+' Generuje analitykę zarządczą.
+entity "raport_administratora" {
+  * id : integer
+  --
+  administrator_id : integer
+  rodzaj_raportu_id : integer
+  data_wygenerowania : timestamp
+  parametry_raportu : text
+}
+
+
+' ==========================================
+' RELACJE
+' ==========================================
+
+' Wiąże słowniki z głównymi tabelami.
+slownik_status_karty ||--o{ karta
+slownik_sezon ||--o{ taryfa
+slownik_status_rezerwacji ||--o{ rezerwacja
+slownik_typ_operacji ||--o{ transakcja
+slownik_status_karnetu ||--o{ karnet
+slownik_trudnosc_trasy ||--o{ trasa
+slownik_wynik_weryfikacji ||--o{ odbicie_bramka
+
+' Buduje powiązania logiki sprzedażowej.
+uzytkownik ||--o{ rezerwacja
+rezerwacja ||--o{ transakcja
+kasjer ||--o{ transakcja
+karta ||--o{ karnet
+taryfa ||--o{ karnet
+rezerwacja ||--o{ karnet
+kasjer ||--o{ raport_zmianowy
+
+' Ustanawia zależności w architekturze ośrodka.
+planista_tras ||--o{ trasa
+planista_tras ||--o{ wyciag
+wyciag ||--o{ wyciag_trasa
+trasa ||--o{ wyciag_trasa
+wyciag ||--o{ harmonogram
+wyciag ||--o{ bramka
+
+' Organizuje kontrolę dostępu.
+karta ||--o{ odbicie_bramka
+bramka ||--o{ odbicie_bramka
+
+' Podpina struktury analityczne.
+administrator ||--o{ raport_administratora
+rodzaj_raportu ||--o{ raport_administratora
+
+@enduml

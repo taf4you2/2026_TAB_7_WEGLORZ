@@ -21,6 +21,13 @@ entity "slownik_status_karnetu" {
   nazwa : varchar
 }
 
+' Definiuje rodzaje uprawnień (np. bilet, karnet 1-dniowy, sezonowy).
+entity "slownik_typ_produktu" {
+  * id : integer
+  --
+  nazwa : varchar
+}
+
 ' Inicjalizuje tabelę dla typów operacji.
 entity "slownik_typ_operacji" {
   * id : integer
@@ -137,14 +144,24 @@ entity "wyciag_trasa" {
   * trasa_id : integer
 }
 
-' Tworzy ramy czasowe działania.
-entity "harmonogram" {
+' Tworzy ramy czasowe działania wyciągów.
+entity "harmonogram_wyciagu" {
   * id : integer
   --
   wyciag_id : integer
   dzien_tygodnia : integer
   godzina_otwarcia : time
   godzina_zamkniecia : time
+}
+
+' Zapisuje aktualny stan otwarcia trasy.
+entity "harmonogram_trasy" {
+  * id : integer
+  --
+  trasa_id : integer
+  czy_otwarta : boolean
+  powod_zamkniecia : varchar
+  data_zmiany : timestamp
 }
 
 
@@ -161,12 +178,13 @@ entity "karta" {
   data_dodania_do_puli : timestamp
 }
 
-' Parametryzuje wartości usług.
+' Parametryzuje wartości usług i ich typy.
 entity "taryfa" {
   * id : integer
   --
   nazwa : varchar
   sezon_id : integer
+  typ_id : integer
   cena : decimal
   limit_puli : integer
 }
@@ -270,6 +288,7 @@ entity "raport_administratora" {
 ' Wiąże słowniki z głównymi tabelami.
 slownik_status_karty ||--o{ karta
 slownik_sezon ||--o{ taryfa
+slownik_typ_produktu ||--o{ taryfa
 slownik_status_rezerwacji ||--o{ rezerwacja
 slownik_typ_operacji ||--o{ transakcja
 slownik_status_karnetu ||--o{ karnet
@@ -290,7 +309,8 @@ planista_tras ||--o{ trasa
 planista_tras ||--o{ wyciag
 wyciag ||--o{ wyciag_trasa
 trasa ||--o{ wyciag_trasa
-wyciag ||--o{ harmonogram
+wyciag ||--o{ harmonogram_wyciagu
+trasa ||--o{ harmonogram_trasy
 wyciag ||--o{ bramka
 
 ' Organizuje kontrolę dostępu.

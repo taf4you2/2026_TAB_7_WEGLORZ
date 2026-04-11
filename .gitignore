@@ -1,1 +1,17 @@
+[Bb]in/
+[Oo]bj/
+
 .vs/
+*.user
+*.userosscache
+*.sln.docstates
+
+# HASŁA!!!!!
+appsettings.Development.json
+appsettings.Local.json
+
+*.sqlite
+*.db
+
+.DS_Store
+Thumbs.db

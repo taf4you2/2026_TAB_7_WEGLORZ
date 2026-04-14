@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using StacjaNarciarskaDB.Models;
+using SystemStacjiNarciarskiejDLL.Models;
 
 namespace BramkaAPI.Controllers
 {
@@ -22,12 +22,11 @@ namespace BramkaAPI.Controllers
         [HttpGet("test")]
         public IActionResult test()
         {
-            Karnet testowyKarnet = new Karnet
+            Card testowyKarnet = new Card
             {
-                Id = 1,
-                DataWaznosciOd = DateTime.Now,
-                DataWaznosciDo = DateTime.Now.AddDays(7),
-                PowodBlokady = "brak"
+                Id = "1",
+                StatusId = 3,
+                PhysicalCondition = "nie dziala"
             };
 
             return Ok(testowyKarnet);

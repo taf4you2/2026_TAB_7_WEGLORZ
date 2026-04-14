@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using StacjaNarciarskaDB.Models;
 
 namespace BramkaAPI.Controllers
 {
@@ -11,13 +12,25 @@ namespace BramkaAPI.Controllers
         {
             if ((a == 0 || a == 1) && (b == 0 || b == 1))
             {
-                // Oblicza stan logiczny dla dostępu przez bramkę.
                 int wynik = a & b;
 
-                // Zwraca pozytywną odpowiedź wraz z wyliczonym wynikiem.
                 return Ok(new { Wynik = wynik, Wiadomosc = $"Wynik operacji AND dla {a} i {b} to: {wynik}" });
             }
             return BadRequest("Podano nie prawidołowe wartości");
+        }
+
+        [HttpGet("test")]
+        public IActionResult test()
+        {
+            Karnet testowyKarnet = new Karnet
+            {
+                Id = 1,
+                DataWaznosciOd = DateTime.Now,
+                DataWaznosciDo = DateTime.Now.AddDays(7),
+                PowodBlokady = "brak"
+            };
+
+            return Ok(testowyKarnet);
         }
 
     }

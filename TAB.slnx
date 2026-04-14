@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="Bramka/Bramka.csproj" />
+  <Project Path="BramkaAPI/BramkaAPI.csproj" Id="2589c60a-6ff2-4515-ab56-9bf76fe08e4d" />
   <Project Path="StacjaNarciarskaDB/StacjaNarciarskaDB.csproj" />
 </Solution>

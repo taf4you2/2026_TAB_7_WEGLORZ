@@ -14,8 +14,4 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\StacjaNarciarskaDB\StacjaNarciarskaDB.csproj" />
-  </ItemGroup>
-
 </Project>

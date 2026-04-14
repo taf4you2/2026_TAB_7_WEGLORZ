@@ -1,4 +1,4 @@
-﻿namespace StacjaNarciarskaDB
+﻿namespace SystemStacjiNarciarskiejDLL
 {
     public class Class1
     {

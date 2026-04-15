@@ -46,5 +46,25 @@ namespace BramkaAPI.Controllers
 
             return Ok(karty);
         }
+
+        [HttpGet("sprawdz-karte/{id}")]
+        public async Task<IActionResult> SprawdzKarte(string id)
+        {
+            var karta = await _context.Cards.FirstOrDefaultAsync(c => c.Id == id);
+
+            if (karta == null)
+            {
+                return NotFound(new { Wiadomosc = "Karta o podanym ID nie istnieje." });
+            }
+
+            bool czyAktywna = karta.StatusId == 1;
+
+            if (czyAktywna)
+            {
+                return Ok(new { Aktywna = true, Wiadomosc = "Karta jest aktywna. Dostęp przyznany." });
+            }
+
+            return Ok(new { Aktywna = false, Wiadomosc = "Karta jest nieaktywna. Odmowa dostępu." });
+        }
     }
 }

@@ -10,7 +10,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./Dokumentacja/baza_danych/baza_danych_kod.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - .BazaDanych/skrypty_inicjacyjne/baza_danych_kod.sql:/docker-entrypoint-initdb.d/01_schema.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d ski_resort"]
       interval: 5s

@@ -2,6 +2,7 @@
 [Oo]bj/
 
 .vs/
+.idea/claudeCodeTabState.xml
 *.user
 *.userosscache
 *.sln.docstates

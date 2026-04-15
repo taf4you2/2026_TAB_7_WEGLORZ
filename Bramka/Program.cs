@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Bramka
@@ -8,37 +9,161 @@ namespace Bramka
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Podaj wartość (0 lub 1):");
-            int a = int.Parse(Console.ReadLine());
-            Console.WriteLine("Podaj wartość (0 lub 1):");
-            int b = int.Parse(Console.ReadLine());
+            using HttpClient client = new HttpClient();
 
-            if ((a == 0 || a == 1) && (b == 0 || b == 1))
+            while (true)
             {
-                using HttpClient client = new HttpClient();
+                Console.Clear();
 
-                string url = $"http://localhost:49226/api/bramka/weryfikuj?a={a}&b={b}";
+                Console.WriteLine("\n");
+                Console.Write("Podaj ID karty do sprawdzenia: ");
 
-                try
+                string cardId = await PobierzWartoscZOdswiezaniemAsync();
+
+                if (!string.IsNullOrEmpty(cardId))
                 {
-                    HttpResponseMessage response = await client.GetAsync(url);
+                    Console.Clear();
 
-                    response.EnsureSuccessStatusCode();
+                    Console.WriteLine("\nSprawdzanie karty...");
 
-                    Console.WriteLine("\nOdpowiedź z serwera API:");
+                    string url = $"http://localhost:49226/api/bramka/sprawdz-karte/{cardId}";
 
-                    Console.WriteLine(await response.Content.ReadAsStringAsync());
+                    try
+                    {
+                        
+                        Task<HttpResponseMessage> getTask = client.GetAsync(url);
+
+                        while (!getTask.IsCompleted)
+                        {
+                            OdswiezNaglowek();
+                            await Task.Delay(200);
+                        }
+                        
+                        
+                        HttpResponseMessage response = await getTask;
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            string jsonResponse = await response.Content.ReadAsStringAsync();
+
+                            using JsonDocument doc = JsonDocument.Parse(jsonResponse);
+                            JsonElement root = doc.RootElement;
+
+                            bool czyAktywna = false;
+
+                            if (root.TryGetProperty("aktywna", out JsonElement prop) || root.TryGetProperty("Aktywna", out prop))
+                            {
+                                czyAktywna = prop.GetBoolean();
+                            }
+
+                            Console.WriteLine();
+                            if (czyAktywna)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine(">>> ZAPRASZAMY <<<");
+                            }
+                            else
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine(">>> ODMÓWIONO DOSTĘPU <<<");
+                            }
+                            Console.ResetColor();
+                        }
+                        else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                        {
+                            Console.WriteLine();
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine(">>> ODMÓWIONO DOSTĘPU (Karta nie istnieje) <<<");
+                            Console.ResetColor();
+                        }
+                        else
+                        {
+                            Console.WriteLine($"\nNieoczekiwany błąd serwera: {response.StatusCode}");
+                        }
+                    }
+                    catch (HttpRequestException e)
+                    {
+                        Console.ForegroundColor = ConsoleColor.DarkYellow;
+                        Console.WriteLine($"\nBłąd połączenia z serwerem API: {e.Message}");
+                        Console.ResetColor();
+                    }
                 }
-                catch (HttpRequestException e)
+                else
                 {
-                    
-                    Console.WriteLine($"\nBłąd połączenia z serwerem API: {e.Message}");
+                    Console.WriteLine("Nieprawidłowy format ID.");
+                }
+
+                int elapsed = 0;
+                int interval = 100;
+                int waitTime = 5000;
+
+                while (elapsed < waitTime)
+                {
+                    OdswiezNaglowek();
+
+                    if (Console.KeyAvailable)
+                    {
+                        while (Console.KeyAvailable)
+                        {
+                            Console.ReadKey(intercept: true);
+                        }
+                        break;
+                    }
+
+                    await Task.Delay(interval);
+                    elapsed += interval;
                 }
             }
-            else
+        }
+
+        static async Task<string> PobierzWartoscZOdswiezaniemAsync()
+        {
+            string idKarty = "";
+
+            while (true)
             {
-                Console.WriteLine("Nieprawidłowe wartośći");
+                OdswiezNaglowek();
+
+                while (Console.KeyAvailable)
+                {
+                    var klawisz = Console.ReadKey(intercept: true);
+
+                    if (klawisz.Key == ConsoleKey.Enter)
+                    {
+                        Console.WriteLine();
+                        return idKarty;
+                    }
+                    else if (klawisz.Key == ConsoleKey.Backspace)
+                    {
+                        if (idKarty.Length > 0)
+                        {
+                            idKarty = idKarty.Substring(0, idKarty.Length - 1);
+                            Console.Write("\b \b");
+                        }
+                    }
+                    else if (!char.IsControl(klawisz.KeyChar))
+                    {
+                        idKarty += klawisz.KeyChar;
+                        Console.Write(klawisz.KeyChar);
+                    }
+                }
+
+                await Task.Delay(200);
             }
+        }
+
+        static void OdswiezNaglowek()
+        {
+            int obecnaKolumna = Console.CursorLeft;
+            int obecnyWiersz = Console.CursorTop;
+
+            Console.SetCursorPosition(0, 0);
+            string numerBramki = "1";
+
+            string naglowek = $"=== BRAMKA {numerBramki} | {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===";
+            Console.Write(naglowek);
+
+            Console.SetCursorPosition(obecnaKolumna, obecnyWiersz);
         }
     }
 }

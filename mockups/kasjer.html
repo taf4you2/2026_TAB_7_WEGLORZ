@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Kasjera — Stacja Narciarska</title>
+  <style>
+    :root {
+      --primary:       #1565C0;
+      --primary-dark:  #0D47A1;
+      --primary-light: #E3F2FD;
+      --accent:        #FF6D00;
+      --success:       #2E7D32;
+      --success-light: #E8F5E9;
+      --warning:       #F57F17;
+      --warning-light: #FFF9C4;
+      --danger:        #C62828;
+      --danger-light:  #FFEBEE;
+      --sidebar-bg:    #0D47A1;
+      --sidebar-text:  rgba(255,255,255,0.75);
+      --sidebar-active:#42A5F5;
+      --text:          #212121;
+      --text-muted:    #757575;
+      --border:        #E0E0E0;
+      --bg:            #F5F7FA;
+      --white:         #FFFFFF;
+      --shadow:        0 1px 4px rgba(0,0,0,0.1);
+      --shadow-md:     0 4px 16px rgba(0,0,0,0.12);
+      --radius:        8px;
+      --radius-sm:     4px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ========== SIDEBAR ========== */
+    .sidebar {
+      width: 240px;
+      min-height: 100vh;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-logo .logo-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+    .sidebar-logo .logo-top span { font-size: 28px; }
+    .sidebar-logo h2 { color: white; font-size: 15px; font-weight: 700; line-height: 1.3; }
+    .sidebar-logo p  { color: rgba(255,255,255,0.5); font-size: 11px; }
+
+    .sidebar-user {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .avatar {
+      width: 34px; height: 34px;
+      background: var(--sidebar-active);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: 14px;
+      flex-shrink: 0;
+    }
+    .user-info { overflow: hidden; }
+    .user-info .name { color: white; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-info .role { color: rgba(255,255,255,0.5); font-size: 11px; }
+
+    .sidebar-nav { flex: 1; padding: 12px 0; }
+    .nav-section-label {
+      padding: 10px 20px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 20px;
+      color: var(--sidebar-text);
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+      font-size: 14px;
+      transition: background 0.15s, color 0.15s;
+      border-radius: 0;
+    }
+    .nav-item:hover  { background: rgba(255,255,255,0.08); color: white; }
+    .nav-item.active { background: rgba(66,165,245,0.2); color: white; border-right: 3px solid var(--sidebar-active); }
+    .nav-item .nav-icon { font-size: 18px; width: 22px; text-align: center; }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--accent);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+    }
+
+    .sidebar-bottom {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn-logout {
+      display: flex; align-items: center; gap: 8px;
+      color: rgba(255,255,255,0.6);
+      font-size: 13px;
+      cursor: pointer;
+      background: none; border: none; font-family: inherit;
+      padding: 4px 0;
+    }
+    .btn-logout:hover { color: white; }
+
+    /* ========== MAIN ========== */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .topbar {
+      background: white;
+      padding: 0 28px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .topbar-left h1 { font-size: 18px; font-weight: 700; color: var(--text); }
+    .topbar-left p  { font-size: 12px; color: var(--text-muted); }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+
+    .badge-info {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text-muted);
+      padding: 5px 12px;
+      background: var(--bg);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .content { flex: 1; overflow-y: auto; padding: 28px; }
+
+    /* ========== SEKCJE ========== */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ---- DASHBOARD ---- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border-left: 4px solid transparent;
+    }
+    .stat-card.blue   { border-left-color: var(--primary); }
+    .stat-card.green  { border-left-color: var(--success); }
+    .stat-card.orange { border-left-color: var(--accent); }
+    .stat-card.red    { border-left-color: var(--danger); }
+
+    .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
+    .stat-sub   { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+    .stat-sub .up   { color: var(--success); font-weight: 600; }
+    .stat-sub .down { color: var(--danger); font-weight: 600; }
+
+    .quick-actions {
+      display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;
+    }
+
+    /* ---- TABELE ---- */
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-header h3 { font-size: 15px; font-weight: 600; }
+    .card-header p  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .card-body { padding: 20px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      padding: 10px 14px;
+      border-bottom: 2px solid var(--border);
+      background: #FAFAFA;
+    }
+    td {
+      padding: 12px 14px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #FAFAFA; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-success { background: var(--success-light); color: var(--success); }
+    .badge-warning { background: var(--warning-light); color: var(--warning); }
+    .badge-danger  { background: var(--danger-light);  color: var(--danger); }
+    .badge-info    { background: var(--primary-light);  color: var(--primary); }
+
+    /* ---- PRZYCISKI ---- */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 18px;
+      border-radius: var(--radius);
+      font-size: 14px; font-weight: 600; font-family: inherit;
+      cursor: pointer; border: none;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover { background: #1B5E20; }
+    .btn-outline {
+      background: white; color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: #B71C1C; }
+
+    /* ---- FORMULARZE ---- */
+    .form-row { display: grid; gap: 16px; margin-bottom: 16px; }
+    .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+    .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label {
+      font-size: 12px; font-weight: 600; color: var(--text);
+      text-transform: uppercase; letter-spacing: 0.02em;
+    }
+    .form-input, .form-select {
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px; font-family: inherit; color: var(--text);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      background: white;
+    }
+    .form-input:focus, .form-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(21,101,192,0.12);
+    }
+    .form-hint { font-size: 11px; color: var(--text-muted); }
+
+    .rfid-input-wrap {
+      display: flex; gap: 8px;
+    }
+    .rfid-input-wrap .form-input { flex: 1; font-family: 'Consolas', monospace; }
+
+    .price-summary {
+      background: var(--primary-light);
+      border: 1px solid #BBDEFB;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-top: 8px;
+    }
+    .price-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+    .price-row:last-child { margin-bottom: 0; border-top: 1px solid #BBDEFB; padding-top: 8px; font-weight: 700; font-size: 16px; }
+    .price-row span:last-child { font-weight: 600; }
+
+    .tariff-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .tariff-card {
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tariff-card:hover { border-color: var(--primary); }
+    .tariff-card.selected { border-color: var(--primary); background: var(--primary-light); }
+    .tariff-card .t-name  { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .tariff-card .t-price { font-size: 18px; font-weight: 700; color: var(--primary); }
+    .tariff-card .t-sub   { font-size: 11px; color: var(--text-muted); }
+
+    .section-title {
+      font-size: 22px; font-weight: 700; margin-bottom: 4px;
+    }
+    .section-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .alert-success { background: var(--success-light); color: var(--success); border: 1px solid #A5D6A7; }
+    .alert-warning { background: var(--warning-light); color: var(--warning); border: 1px solid #FFF176; }
+
+    .divider-label {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em;
+      margin: 20px 0 16px;
+    }
+    .divider-label::before, .divider-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* Karty RFID */
+    .chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-family: 'Consolas', monospace;
+      font-size: 12px; padding: 3px 8px;
+      background: #ECEFF1; border-radius: 4px;
+      color: #37474F;
+    }
+
+    /* Raport zmiany */
+    .report-stat {
+      display: flex; justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .report-stat:last-child { border-bottom: none; }
+    .report-stat .rs-label { color: var(--text-muted); }
+    .report-stat .rs-value { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-top">
+      <span>⛷️</span>
+      <h2>Stacja<br>Narciarska</h2>
+    </div>
+    <p>Panel Kasjera</p>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="avatar">JK</div>
+    <div class="user-info">
+      <div class="name">Jan Kowalski</div>
+      <div class="role">Kasjer • Zmiana poranna</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Główne</div>
+    <button class="nav-item active" onclick="showSection('dashboard', this)">
+      <span class="nav-icon">📊</span> Dashboard
+    </button>
+
+    <div class="nav-section-label">Sprzedaż</div>
+    <button class="nav-item" onclick="showSection('sprzedaj-bilet', this)">
+      <span class="nav-icon">🎫</span> Sprzedaj bilet
+    </button>
+    <button class="nav-item" onclick="showSection('sprzedaj-karnet', this)">
+      <span class="nav-icon">🃏</span> Sprzedaj karnet
+    </button>
+    <button class="nav-item" onclick="showSection('blokuj', this)">
+      <span class="nav-icon">🔒</span> Blokuj / Zwróć
+      <span class="nav-badge">2</span>
+    </button>
+
+    <div class="nav-section-label">Dane</div>
+    <button class="nav-item" onclick="showSection('karty', this)">
+      <span class="nav-icon">💳</span> Karty RFID
+    </button>
+    <button class="nav-item" onclick="showSection('transakcje', this)">
+      <span class="nav-icon">📋</span> Transakcje
+    </button>
+
+    <div class="nav-section-label">Zmiana</div>
+    <button class="nav-item" onclick="showSection('raport', this)">
+      <span class="nav-icon">📄</span> Raport zmiany
+    </button>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <button class="btn-logout" onclick="window.location='login.html'">
+      <span>↩️</span> Wyloguj się
+    </button>
+  </div>
+</aside>
+
+<!-- ===== MAIN ===== -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1 id="topbarTitle">Dashboard</h1>
+      <p id="topbarSub">Wtorek, 15 kwietnia 2026 · Zmiana poranna 07:00–15:00</p>
+    </div>
+    <div class="topbar-right">
+      <span class="badge-info">
+        <span class="status-dot"></span>
+        Kasa nr 3 · aktywna
+      </span>
+      <span class="badge-info">🕐 09:42</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ========== DASHBOARD ========== -->
+    <div class="section active" id="sec-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="stat-label">🎫 Bilety sprzedane dziś</div>
+          <div class="stat-value">48</div>
+          <div class="stat-sub"><span class="up">+12%</span> vs. wczoraj</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">🃏 Aktywne karnety</div>
+          <div class="stat-value">127</div>
+          <div class="stat-sub">w całym systemie</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-label">💰 Przychód zmiany</div>
+          <div class="stat-value">2 840 zł</div>
+          <div class="stat-sub"><span class="up">+8%</span> vs. poprzednia zmiana</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-label">⚠️ Oczekujące zwroty</div>
+          <div class="stat-value">2</div>
+          <div class="stat-sub">wymagają obsługi</div>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <button class="btn btn-primary" onclick="showSection('sprzedaj-bilet', document.querySelectorAll('.nav-item')[1])">
+          🎫 Sprzedaj bilet
+        </button>
+        <button class="btn btn-success" onclick="showSection('sprzedaj-karnet', document.querySelectorAll('.nav-item')[2])">
+          🃏 Sprzedaj karnet
+        </button>
+        <button class="btn btn-outline" onclick="showSection('blokuj', document.querySelectorAll('.nav-item')[3])">
+          🔒 Blokada / zwrot
+        </button>
+        <button class="btn btn-outline" onclick="showSection('karty', document.querySelectorAll('.nav-item')[5])">
+          💳 Karty RFID
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3>Ostatnie transakcje</h3>
+            <p>Dzisiejsza zmiana · 48 transakcji</p>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="showSection('transakcje', document.querySelectorAll('.nav-item')[6])">
+            Wszystkie →
+          </button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Typ</th><th>Taryfa</th><th>Kwota</th><th>Karta RFID</th><th>Godzina</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>TRX-0048</strong></td>
+              <td>Karnet 3-dniowy</td>
+              <td>Dorosły</td>
+              <td><strong>267 zł</strong></td>
+              <td><span class="chip">A3:F2:11:CC</span></td>
+              <td>09:38</td>
+              <td><span class="badge badge-success">Opłacony</span></td>
+            </tr>
+            <tr>
+              <td><strong>TRX-0047</strong></td>
+              <td>Bilet jednorazowy</td>
+              <td>Senior</td>
+              <td><strong>69 zł</strong></td>
+              <td><span class="chip">B7:AA:32:0E</span></td>
+              <td>09:21</td>
+              <td><span class="badge badge-success">Opłacony</span></td>
+            </tr>
+            <tr>
+              <td><strong>TRX-0046</strong></td>
+              <td>Karnet 7-dniowy</td>
+              <td>Dziecko</td>
+              <td><strong>413 zł</strong></td>
+              <td><span class="chip">C1:DE:84:57</span></td>
+              <td>09:07</td>
+              <td><span class="badge badge-success">Opłacony</span></td>
+            </tr>
+            <tr>
+              <td><strong>TRX-0045</strong></td>
+              <td>Zwrot karnetu</td>
+              <td>Dorosły</td>
+              <td><strong>−178 zł</strong></td>
+              <td><span class="chip">E9:CC:01:A3</span></td>
+              <td>08:55</td>
+              <td><span class="badge badge-warning">Zwrot</span></td>
+            </tr>
+            <tr>
+              <td><strong>TRX-0044</strong></td>
+              <td>Bilet grupowy (6 os.)</td>
+              <td>Grupowy</td>
+              <td><strong>474 zł</strong></td>
+              <td><span class="chip">—</span></td>
+              <td>08:41</td>
+              <td><span class="badge badge-success">Opłacony</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div><h3>Sprzedaż według taryfy (dziś)</h3></div>
+        </div>
+        <div class="card-body">
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; text-align:center">
+            <div>
+              <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px">Dorosły</div>
+              <div style="font-size:24px;font-weight:700">22</div>
+              <div style="font-size:12px;color:var(--text-muted)">1 958 zł</div>
+            </div>
+            <div>
+              <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px">Dziecko</div>
+              <div style="font-size:24px;font-weight:700">11</div>
+              <div style="font-size:12px;color:var(--text-muted)">649 zł</div>
+            </div>
+            <div>
+              <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px">Senior</div>
+              <div style="font-size:24px;font-weight:700">8</div>
+              <div style="font-size:12px;color:var(--text-muted)">552 zł</div>
+            </div>
+            <div>
+              <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px">Grupowy</div>
+              <div style="font-size:24px;font-weight:700">7</div>
+              <div style="font-size:12px;color:var(--text-muted)">553 zł</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== SPRZEDAJ BILET ========== -->
+    <div class="section" id="sec-sprzedaj-bilet">
+      <div class="section-title">Sprzedaj bilet jednorazowy</div>
+      <div class="section-sub">UC1 · Bilet upoważnia do jednego wjazdu wyciągiem w wybranym dniu</div>
+
+      <div class="card">
+        <div class="card-header"><h3>1. Karta RFID narciarza</h3></div>
+        <div class="card-body">
+          <div class="form-row cols-2">
+            <div class="form-group">
+              <label class="form-label">Numer karty RFID</label>
+              <div class="rfid-input-wrap">
+                <input class="form-input" type="text" placeholder="Przyłóż kartę lub wpisz ręcznie" value="A3:F2:11:CC">
+                <button class="btn btn-outline">📡 Skanuj</button>
+              </div>
+              <span class="form-hint">Karta zostanie wyszukana lub wydana nowa (kaucja 20 zł)</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Właściciel karty</label>
+              <input class="form-input" type="text" placeholder="Imię i Nazwisko" value="Anna Nowak">
+            </div>
+          </div>
+          <div class="alert alert-success">
+            ✅ Karta znaleziona · Anna Nowak · Kaucja opłacona
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>2. Wybierz taryfę</h3></div>
+        <div class="card-body">
+          <div class="tariff-grid">
+            <div class="tariff-card" onclick="selectTariff(this)">
+              <div class="t-name">Dorosły</div>
+              <div class="t-price">89 zł</div>
+              <div class="t-sub">18–64 lat</div>
+            </div>
+            <div class="tariff-card selected" onclick="selectTariff(this)">
+              <div class="t-name">Dziecko</div>
+              <div class="t-price">59 zł</div>
+              <div class="t-sub">7–17 lat</div>
+            </div>
+            <div class="tariff-card" onclick="selectTariff(this)">
+              <div class="t-name">Senior</div>
+              <div class="t-price">69 zł</div>
+              <div class="t-sub">65+ lat</div>
+            </div>
+            <div class="tariff-card" onclick="selectTariff(this)">
+              <div class="t-name">Grupowy</div>
+              <div class="t-price">79 zł</div>
+              <div class="t-sub">min. 10 osób</div>
+            </div>
+          </div>
+          <div class="form-row cols-2">
+            <div class="form-group">
+              <label class="form-label">Data ważności biletu</label>
+              <input class="form-input" type="date" value="2026-04-15">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Liczba biletów</label>
+              <input class="form-input" type="number" value="1" min="1" max="50">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>3. Podsumowanie i płatność</h3></div>
+        <div class="card-body">
+          <div class="price-summary">
+            <div class="price-row"><span>Bilet jednorazowy × 1</span><span>59,00 zł</span></div>
+            <div class="price-row"><span>Kaucja za kartę</span><span>0,00 zł</span></div>
+            <div class="price-row"><span>Do zapłaty</span><span>59,00 zł</span></div>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:16px">
+            <button class="btn btn-success">✅ Sprzedaj i wydrukuj bilet</button>
+            <button class="btn btn-outline">💳 Płatność kartą</button>
+            <button class="btn btn-outline">💵 Gotówka</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== SPRZEDAJ KARNET ========== -->
+    <div class="section" id="sec-sprzedaj-karnet">
+      <div class="section-title">Sprzedaj karnet narciarski</div>
+      <div class="section-sub">UC2 · Karnet umożliwia wielokrotne korzystanie z wyciągów w określonym czasie</div>
+
+      <div class="card">
+        <div class="card-header"><h3>1. Dane narciarza i karta RFID</h3></div>
+        <div class="card-body">
+          <div class="form-row cols-3">
+            <div class="form-group">
+              <label class="form-label">Imię</label>
+              <input class="form-input" type="text" placeholder="Jan" value="Piotr">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nazwisko</label>
+              <input class="form-input" type="text" placeholder="Kowalski" value="Wiśniewski">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Karta RFID</label>
+              <div class="rfid-input-wrap">
+                <input class="form-input" type="text" placeholder="Skanuj lub wpisz" value="">
+                <button class="btn btn-outline btn-sm">📡</button>
+              </div>
+            </div>
+          </div>
+          <div class="alert alert-warning">
+            ⚠️ Brak karty RFID · Do kosztu zostanie doliczony depozyt 20 zł za nową kartę
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>2. Wybierz rodzaj karnetu</h3></div>
+        <div class="card-body">
+          <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:16px">
+            <div class="tariff-card" onclick="selectTariff(this)">
+              <div class="t-name">1 dzień</div>
+              <div class="t-price">89 zł</div>
+              <div class="t-sub">dorosły</div>
+            </div>
+            <div class="tariff-card selected" onclick="selectTariff(this)">
+              <div class="t-name">3 dni</div>
+              <div class="t-price">247 zł</div>
+              <div class="t-sub">dorosły</div>
+            </div>
+            <div class="tariff-card" onclick="selectTariff(this)">
+              <div class="t-name">5 dni</div>
+              <div class="t-price">390 zł</div>
+              <div class="t-sub">dorosły</div>
+            </div>
+            <div class="tariff-card" onclick="selectTariff(this)">
+              <div class="t-name">7 dni</div>
+              <div class="t-price">525 zł</div>
+              <div class="t-sub">dorosły</div>
+            </div>
+            <div class="tariff-card" onclick="selectTariff(this)">
+              <div class="t-name">Sezon</div>
+              <div class="t-price">1 200 zł</div>
+              <div class="t-sub">dorosły</div>
+            </div>
+          </div>
+
+          <div class="form-row cols-3">
+            <div class="form-group">
+              <label class="form-label">Taryfa wiekowa</label>
+              <select class="form-select">
+                <option>Dorosły (89 zł/dzień)</option>
+                <option>Dziecko (59 zł/dzień)</option>
+                <option>Senior (69 zł/dzień)</option>
+                <option>Grupowy (79 zł/dzień)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Data rozpoczęcia</label>
+              <input class="form-input" type="date" value="2026-04-15">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Data zakończenia</label>
+              <input class="form-input" type="date" value="2026-04-17" readonly style="background:#F5F5F5">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>3. Podsumowanie i płatność</h3></div>
+        <div class="card-body">
+          <div class="price-summary">
+            <div class="price-row"><span>Karnet 3-dniowy · Dorosły</span><span>247,00 zł</span></div>
+            <div class="price-row"><span>Depozyt za nową kartę RFID</span><span>20,00 zł</span></div>
+            <div class="price-row"><span>Do zapłaty</span><span>267,00 zł</span></div>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:16px">
+            <button class="btn btn-success">✅ Wystaw karnet i wydaj kartę</button>
+            <button class="btn btn-outline">💳 Płatność kartą</button>
+            <button class="btn btn-outline">💵 Gotówka</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== BLOKUJ / ZWRÓĆ ========== -->
+    <div class="section" id="sec-blokuj">
+      <div class="section-title">Blokada i zwroty</div>
+      <div class="section-sub">UC3 Zablokuj bilet · UC11 Zwróć karnet</div>
+
+      <div class="alert alert-warning">
+        ⚠️ Są 2 wnioski o zwrot oczekujące na obsługę
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Wyszukaj karnet / bilet</h3></div>
+        <div class="card-body">
+          <div class="form-row cols-2">
+            <div class="form-group">
+              <label class="form-label">Karta RFID lub numer karnetu</label>
+              <div class="rfid-input-wrap">
+                <input class="form-input" type="text" placeholder="Skanuj kartę lub wpisz numer">
+                <button class="btn btn-primary">🔍 Szukaj</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Lub imię i nazwisko</label>
+              <input class="form-input" type="text" placeholder="Jan Kowalski">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Oczekujące wnioski o zwrot</h3></div>
+        <table>
+          <thead>
+            <tr><th>Narciarz</th><th>Karta RFID</th><th>Karnet</th><th>Ważny do</th><th>Pozostało dni</th><th>Zwrot szacunkowy</th><th>Akcja</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Marta Nowak</strong></td>
+              <td><span class="chip">E9:CC:01:A3</span></td>
+              <td>5-dniowy · Dorosły</td>
+              <td>20.04.2026</td>
+              <td><span class="badge badge-info">4 dni</span></td>
+              <td><strong>356 zł</strong></td>
+              <td>
+                <button class="btn btn-danger btn-sm">Zwróć</button>
+                <button class="btn btn-outline btn-sm">Blokuj</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Tomasz Wiśniewski</strong></td>
+              <td><span class="chip">B1:23:FC:D4</span></td>
+              <td>3-dniowy · Senior</td>
+              <td>16.04.2026</td>
+              <td><span class="badge badge-warning">1 dzień</span></td>
+              <td><strong>69 zł</strong></td>
+              <td>
+                <button class="btn btn-danger btn-sm">Zwróć</button>
+                <button class="btn btn-outline btn-sm">Blokuj</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ========== KARTY RFID ========== -->
+    <div class="section" id="sec-karty">
+      <div class="section-title">Karty RFID</div>
+      <div class="section-sub">Pula kart w systemie — aktywne, wolne, zastrzeżone</div>
+
+      <div class="stats-grid">
+        <div class="stat-card blue"><div class="stat-label">💳 Wszystkich kart</div><div class="stat-value">500</div></div>
+        <div class="stat-card green"><div class="stat-label">✅ Aktywnych</div><div class="stat-value">127</div></div>
+        <div class="stat-card orange"><div class="stat-label">⬜ Wolnych</div><div class="stat-value">358</div></div>
+        <div class="stat-card red"><div class="stat-label">🚫 Zastrzeżonych</div><div class="stat-value">15</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div><h3>Lista kart</h3></div>
+          <input class="form-input" type="text" placeholder="Szukaj karty…" style="width:260px;padding:7px 12px;font-size:13px">
+        </div>
+        <table>
+          <thead>
+            <tr><th>#</th><th>Karta RFID</th><th>Status</th><th>Właściciel</th><th>Karnet</th><th>Ważny do</th><th>Kaucja</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>001</td>
+              <td><span class="chip">A3:F2:11:CC</span></td>
+              <td><span class="badge badge-success">Aktywna</span></td>
+              <td>Anna Nowak</td>
+              <td>3-dniowy</td>
+              <td>17.04.2026</td>
+              <td><span class="badge badge-info">Opłacona</span></td>
+            </tr>
+            <tr>
+              <td>002</td>
+              <td><span class="chip">B7:AA:32:0E</span></td>
+              <td><span class="badge badge-success">Aktywna</span></td>
+              <td>Krzysztof Maj</td>
+              <td>1-dniowy</td>
+              <td>15.04.2026</td>
+              <td><span class="badge badge-info">Opłacona</span></td>
+            </tr>
+            <tr>
+              <td>003</td>
+              <td><span class="chip">C1:DE:84:57</span></td>
+              <td><span class="badge badge-warning">Wolna</span></td>
+              <td>—</td>
+              <td>—</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>004</td>
+              <td><span class="chip">D4:BC:99:11</span></td>
+              <td><span class="badge badge-danger">Zastrzeżona</span></td>
+              <td>Nieznany</td>
+              <td>—</td>
+              <td>—</td>
+              <td><span class="badge badge-danger">Do zwrotu</span></td>
+            </tr>
+            <tr>
+              <td>005</td>
+              <td><span class="chip">E9:CC:01:A3</span></td>
+              <td><span class="badge badge-success">Aktywna</span></td>
+              <td>Marta Nowak</td>
+              <td>5-dniowy</td>
+              <td>20.04.2026</td>
+              <td><span class="badge badge-info">Opłacona</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ========== TRANSAKCJE ========== -->
+    <div class="section" id="sec-transakcje">
+      <div class="section-title">Historia transakcji</div>
+      <div class="section-sub">Wszystkie transakcje z bieżącej zmiany</div>
+
+      <div class="card">
+        <div class="card-header">
+          <div><h3>Transakcje · 15.04.2026 · Zmiana poranna</h3></div>
+          <button class="btn btn-outline btn-sm">📤 Eksportuj CSV</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Nr</th><th>Typ</th><th>Taryfa</th><th>Kwota</th><th>Karta</th><th>Kasjer</th><th>Godzina</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>TRX-0048</td><td>Karnet 3-dniowy</td><td>Dorosły</td><td>267 zł</td><td><span class="chip">A3:F2:11:CC</span></td><td>J. Kowalski</td><td>09:38</td><td><span class="badge badge-success">OK</span></td></tr>
+            <tr><td>TRX-0047</td><td>Bilet jednorazowy</td><td>Senior</td><td>69 zł</td><td><span class="chip">B7:AA:32:0E</span></td><td>J. Kowalski</td><td>09:21</td><td><span class="badge badge-success">OK</span></td></tr>
+            <tr><td>TRX-0046</td><td>Karnet 7-dniowy</td><td>Dziecko</td><td>413 zł</td><td><span class="chip">C1:DE:84:57</span></td><td>J. Kowalski</td><td>09:07</td><td><span class="badge badge-success">OK</span></td></tr>
+            <tr><td>TRX-0045</td><td>Zwrot karnetu</td><td>Dorosły</td><td>−178 zł</td><td><span class="chip">E9:CC:01:A3</span></td><td>J. Kowalski</td><td>08:55</td><td><span class="badge badge-warning">Zwrot</span></td></tr>
+            <tr><td>TRX-0044</td><td>Bilet grupowy 6×</td><td>Grupowy</td><td>474 zł</td><td>—</td><td>J. Kowalski</td><td>08:41</td><td><span class="badge badge-success">OK</span></td></tr>
+            <tr><td>TRX-0043</td><td>Bilet jednorazowy</td><td>Dorosły</td><td>89 zł</td><td><span class="chip">F0:11:22:33</span></td><td>J. Kowalski</td><td>08:29</td><td><span class="badge badge-success">OK</span></td></tr>
+            <tr><td>TRX-0042</td><td>Karnet 1-dniowy</td><td>Dziecko</td><td>59 zł</td><td><span class="chip">A8:BC:DE:F0</span></td><td>J. Kowalski</td><td>08:14</td><td><span class="badge badge-success">OK</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ========== RAPORT ZMIANY ========== -->
+    <div class="section" id="sec-raport">
+      <div class="section-title">Raport zmiany</div>
+      <div class="section-sub">Zmiana poranna · 15.04.2026 · Kasjer: Jan Kowalski</div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px">
+        <div class="card">
+          <div class="card-header"><h3>Podsumowanie sprzedaży</h3></div>
+          <div class="card-body">
+            <div class="report-stat"><span class="rs-label">Bilety jednorazowe</span><span class="rs-value">23 szt. · 1 892 zł</span></div>
+            <div class="report-stat"><span class="rs-label">Karnety 1-dniowe</span><span class="rs-value">8 szt. · 712 zł</span></div>
+            <div class="report-stat"><span class="rs-label">Karnety 3-dniowe</span><span class="rs-value">10 szt. · 2 470 zł</span></div>
+            <div class="report-stat"><span class="rs-label">Karnety 7-dniowe</span><span class="rs-value">4 szt. · 2 100 zł</span></div>
+            <div class="report-stat"><span class="rs-label">Zwroty</span><span class="rs-value" style="color:var(--danger)">3 szt. · −534 zł</span></div>
+            <div class="report-stat" style="font-size:16px;font-weight:700">
+              <span>RAZEM PRZYCHÓD</span>
+              <span style="color:var(--success)">6 640 zł</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Podsumowanie płatności</h3></div>
+          <div class="card-body">
+            <div class="report-stat"><span class="rs-label">Gotówka</span><span class="rs-value">2 140 zł</span></div>
+            <div class="report-stat"><span class="rs-label">Karta płatnicza</span><span class="rs-value">4 500 zł</span></div>
+            <div class="report-stat"><span class="rs-label">Zwroty gotówkowe</span><span class="rs-value" style="color:var(--danger)">−534 zł</span></div>
+            <div class="report-stat" style="font-size:16px;font-weight:700">
+              <span>Gotówka w kasie</span>
+              <span>1 606 zł</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px; margin-top:8px">
+        <button class="btn btn-primary">📄 Drukuj raport zmiany</button>
+        <button class="btn btn-danger">🔒 Zamknij zmianę</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+  const titles = {
+    'dashboard':       { title: 'Dashboard',            sub: 'Wtorek, 15 kwietnia 2026 · Zmiana poranna 07:00–15:00' },
+    'sprzedaj-bilet':  { title: 'Sprzedaj bilet',       sub: 'UC1 · Bilet jednorazowy' },
+    'sprzedaj-karnet': { title: 'Sprzedaj karnet',      sub: 'UC2 · Karnet narciarski' },
+    'blokuj':          { title: 'Blokada / Zwrot',      sub: 'UC3 · UC11' },
+    'karty':           { title: 'Karty RFID',            sub: 'Zarządzanie pulą kart' },
+    'transakcje':      { title: 'Transakcje',            sub: 'Historia bieżącej zmiany' },
+    'raport':          { title: 'Raport zmiany',         sub: 'Podsumowanie i zamknięcie kasy' },
+  };
+
+  function showSection(id, navEl) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelector('#sec-' + id).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if (navEl) navEl.classList.add('active');
+    const t = titles[id];
+    if (t) {
+      document.getElementById('topbarTitle').textContent = t.title;
+      document.getElementById('topbarSub').textContent = t.sub;
+    }
+  }
+
+  function selectTariff(el) {
+    el.closest('.tariff-grid, div').querySelectorAll('.tariff-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+</script>
+</body>
+</html>

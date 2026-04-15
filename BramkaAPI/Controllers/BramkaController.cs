@@ -1,4 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using SystemStacjiNarciarskiejDLL;
 using SystemStacjiNarciarskiejDLL.Models;
 
 namespace BramkaAPI.Controllers
@@ -7,6 +12,13 @@ namespace BramkaAPI.Controllers
     [Route("api/[controller]")]
     public class BramkaController : ControllerBase
     {
+        private readonly SkiResortDbContext _context;
+
+        public BramkaController(SkiResortDbContext context)
+        {
+            _context = context;
+        }
+
         [HttpGet("weryfikuj")]
         public IActionResult weryfikujDostęp(int a, int b)
         {
@@ -19,18 +31,20 @@ namespace BramkaAPI.Controllers
             return BadRequest("Podano nie prawidołowe wartości");
         }
 
-        [HttpGet("test")]
-        public IActionResult test()
+        [HttpGet("karty")]
+        public async Task<IActionResult> PobierzKarty()
         {
-            Card testowyKarnet = new Card
-            {
-                Id = "1",
-                StatusId = 3,
-                PhysicalCondition = "nie dziala"
-            };
+            var karty = await _context.Cards
+                .Select(c => new
+                {
+                    c.Id,
+                    c.StatusId,
+                    c.PhysicalCondition,
+                    c.AddedToPoolAt
+                })
+                .ToListAsync();
 
-            return Ok(testowyKarnet);
+            return Ok(karty);
         }
-
     }
 }

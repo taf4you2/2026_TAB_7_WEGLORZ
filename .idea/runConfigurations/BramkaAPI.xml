@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="BramkaAPI" type="DotNetProject" factoryName=".NET Project">
+    <option name="PROJECT_PATH" value="$PROJECT_DIR$/BramkaAPI/BramkaAPI.csproj" />
+    <option name="TARGET_FRAMEWORK_ID" value="net10.0" />
+    <option name="PROFILE_NAME" value="http" />
+    <method v="2" />
+  </configuration>
+</component>

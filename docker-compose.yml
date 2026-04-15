@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ski_resort
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./Dokumentacja/baza_danych/baza_danych_kod.sql:/docker-entrypoint-initdb.d/01_schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ski_resort"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  bramka-api:
+    build:
+      context: .
+      dockerfile: BramkaAPI/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "49226:8080"
+    environment:
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=ski_resort;Username=postgres;"
+      DbPassword: "postgres"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

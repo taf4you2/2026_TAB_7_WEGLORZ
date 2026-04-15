@@ -1,0 +1,6 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Docker Compose: wszystko" type="docker-compose" factoryName="Docker-compose">
+    <option name="sourceFilePath" value="$PROJECT_DIR$/docker-compose.yml" />
+    <method v="2" />
+  </configuration>
+</component>

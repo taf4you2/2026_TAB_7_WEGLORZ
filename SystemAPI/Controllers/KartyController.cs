@@ -106,7 +106,7 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
     }
 }
 
-record CardDto(
+public record CardDto(
     string Id,
     string Status,
     string? Owner,
@@ -115,4 +115,4 @@ record CardDto(
     bool DepositPaid
 );
 
-record IssueCardRequest(string Id);
+public record IssueCardRequest(string Id);

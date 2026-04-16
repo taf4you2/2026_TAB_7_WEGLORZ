@@ -78,4 +78,4 @@ public class BiletyController(SkiResortDbContext db) : ControllerBase
     }
 }
 
-record SellTicketRequest(string CardId, int TariffId, DateTime ValidOn, int Quantity);
+public record SellTicketRequest(string CardId, int TariffId, DateTime ValidOn, int Quantity);

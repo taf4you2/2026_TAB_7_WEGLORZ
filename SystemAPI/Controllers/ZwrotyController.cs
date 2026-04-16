@@ -54,7 +54,7 @@ public class ZwrotyController(SkiResortDbContext db) : ControllerBase
     }
 }
 
-record PendingReturnDto(
+public record PendingReturnDto(
     int PassId,
     string CardRfid,
     string? OwnerEmail,

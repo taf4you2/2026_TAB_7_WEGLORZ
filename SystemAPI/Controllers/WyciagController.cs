@@ -63,7 +63,7 @@ public class WyciagController(SkiResortDbContext db) : ControllerBase
     }
 }
 
-record LiftDto(
+public record LiftDto(
     int Id,
     string Name,
     string Status,
@@ -72,4 +72,4 @@ record LiftDto(
     TrailSummaryDto[] Trails
 );
 
-record TrailSummaryDto(int Id, string Name, string? Difficulty);
+public record TrailSummaryDto(int Id, string Name, string? Difficulty);

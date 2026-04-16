@@ -606,6 +606,9 @@
       <div class="section-title">Sprzedaj bilet jednorazowy</div>
       <div class="section-sub">UC1 · Bilet upoważnia do jednego wjazdu wyciągiem w wybranym dniu</div>
 
+      <div id="bilet-alert" class="alert alert-success" style="display:none"></div>
+      <div id="bilet-error" class="alert alert-warning" style="display:none;background:var(--danger-light);color:var(--danger);border:1px solid #EF9A9A"></div>
+
       <div class="card">
         <div class="card-header"><h3>1. Karta RFID narciarza</h3></div>
         <div class="card-body">
@@ -613,7 +616,7 @@
             <div class="form-group">
               <label class="form-label">Numer karty RFID</label>
               <div class="rfid-input-wrap">
-                <input class="form-input" type="text" placeholder="Przyłóż kartę lub wpisz ręcznie" value="A3:F2:11:CC">
+                <input class="form-input" type="text" id="bilet-rfid" placeholder="Przyłóż kartę lub wpisz ręcznie" value="A3:F2:11:CC">
                 <button class="btn btn-outline">📡 Skanuj</button>
               </div>
               <span class="form-hint">Karta zostanie wyszukana lub wydana nowa (kaucja 20 zł)</span>
@@ -623,45 +626,26 @@
               <input class="form-input" type="text" placeholder="Imię i Nazwisko" value="Anna Nowak">
             </div>
           </div>
-          <div class="alert alert-success">
-            ✅ Karta znaleziona · Anna Nowak · Kaucja opłacona
-          </div>
         </div>
       </div>
 
       <div class="card">
         <div class="card-header"><h3>2. Wybierz taryfę</h3></div>
         <div class="card-body">
-          <div class="tariff-grid">
-            <div class="tariff-card" onclick="selectTariff(this)">
-              <div class="t-name">Dorosły</div>
-              <div class="t-price">89 zł</div>
-              <div class="t-sub">18–64 lat</div>
-            </div>
-            <div class="tariff-card selected" onclick="selectTariff(this)">
-              <div class="t-name">Dziecko</div>
-              <div class="t-price">59 zł</div>
-              <div class="t-sub">7–17 lat</div>
-            </div>
-            <div class="tariff-card" onclick="selectTariff(this)">
-              <div class="t-name">Senior</div>
-              <div class="t-price">69 zł</div>
-              <div class="t-sub">65+ lat</div>
-            </div>
-            <div class="tariff-card" onclick="selectTariff(this)">
-              <div class="t-name">Grupowy</div>
-              <div class="t-price">79 zł</div>
-              <div class="t-sub">min. 10 osób</div>
-            </div>
+          <div class="tariff-grid" id="bilet-tariff-grid">
+            <div class="tariff-card" onclick="selectTariff(this)" data-tariff-id="1"><div class="t-name">Bilet Dorosły</div><div class="t-price">89,00 zł</div></div>
+            <div class="tariff-card selected" onclick="selectTariff(this)" data-tariff-id="2"><div class="t-name">Bilet Dziecko</div><div class="t-price">59,00 zł</div></div>
+            <div class="tariff-card" onclick="selectTariff(this)" data-tariff-id="3"><div class="t-name">Bilet Senior</div><div class="t-price">69,00 zł</div></div>
+            <div class="tariff-card" onclick="selectTariff(this)" data-tariff-id="4"><div class="t-name">Bilet Grupowy</div><div class="t-price">79,00 zł</div></div>
           </div>
           <div class="form-row cols-2">
             <div class="form-group">
               <label class="form-label">Data ważności biletu</label>
-              <input class="form-input" type="date" value="2026-04-15">
+              <input class="form-input" type="date" id="bilet-data" value="2026-04-16">
             </div>
             <div class="form-group">
               <label class="form-label">Liczba biletów</label>
-              <input class="form-input" type="number" value="1" min="1" max="50">
+              <input class="form-input" type="number" id="bilet-ilosc" value="1" min="1" max="50">
             </div>
           </div>
         </div>
@@ -670,13 +654,12 @@
       <div class="card">
         <div class="card-header"><h3>3. Podsumowanie i płatność</h3></div>
         <div class="card-body">
-          <div class="price-summary">
-            <div class="price-row"><span>Bilet jednorazowy × 1</span><span>59,00 zł</span></div>
-            <div class="price-row"><span>Kaucja za kartę</span><span>0,00 zł</span></div>
-            <div class="price-row"><span>Do zapłaty</span><span>59,00 zł</span></div>
+          <div class="price-summary" id="bilet-summary">
+            <div class="price-row"><span>Bilet jednorazowy × 1</span><span id="bilet-kwota">59,00 zł</span></div>
+            <div class="price-row"><span>Do zapłaty</span><span id="bilet-kwota-total">59,00 zł</span></div>
           </div>
           <div style="display:flex; gap:10px; margin-top:16px">
-            <button class="btn btn-success">✅ Sprzedaj i wydrukuj bilet</button>
+            <button class="btn btn-success" id="btnSprzedajBilet">✅ Sprzedaj i wydrukuj bilet</button>
             <button class="btn btn-outline">💳 Płatność kartą</button>
             <button class="btn btn-outline">💵 Gotówka</button>
           </div>
@@ -689,22 +672,25 @@
       <div class="section-title">Sprzedaj karnet narciarski</div>
       <div class="section-sub">UC2 · Karnet umożliwia wielokrotne korzystanie z wyciągów w określonym czasie</div>
 
+      <div id="karnet-alert" class="alert alert-success" style="display:none"></div>
+      <div id="karnet-error" class="alert alert-warning" style="display:none;background:var(--danger-light);color:var(--danger);border:1px solid #EF9A9A"></div>
+
       <div class="card">
         <div class="card-header"><h3>1. Dane narciarza i karta RFID</h3></div>
         <div class="card-body">
           <div class="form-row cols-3">
             <div class="form-group">
               <label class="form-label">Imię</label>
-              <input class="form-input" type="text" placeholder="Jan" value="Piotr">
+              <input class="form-input" type="text" id="karnet-imie" placeholder="Jan" value="Piotr">
             </div>
             <div class="form-group">
               <label class="form-label">Nazwisko</label>
-              <input class="form-input" type="text" placeholder="Kowalski" value="Wiśniewski">
+              <input class="form-input" type="text" id="karnet-nazwisko" placeholder="Kowalski" value="Wiśniewski">
             </div>
             <div class="form-group">
               <label class="form-label">Karta RFID</label>
               <div class="rfid-input-wrap">
-                <input class="form-input" type="text" placeholder="Skanuj lub wpisz" value="">
+                <input class="form-input" type="text" id="karnet-rfid" placeholder="Skanuj lub wpisz" value="">
                 <button class="btn btn-outline btn-sm">📡</button>
               </div>
             </div>
@@ -718,7 +704,7 @@
       <div class="card">
         <div class="card-header"><h3>2. Wybierz rodzaj karnetu</h3></div>
         <div class="card-body">
-          <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:16px">
+          <div id="karnet-tariff-grid" class="tariff-grid" style="grid-template-columns:repeat(5,1fr)">
             <div class="tariff-card" onclick="selectTariff(this)">
               <div class="t-name">1 dzień</div>
               <div class="t-price">89 zł</div>
@@ -739,30 +725,24 @@
               <div class="t-price">525 zł</div>
               <div class="t-sub">dorosły</div>
             </div>
-            <div class="tariff-card" onclick="selectTariff(this)">
-              <div class="t-name">Sezon</div>
-              <div class="t-price">1 200 zł</div>
-              <div class="t-sub">dorosły</div>
-            </div>
           </div>
 
           <div class="form-row cols-3">
             <div class="form-group">
               <label class="form-label">Taryfa wiekowa</label>
               <select class="form-select">
-                <option>Dorosły (89 zł/dzień)</option>
-                <option>Dziecko (59 zł/dzień)</option>
-                <option>Senior (69 zł/dzień)</option>
-                <option>Grupowy (79 zł/dzień)</option>
+                <option>Dorosły</option>
+                <option>Dziecko</option>
+                <option>Senior</option>
               </select>
             </div>
             <div class="form-group">
               <label class="form-label">Data rozpoczęcia</label>
-              <input class="form-input" type="date" value="2026-04-15">
+              <input class="form-input" type="date" id="karnet-od" value="2026-04-16">
             </div>
             <div class="form-group">
               <label class="form-label">Data zakończenia</label>
-              <input class="form-input" type="date" value="2026-04-17" readonly style="background:#F5F5F5">
+              <input class="form-input" type="date" id="karnet-do" value="2026-04-19">
             </div>
           </div>
         </div>
@@ -771,13 +751,12 @@
       <div class="card">
         <div class="card-header"><h3>3. Podsumowanie i płatność</h3></div>
         <div class="card-body">
-          <div class="price-summary">
+          <div class="price-summary" id="karnet-summary">
             <div class="price-row"><span>Karnet 3-dniowy · Dorosły</span><span>247,00 zł</span></div>
-            <div class="price-row"><span>Depozyt za nową kartę RFID</span><span>20,00 zł</span></div>
-            <div class="price-row"><span>Do zapłaty</span><span>267,00 zł</span></div>
+            <div class="price-row"><span>Do zapłaty</span><span>247,00 zł</span></div>
           </div>
           <div style="display:flex; gap:10px; margin-top:16px">
-            <button class="btn btn-success">✅ Wystaw karnet i wydaj kartę</button>
+            <button class="btn btn-success" id="btnSprzedajKarnet">✅ Wystaw karnet i wydaj kartę</button>
             <button class="btn btn-outline">💳 Płatność kartą</button>
             <button class="btn btn-outline">💵 Gotówka</button>
           </div>
@@ -1015,9 +994,269 @@
   }
 
   function selectTariff(el) {
-    el.closest('.tariff-grid, div').querySelectorAll('.tariff-card').forEach(c => c.classList.remove('selected'));
+    el.closest('.tariff-grid').querySelectorAll('.tariff-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
   }
+
+  // ========== API ==========
+  const API = 'http://localhost:5000';
+  const CASHIER_ID = 1;
+
+  async function apiFetch(path) {
+    try {
+      const res = await fetch(API + path);
+      if (!res.ok) throw new Error(res.status);
+      return await res.json();
+    } catch (e) {
+      console.warn('API error:', path, e.message);
+      return null;
+    }
+  }
+
+  // Dashboard
+  async function loadDashboard() {
+    const data = await apiFetch('/api/statystyki/dzisiaj');
+    if (!data) return;
+    const vals = document.querySelectorAll('#sec-dashboard .stats-grid .stat-value');
+    if (vals[0]) vals[0].textContent = data.ticketsSoldToday;
+    if (vals[1]) vals[1].textContent = data.activePasses;
+    if (vals[2]) vals[2].textContent = data.shiftRevenue.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' });
+    if (vals[3]) vals[3].textContent = data.pendingReturns;
+  }
+
+  // Taryfy (grid w sekcji sprzedaj-bilet i sprzedaj-karnet)
+  async function loadTaryfy() {
+    const data = await apiFetch('/api/taryfy');
+    if (!data) return;
+
+    const bilety  = data.filter(t => t.passType === 'bilet_jednorazowy');
+    const karnety = data.filter(t => t.passType === 'karnet');
+
+    function renderGrid(items) {
+      return items.map(t => `
+        <div class="tariff-card" onclick="selectTariff(this)" data-tariff-id="${t.id}">
+          <div class="t-name">${t.name}</div>
+          <div class="t-price">${t.price?.toFixed(2) ?? '—'} zł</div>
+          <div class="t-sub">${t.season ?? ''}</div>
+        </div>`).join('');
+    }
+
+    const biletGrid = document.getElementById('bilet-tariff-grid');
+    if (biletGrid && bilety.length) biletGrid.innerHTML = renderGrid(bilety);
+
+    const karnetGrid = document.getElementById('karnet-tariff-grid');
+    if (karnetGrid && karnety.length) karnetGrid.innerHTML = renderGrid(karnety);
+  }
+
+  // Transakcje
+  async function loadTransakcje() {
+    const today = new Date().toISOString().split('T')[0];
+    const data = await apiFetch(`/api/transakcje?date=${today}&cashierId=${CASHIER_ID}`);
+    if (!data) return;
+
+    const tbody = document.querySelector('#sec-transakcje tbody');
+    if (!tbody) return;
+
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted)">Brak transakcji</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.map(t => {
+      const kwota = (t.amount >= 0 ? '' : '−') + Math.abs(t.amount).toLocaleString('pl-PL', { minimumFractionDigits: 2 }) + ' zł';
+      const badgeClass = t.amount < 0 ? 'badge-warning' : 'badge-success';
+      const badgeText  = t.amount < 0 ? 'Zwrot' : 'OK';
+      const godz = t.date ? new Date(t.date).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '—';
+      return `<tr>
+        <td>TRX-${String(t.id).padStart(4, '0')}</td>
+        <td>${t.operationType ?? '—'}</td>
+        <td>${t.tariff ?? '—'}</td>
+        <td>${kwota}</td>
+        <td>—</td>
+        <td>${t.cashierLogin ?? '—'}</td>
+        <td>${godz}</td>
+        <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Raport zmiany
+  async function loadRaport() {
+    const data = await apiFetch(`/api/raport-zmiany?cashierId=${CASHIER_ID}`);
+    if (!data) return;
+
+    const raportStats = document.querySelectorAll('#sec-raport .report-stat .rs-value');
+    if (raportStats.length >= 6) {
+      raportStats[0].textContent = `${data.totalSalesCount} szt. · ${data.totalSalesAmount.toFixed(2)} zł`;
+      raportStats[1].textContent = `${Math.abs(data.totalReturnsCount)} szt. · ${Math.abs(data.totalReturnsAmount).toFixed(2)} zł`;
+      raportStats[2].textContent = data.netRevenue.toFixed(2) + ' zł';
+    }
+  }
+
+  // Karty
+  async function loadKarty() {
+    const data = await apiFetch('/api/karty');
+    if (!data) return;
+
+    const tbody = document.querySelector('#sec-karty tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = data.map((c, i) => {
+      const statusBadge = c.status === 'zajeta'
+        ? '<span class="badge badge-success">Aktywna</span>'
+        : c.status === 'zastrzezony'
+          ? '<span class="badge badge-danger">Zastrzeżona</span>'
+          : '<span class="badge badge-warning">Wolna</span>';
+      const validTo = c.validTo ? new Date(c.validTo).toLocaleDateString('pl-PL') : '—';
+      return `<tr>
+        <td>${String(i + 1).padStart(3, '0')}</td>
+        <td><span class="chip">${c.id}</span></td>
+        <td>${statusBadge}</td>
+        <td>${c.owner ?? '—'}</td>
+        <td>${c.activePassType ?? '—'}</td>
+        <td>${validTo}</td>
+        <td>${c.depositPaid ? '<span class="badge badge-info">Opłacona</span>' : '—'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function showAlert(alertEl, errorEl, isSuccess, msg) {
+    alertEl.style.display = 'none';
+    errorEl.style.display = 'none';
+    if (isSuccess) {
+      alertEl.textContent = msg;
+      alertEl.style.display = 'block';
+      alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      errorEl.textContent = msg;
+      errorEl.style.display = 'block';
+      errorEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  async function parseError(res) {
+    try { const j = await res.json(); return j.message ?? JSON.stringify(j); }
+    catch { return `HTTP ${res.status}`; }
+  }
+
+  // Sprzedaż karnetu
+  async function sprzedajKarnet() {
+    const alertEl  = document.getElementById('karnet-alert');
+    const errorEl  = document.getElementById('karnet-error');
+    const cardId   = document.getElementById('karnet-rfid')?.value?.trim();
+    const validFrom = document.getElementById('karnet-od')?.value;
+    const validTo   = document.getElementById('karnet-do')?.value;
+    const selected  = document.querySelector('#karnet-tariff-grid .tariff-card.selected');
+    const tariffId  = selected ? parseInt(selected.dataset.tariffId) : NaN;
+
+    console.log('[karnet] cardId:', cardId, 'tariffId:', tariffId, 'od:', validFrom, 'do:', validTo);
+
+    if (!cardId)       return showAlert(alertEl, errorEl, false, '⚠ Podaj numer karty RFID.');
+    if (!tariffId || isNaN(tariffId)) return showAlert(alertEl, errorEl, false, '⚠ Wybierz taryfę z listy (taryfy ładują się z API).');
+    if (!validFrom || !validTo) return showAlert(alertEl, errorEl, false, '⚠ Podaj daty ważności.');
+
+    const btn = document.getElementById('btnSprzedajKarnet');
+    btn.disabled = true;
+    btn.textContent = '⏳ Wystawianie…';
+
+    const body = { cardId, tariffId, validFrom: new Date(validFrom).toISOString(), validTo: new Date(validTo).toISOString() };
+    console.log('[karnet] POST /api/karnety', body);
+
+    try {
+      const res = await fetch(`${API}/api/karnety`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      console.log('[karnet] status:', res.status);
+      if (res.status === 201) {
+        const data = await res.json();
+        console.log('[karnet] ok:', data);
+        showAlert(alertEl, errorEl, true, `✅ Karnet wystawiony · ID ${data.id} · Karta ${data.cardId} · status: ${data.status}`);
+        document.getElementById('karnet-rfid').value = '';
+        loadDashboard();
+      } else {
+        const msg = await parseError(res);
+        console.error('[karnet] błąd:', res.status, msg);
+        showAlert(alertEl, errorEl, false, `❌ Błąd ${res.status}: ${msg}`);
+      }
+    } catch (e) {
+      console.error('[karnet] fetch error:', e);
+      showAlert(alertEl, errorEl, false, `❌ Brak połączenia z API (${e.message}). Czy docker compose up jest uruchomiony?`);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '✅ Wystaw karnet i wydaj kartę';
+    }
+  }
+
+  // Sprzedaż biletu
+  async function sprzedajBilet() {
+    const alertEl  = document.getElementById('bilet-alert');
+    const errorEl  = document.getElementById('bilet-error');
+    const cardId   = document.getElementById('bilet-rfid')?.value?.trim();
+    const validOn  = document.getElementById('bilet-data')?.value;
+    const qty      = parseInt(document.getElementById('bilet-ilosc')?.value) || 1;
+    const selected = document.querySelector('#bilet-tariff-grid .tariff-card.selected');
+    const tariffId = selected ? parseInt(selected.dataset.tariffId) : NaN;
+
+    console.log('[bilet] cardId:', cardId, 'tariffId:', tariffId, 'validOn:', validOn, 'qty:', qty);
+
+    if (!cardId)      return showAlert(alertEl, errorEl, false, '⚠ Podaj numer karty RFID.');
+    if (!tariffId || isNaN(tariffId)) return showAlert(alertEl, errorEl, false, '⚠ Wybierz taryfę z listy (taryfy ładują się z API).');
+    if (!validOn)     return showAlert(alertEl, errorEl, false, '⚠ Podaj datę ważności.');
+
+    const btn = document.getElementById('btnSprzedajBilet');
+    btn.disabled = true;
+    btn.textContent = '⏳ Sprzedaż…';
+
+    const body = { cardId, tariffId, validOn: new Date(validOn).toISOString(), quantity: qty };
+    console.log('[bilet] POST /api/bilety', body);
+
+    try {
+      const res = await fetch(`${API}/api/bilety`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      console.log('[bilet] status:', res.status);
+      if (res.ok) {
+        const data = await res.json();
+        console.log('[bilet] ok:', data);
+        showAlert(alertEl, errorEl, true, `✅ Sprzedano ${data.quantity} bilet(ów) · Rezerwacja #${data.reservationId} · ${data.totalAmount.toFixed(2)} zł`);
+        document.getElementById('bilet-rfid').value = '';
+        document.getElementById('bilet-ilosc').value = '1';
+        loadDashboard();
+      } else {
+        const msg = await parseError(res);
+        console.error('[bilet] błąd:', res.status, msg);
+        showAlert(alertEl, errorEl, false, `❌ Błąd ${res.status}: ${msg}`);
+      }
+    } catch (e) {
+      console.error('[bilet] fetch error:', e);
+      showAlert(alertEl, errorEl, false, `❌ Brak połączenia z API (${e.message}). Czy docker compose up jest uruchomiony?`);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '✅ Sprzedaj i wydrukuj bilet';
+    }
+  }
+
+  document.getElementById('btnSprzedajBilet')
+    ?.addEventListener('click', sprzedajBilet);
+  document.getElementById('btnSprzedajKarnet')
+    ?.addEventListener('click', sprzedajKarnet);
+
+  // Ładuj przy starcie
+  loadDashboard();
+  loadTaryfy();
+
+  // Ładuj przy przełączaniu sekcji
+  const _origShowSection = showSection;
+  showSection = function(id, navEl) {
+    _origShowSection(id, navEl);
+    if (id === 'transakcje') loadTransakcje();
+    if (id === 'raport')     loadRaport();
+    if (id === 'karty')      loadKarty();
+  };
 </script>
 </body>
 </html>

@@ -88,7 +88,7 @@ public class RaportZmianyController(SkiResortDbContext db) : ControllerBase
     }
 }
 
-record ShiftReportDto(
+public record ShiftReportDto(
     string CashierLogin,
     DateOnly Date,
     int TotalSalesCount,

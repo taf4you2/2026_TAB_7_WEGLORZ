@@ -54,7 +54,7 @@ public class TransakcjeController(SkiResortDbContext db) : ControllerBase
     }
 }
 
-record TransactionDto(
+public record TransactionDto(
     int Id,
     string? OperationType,
     string? Tariff,

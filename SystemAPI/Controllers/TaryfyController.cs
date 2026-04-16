@@ -33,7 +33,7 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
     }
 }
 
-record TariffDto(
+public record TariffDto(
     int Id,
     string Name,
     string? Season,

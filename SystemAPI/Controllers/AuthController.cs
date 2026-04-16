@@ -51,5 +51,5 @@ public class AuthController(SkiResortDbContext db) : ControllerBase
     }
 }
 
-record LoginRequest(string Email, string Password, string Role);
-record LoginResponse(int UserId, string Role, string Token);
+public record LoginRequest(string Email, string Password, string Role);
+public record LoginResponse(int UserId, string Role, string Token);

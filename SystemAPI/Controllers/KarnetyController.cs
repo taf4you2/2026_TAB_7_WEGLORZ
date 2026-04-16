@@ -9,6 +9,27 @@ namespace SystemAPI.Controllers;
 [Route("api/karnety")]
 public class KarnetyController(SkiResortDbContext db) : ControllerBase
 {
+    // GET /api/karnety?cardId={rfid}  — lista karnetów dla danej karty
+    [HttpGet]
+    public async Task<IActionResult> GetByCard([FromQuery] string cardId)
+    {
+        if (string.IsNullOrEmpty(cardId))
+            return BadRequest(new { message = "Parametr cardId jest wymagany." });
+
+        var passes = await db.SkiPasses
+            .Include(sp => sp.Status)
+            .Include(sp => sp.Tariff)
+                .ThenInclude(t => t!.PassType)
+            .Include(sp => sp.Card)
+            .Include(sp => sp.Reservation)
+                .ThenInclude(r => r!.User)
+            .Where(sp => sp.CardId == cardId)
+            .OrderByDescending(sp => sp.ValidFrom)
+            .ToListAsync();
+
+        return Ok(passes.Select(ToDto));
+    }
+
     // GET /api/karnety/{id}
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
@@ -180,11 +201,11 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
     );
 }
 
-record CreatePassRequest(string CardId, int TariffId, DateTime ValidFrom, DateTime ValidTo);
-record BlockPassRequest(string Reason);
-record ReturnPassRequest(string Reason, bool ReturnCard);
+public record CreatePassRequest(string CardId, int TariffId, DateTime ValidFrom, DateTime ValidTo);
+public record BlockPassRequest(string Reason);
+public record ReturnPassRequest(string Reason, bool ReturnCard);
 
-record PassDto(
+public record PassDto(
     int Id,
     string CardId,
     string? Status,
@@ -195,7 +216,7 @@ record PassDto(
     string? BlockReason
 );
 
-record ReturnPreviewDto(
+public record ReturnPreviewDto(
     decimal GrossAmount,
     int TotalDays,
     int UsedDays,

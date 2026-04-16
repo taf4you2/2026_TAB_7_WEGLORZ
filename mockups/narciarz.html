@@ -945,7 +945,66 @@
     document.querySelector('#sec-' + id).classList.add('active');
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     if (tabEl) tabEl.classList.add('active');
+    if (id === 'rozklad') loadWyciagi();
   }
+
+  // ========== API ==========
+  const API = 'http://localhost:5000';
+
+  async function apiFetch(path) {
+    try {
+      const res = await fetch(API + path);
+      if (!res.ok) throw new Error(res.status);
+      return await res.json();
+    } catch (e) {
+      console.warn('API error:', path, e.message);
+      return null;
+    }
+  }
+
+  function statusBadge(status) {
+    switch (status) {
+      case 'czynny':          return '<span class="lift-status-dot dot-open"></span><span class="badge badge-success">Czynny</span>';
+      case 'przed_otwarciem': return '<span class="lift-status-dot dot-delay"></span><span class="badge badge-warning">Przed otwarciem</span>';
+      case 'po_zamknieciu':   return '<span class="lift-status-dot dot-closed"></span><span class="badge badge-danger">Zamknięty</span>';
+      default:                return '<span class="lift-status-dot dot-closed"></span><span class="badge badge-danger">Nieczynny</span>';
+    }
+  }
+
+  function fmtTime(ts) {
+    if (!ts) return '—';
+    // ts może być "HH:MM:SS" lub ISO
+    return ts.substring(0, 5);
+  }
+
+  async function loadWyciagi() {
+    const data = await apiFetch('/api/wyciagi');
+    if (!data) return;
+
+    const tbody = document.querySelector('#sec-rozklad tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = data.map(l => {
+      const trasy = l.trails.map(t => t.name).join(', ') || '—';
+      const godz  = (l.opensAt && l.closesAt) ? `${fmtTime(l.opensAt)} – ${fmtTime(l.closesAt)}` : '—';
+      return `<tr class="lift-row">
+        <td>${l.name}</td>
+        <td>${trasy}</td>
+        <td>—</td>
+        <td>${godz}</td>
+        <td>—</td>
+        <td>${statusBadge(l.status)}</td>
+      </tr>`;
+    }).join('');
+
+    // Aktualizuj licznik czynnych
+    const active = data.filter(l => l.status === 'czynny').length;
+    const counter = document.querySelector('.weather-bar .badge-success:last-child, .weather-bar span[style]');
+    if (counter) counter.textContent = `${active}/${data.length} wyciągów czynnych`;
+  }
+
+  // Ładuj przy starcie (domyślna sekcja to karnety, ale wyciągi ładuj od razu w tle)
+  loadWyciagi();
 </script>
 </body>
 </html>

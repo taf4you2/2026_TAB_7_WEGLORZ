@@ -39,7 +39,7 @@ public class StatystykiController(SkiResortDbContext db) : ControllerBase
     }
 }
 
-record DashboardDto(
+public record DashboardDto(
     int TicketsSoldToday,
     int ActivePasses,
     decimal ShiftRevenue,

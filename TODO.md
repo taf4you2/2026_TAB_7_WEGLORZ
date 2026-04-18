@@ -10,13 +10,11 @@ Cel: Sprawić, aby bramka potrafiła wpuścić narciarza bez użycia połączeni
 
     Modyfikacja pętli skanującej kartę – zmiana logiki tak, aby sprawdzała ważność karty wyłącznie poprzez odpytanie lokalnego pliku bazy danych.
 
+        zrobiono
+
 Etap 2: Weryfikacja Hybrydowa i Caching (Bramka + API)
 
 Cel: Zapewnienie obsługi nowo zakupionych kart oraz optymalizacja bazy głównej.
-
-    Rejestracja usługi IMemoryCache w głównym pliku konfiguracyjnym projektu BramkaAPI.
-
-    Przebudowa kontrolera w API: dodanie logiki, która przychodzące zapytania sprawdza najpierw w pamięci RAM, a dopiero w przypadku braku (Cache Miss) odpytuje bazę PostgreSQL i zapisuje wynik na kilka minut w Cache.
 
     Aktualizacja aplikacji Bramka: dodanie warunku (Fallback). Jeśli skanowana karta nie istnieje w lokalnym SQLite, bramka wysyła zapytanie HTTP do API.
 

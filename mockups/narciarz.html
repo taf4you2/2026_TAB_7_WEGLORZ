@@ -420,7 +420,7 @@
       <div class="nav-avatar">PN</div>
       <span>Piotr Narciarz</span>
     </div>
-    <button class="btn-nav" onclick="window.location='login.html'">Wyloguj</button>
+    <button class="btn-nav" onclick="logout()">Wyloguj</button>
   </div>
 </nav>
 
@@ -484,7 +484,17 @@
       <p>Historia i aktywne karnety na Twoje konto</p>
     </div>
 
-    <div class="passes-grid">
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-body" style="display:flex;gap:12px;align-items:flex-end">
+        <div class="form-group" style="margin-bottom:0;flex:1">
+          <label class="form-label">Numer karty RFID</label>
+          <input class="form-input" type="text" id="narciarz-rfid" placeholder="np. A3:F2:11:CC" style="margin-bottom:0">
+        </div>
+        <button class="btn btn-primary" onclick="zaladujMojeDane()">Załaduj</button>
+      </div>
+    </div>
+
+    <div id="karnety-passes" class="passes-grid">
       <!-- Aktywny -->
       <div class="pass-tile">
         <div class="pass-tile-top">
@@ -565,7 +575,7 @@
       <div class="card-header">
         <div><h3>Szczegóły aktywnego karnetu</h3></div>
       </div>
-      <div class="card-body">
+      <div class="card-body" id="karnety-detail-body">
         <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; text-align:center">
           <div style="padding:16px; background:var(--primary-light); border-radius:8px">
             <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Typ</div>
@@ -737,10 +747,24 @@
   <div class="section" id="sec-historia">
     <div class="section-header">
       <h2>Historia przejazdów</h2>
-      <p>Logi skanowania bramek · Aktywny karnet 5-dniowy</p>
+      <p>Logi skanowania bramek</p>
     </div>
 
-    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px">
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-body" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+        <div class="form-group" style="margin-bottom:0;flex:1;min-width:160px">
+          <label class="form-label">Karta RFID</label>
+          <input class="form-input" type="text" id="historia-rfid" placeholder="np. A3:F2:11:CC" style="margin-bottom:0">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Data (puste = wszystkie)</label>
+          <input class="form-input" type="date" id="historia-date" style="margin-bottom:0">
+        </div>
+        <button class="btn btn-primary" onclick="zaladujHistorie()">Załaduj</button>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px" id="historia-stats">
       <div class="card" style="margin-bottom:0">
         <div class="card-body" style="text-align:center">
           <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Przejazdy dziś</div>
@@ -764,14 +788,14 @@
 
     <div class="card">
       <div class="card-header">
-        <div>
-          <h3>Dzisiaj — 15.04.2026</h3>
-          <p>7 wjazdów</p>
+        <div id="historia-today-header">
+          <h3>Dzisiaj</h3>
+          <p>—</p>
         </div>
         <button class="btn btn-outline btn-sm">🖨️ Drukuj raport przejazdów (UC10)</button>
       </div>
       <div class="card-body">
-        <div class="timeline">
+        <div class="timeline" id="historia-timeline">
           <div class="timeline-item">
             <span class="scan-icon scan-ok">✅</span>
             <div class="tl-right">
@@ -840,6 +864,18 @@
       <p>UC11 · Zwrot karnetu z częściowym zwrotem środków</p>
     </div>
 
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-body" style="display:flex;gap:12px;align-items:flex-end">
+        <div class="form-group" style="margin-bottom:0;flex:1">
+          <label class="form-label">Numer karty RFID</label>
+          <input class="form-input" type="text" id="zwrot-rfid" placeholder="np. A3:F2:11:CC" style="margin-bottom:0">
+        </div>
+        <button class="btn btn-primary" onclick="zaladujZwrot()">Załaduj karnety</button>
+      </div>
+    </div>
+
+    <div id="zwrot-result" style="display:none;margin-bottom:16px"></div>
+
     <div class="alert alert-info">
       ℹ️ Zwrot jest liczony proporcjonalnie do liczby niewykorzystanych dni. Opłata manipulacyjna: 10 zł. Kaucja za kartę (20 zł) zostaje zwrócona po oddaniu karty.
     </div>
@@ -847,30 +883,8 @@
     <div class="card">
       <div class="card-header"><h3>Wybierz karnet do zwrotu</h3></div>
       <div class="card-body">
-        <div style="display:grid; gap:10px">
-          <label style="display:flex; align-items:center; gap:12px; padding:14px 16px; border:2px solid var(--primary); border-radius:8px; cursor:pointer; background:var(--primary-light)">
-            <input type="radio" name="karnet" checked style="accent-color:var(--primary)">
-            <div>
-              <div style="font-weight:600">Karnet 5-dniowy · Dorosły</div>
-              <div style="font-size:12px;color:var(--text-muted)">15.04 – 20.04.2026 · Aktywny · A3:F2:11:CC</div>
-            </div>
-            <div style="margin-left:auto; text-align:right">
-              <div style="font-weight:700">390 zł</div>
-              <span class="badge badge-success">Aktywny</span>
-            </div>
-          </label>
-
-          <label style="display:flex; align-items:center; gap:12px; padding:14px 16px; border:2px solid var(--border); border-radius:8px; cursor:pointer">
-            <input type="radio" name="karnet" style="accent-color:var(--primary)">
-            <div>
-              <div style="font-weight:600">Karnet 3-dniowy · Dorosły</div>
-              <div style="font-size:12px;color:var(--text-muted)">22.04 – 25.04.2026 · Przyszły · A3:F2:11:CC</div>
-            </div>
-            <div style="margin-left:auto; text-align:right">
-              <div style="font-weight:700">247 zł</div>
-              <span class="badge badge-info">Przyszły</span>
-            </div>
-          </label>
+        <div style="display:grid; gap:10px" id="zwrot-karnety-lista">
+          <div style="color:var(--text-muted);font-size:13px">Podaj numer karty RFID powyżej, aby załadować karnety.</div>
         </div>
       </div>
     </div>
@@ -878,30 +892,8 @@
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px">
       <div class="card" style="margin-bottom:0">
         <div class="card-header"><h3>Szczegóły zwrotu</h3></div>
-        <div class="card-body">
-          <div style="display:grid; gap:10px">
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border)">
-              <span style="color:var(--text-muted)">Cena karnetu</span><span style="font-weight:600">390,00 zł</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border)">
-              <span style="color:var(--text-muted)">Dni wykupione</span><span>5 dni</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border)">
-              <span style="color:var(--text-muted)">Dni wykorzystane</span><span>0 dni (dziś pierwsza aktywacja)</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border)">
-              <span style="color:var(--text-muted)">Kwota do zwrotu (5 dni × 78 zł)</span><span style="font-weight:600;color:var(--success)">390,00 zł</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border)">
-              <span style="color:var(--text-muted)">Opłata manipulacyjna</span><span style="color:var(--danger)">−10,00 zł</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border)">
-              <span style="color:var(--text-muted)">Kaucja za kartę (przy zwrocie karty)</span><span style="color:var(--success)">+20,00 zł</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; padding:12px 0; font-size:18px; font-weight:700">
-              <span>RAZEM ZWROT</span><span style="color:var(--success)">400,00 zł</span>
-            </div>
-          </div>
+        <div class="card-body" id="zwrot-preview-body">
+          <div style="color:var(--text-muted);font-size:13px">Wybierz karnet, aby zobaczyć symulację zwrotu.</div>
         </div>
       </div>
 
@@ -920,17 +912,17 @@
           </div>
           <div class="form-group">
             <label class="form-label">Dodatkowe uwagi (opcjonalnie)</label>
-            <textarea class="form-input" rows="3" style="resize:vertical" placeholder="Opisz sytuację..."></textarea>
+            <textarea class="form-input" id="zwrot-reason" rows="3" style="resize:vertical" placeholder="Opisz sytuację..."></textarea>
           </div>
           <div class="form-group">
             <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; font-size:13px">
-              <input type="checkbox" style="margin-top:2px; accent-color:var(--primary)">
-              <span>Zwracam kartę RFID (A3:F2:11:CC) — kaucja 20 zł zostanie doliczona do zwrotu</span>
+              <input type="checkbox" id="zwrot-return-card" style="margin-top:2px; accent-color:var(--primary)" onchange="odswiezPodglad()">
+              <span>Zwracam kartę RFID — kaucja 20 zł zostanie doliczona do zwrotu</span>
             </label>
           </div>
           <div style="display:flex; gap:10px; margin-top:8px">
-            <button class="btn btn-danger">↩️ Złóż wniosek o zwrot</button>
-            <button class="btn btn-outline">Anuluj</button>
+            <button class="btn btn-danger" id="zwrot-btn" onclick="zlozWniosek()">↩️ Złóż wniosek o zwrot</button>
+            <button class="btn btn-outline" onclick="document.getElementById('zwrot-karnety-lista').querySelectorAll('input[type=radio]').forEach(r=>r.checked=false);selectedPassId=null;">Anuluj</button>
           </div>
         </div>
       </div>
@@ -946,6 +938,22 @@
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     if (tabEl) tabEl.classList.add('active');
     if (id === 'rozklad') loadWyciagi();
+    if (id === 'karnety' && myRfid) zaladujKarnety();
+    if (id === 'historia' && myRfid) zaladujHistorie();
+    if (id === 'zwrot'   && myRfid) zaladujZwrot();
+  }
+
+  // ========== AUTH GUARD ==========
+  const token = localStorage.getItem('token');
+  if (!token || localStorage.getItem('role') !== 'narciarz') {
+    window.location.replace('login.html');
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('role');
+    window.location.href = 'login.html';
   }
 
   // ========== API ==========
@@ -953,7 +961,9 @@
 
   async function apiFetch(path) {
     try {
-      const res = await fetch(API + path);
+      const res = await fetch(API + path, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (!res.ok) throw new Error(res.status);
       return await res.json();
     } catch (e) {
@@ -975,6 +985,300 @@
     if (!ts) return '—';
     // ts może być "HH:MM:SS" lub ISO
     return ts.substring(0, 5);
+  }
+
+  // ========== NARCIARZ — wspólny stan ==========
+  let myRfid = '';
+  let selectedPassId = null;
+
+  function zaladujMojeDane() {
+    const rfid = document.getElementById('narciarz-rfid')?.value?.trim();
+    if (!rfid) return;
+    myRfid = rfid;
+    // synchronizuj pola rfid w innych sekcjach
+    const hrfid = document.getElementById('historia-rfid');
+    const zrfid = document.getElementById('zwrot-rfid');
+    if (hrfid) hrfid.value = rfid;
+    if (zrfid) zrfid.value = rfid;
+    zaladujKarnety();
+  }
+
+  // ========== KARNETY ==========
+  async function zaladujKarnety() {
+    const rfid = myRfid || document.getElementById('narciarz-rfid')?.value?.trim();
+    if (!rfid) return;
+    myRfid = rfid;
+
+    const data = await apiFetch(`/api/karnety?cardId=${encodeURIComponent(rfid)}`);
+    const grid   = document.getElementById('karnety-passes');
+    const detail = document.getElementById('karnety-detail-body');
+    if (!grid) return;
+
+    if (!data || data.length === 0) {
+      grid.innerHTML = '<div style="color:var(--text-muted);padding:16px">Nie znaleziono karnetów dla tej karty.</div>';
+      if (detail) detail.innerHTML = '<div style="color:var(--text-muted)">Brak aktywnego karnetu.</div>';
+      return;
+    }
+
+    const today = new Date();
+
+    grid.innerHTML = data.map(p => {
+      const from = p.validFrom ? new Date(p.validFrom) : null;
+      const to   = p.validTo   ? new Date(p.validTo)   : null;
+      const totalDays = (from && to) ? Math.max(1, Math.round((to - from) / 86400000)) : 0;
+      const usedDays  = from ? Math.max(0, Math.round((today - from) / 86400000)) : 0;
+      const leftDays  = Math.max(0, totalDays - usedDays);
+      const pct = totalDays > 0 ? Math.min(100, Math.round((usedDays / totalDays) * 100)) : 0;
+
+      const isActive  = p.status === 'aktywny'    && from && to && from <= today && today <= to;
+      const isFuture  = p.status === 'aktywny'    && from && from > today;
+      const isExpired = !isActive && !isFuture;
+
+      const badgeHtml = isActive  ? '<span class="badge-active">AKTYWNY</span>'
+                      : isFuture  ? '<span style="background:rgba(33,150,243,0.15);color:#1565C0;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700">PRZYSZŁY</span>'
+                      : '<span class="badge-expired">WYGASŁY</span>';
+
+      const leftLabel = isActive ? `⏰ ${leftDays} dni pozostało`
+                      : isFuture ? `🗓️ Aktywuje się ${from.toLocaleDateString('pl-PL')}`
+                      : '✓ Wygasły';
+      const leftClass = isActive ? 'ok' : isExpired ? 'ended' : 'ok';
+
+      return `<div class="pass-tile">
+        <div class="pass-tile-top${isExpired ? ' expired' : ''}">
+          <div class="pass-tile-header">
+            <div>
+              <div class="pass-tile-name">${p.tariff ?? '—'}</div>
+              <div class="pass-tile-type">${p.passType ?? ''} · ${p.cardId}</div>
+            </div>
+            ${badgeHtml}
+          </div>
+          <div class="pass-tile-dates">
+            <div><div class="ptd-label">Od</div><div class="ptd-value">${from ? from.toLocaleDateString('pl-PL') : '—'}</div></div>
+            <div><div class="ptd-label">Do</div><div class="ptd-value">${to   ? to.toLocaleDateString('pl-PL')   : '—'}</div></div>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        </div>
+        <div class="pass-tile-bottom">
+          <span class="rfid-small">💳 ${p.cardId}</span>
+          <span class="days-left ${leftClass}">${leftLabel}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Szczegóły — pierwszy aktywny
+    const active = data.find(p => p.status === 'aktywny');
+    if (detail && active) {
+      const from = active.validFrom ? new Date(active.validFrom) : null;
+      const to   = active.validTo   ? new Date(active.validTo)   : null;
+      const totalDays = (from && to) ? Math.max(1, Math.round((to - from) / 86400000)) : 0;
+      const usedDays  = from ? Math.max(0, Math.round((today - from) / 86400000)) : 0;
+      const leftDays  = Math.max(0, totalDays - usedDays);
+
+      detail.innerHTML = `<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; text-align:center">
+        <div style="padding:16px;background:var(--primary-light);border-radius:8px">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Taryfa</div>
+          <div style="font-size:16px;font-weight:700">${active.tariff ?? '—'}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${active.passType ?? ''}</div>
+        </div>
+        <div style="padding:16px;background:#E8F5E9;border-radius:8px">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Dni całkowite</div>
+          <div style="font-size:28px;font-weight:700;color:var(--success)">${totalDays}</div>
+        </div>
+        <div style="padding:16px;background:#FFF9C4;border-radius:8px">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Dni pozostało</div>
+          <div style="font-size:28px;font-weight:700;color:var(--warning)">${leftDays}</div>
+          <div style="font-size:12px;color:var(--text-muted)">do ${to ? to.toLocaleDateString('pl-PL') : '—'}</div>
+        </div>
+        <div style="padding:16px;background:#ECEFF1;border-radius:8px">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Status</div>
+          <div style="font-size:16px;font-weight:700">${active.status ?? '—'}</div>
+        </div>
+      </div>`;
+    } else if (detail) {
+      detail.innerHTML = '<div style="color:var(--text-muted)">Brak aktywnego karnetu.</div>';
+    }
+  }
+
+  // ========== HISTORIA ==========
+  async function zaladujHistorie() {
+    const rfid = document.getElementById('historia-rfid')?.value?.trim() || myRfid;
+    if (!rfid) return;
+    myRfid = rfid;
+
+    const dateVal = document.getElementById('historia-date')?.value;
+    const url = `/api/raporty/przejazdy?cardId=${encodeURIComponent(rfid)}${dateVal ? '&date=' + dateVal : ''}`;
+
+    const data = await apiFetch(url);
+    const statsEl    = document.getElementById('historia-stats');
+    const headerEl   = document.getElementById('historia-today-header');
+    const timelineEl = document.getElementById('historia-timeline');
+    if (!timelineEl) return;
+
+    if (!data || data.length === 0) {
+      if (statsEl) statsEl.innerHTML = '';
+      if (headerEl) headerEl.innerHTML = '<h3>Brak przejazdów</h3><p>—</p>';
+      timelineEl.innerHTML = '<div style="color:var(--text-muted);padding:8px">Brak skanów w wybranym okresie.</div>';
+      return;
+    }
+
+    // Statystyki
+    const today = dateVal || new Date().toISOString().split('T')[0];
+    const todayScans = data.filter(s => s.scanTime && s.scanTime.startsWith(today));
+    // Ulubiony wyciąg
+    const liftCounts = {};
+    data.forEach(s => { if (s.liftName) liftCounts[s.liftName] = (liftCounts[s.liftName] || 0) + 1; });
+    const topLift = Object.entries(liftCounts).sort((a, b) => b[1] - a[1])[0];
+
+    if (statsEl) {
+      statsEl.innerHTML = `
+        <div class="card" style="margin-bottom:0">
+          <div class="card-body" style="text-align:center">
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Przejazdy w wybranym oknie</div>
+            <div style="font-size:32px;font-weight:700;color:var(--primary)">${data.length}</div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-body" style="text-align:center">
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Przejazdy dziś</div>
+            <div style="font-size:32px;font-weight:700;color:var(--primary)">${todayScans.length}</div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-body" style="text-align:center">
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Ulubiony wyciąg</div>
+            <div style="font-size:16px;font-weight:700">${topLift ? topLift[0] : '—'}</div>
+            <div style="font-size:12px;color:var(--text-muted)">${topLift ? topLift[1] + ' przejazdów' : ''}</div>
+          </div>
+        </div>`;
+    }
+
+    if (headerEl) {
+      const label = dateVal ? new Date(dateVal).toLocaleDateString('pl-PL') : 'Wszystkie przejazdy';
+      headerEl.innerHTML = `<h3>${label}</h3><p>${data.length} wjazdów</p>`;
+    }
+
+    timelineEl.innerHTML = data.map(s => {
+      const time = s.scanTime ? new Date(s.scanTime).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '—';
+      const ok   = s.result === 'pozytywna' || s.result === 'ok' || s.result === null;
+      return `<div class="timeline-item">
+        <span class="scan-icon ${ok ? 'scan-ok' : 'scan-err'}">${ok ? '✅' : '❌'}</span>
+        <div class="tl-right">
+          <div class="tl-event">Wjazd · ${s.liftName ?? '—'}</div>
+          <div class="tl-detail">Bramka: ${s.gateName ?? '—'} · Wynik: ${s.result ?? 'OK'}</div>
+        </div>
+        <span class="tl-time">${time}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ========== ZWROT ==========
+  async function zaladujZwrot() {
+    const rfid = document.getElementById('zwrot-rfid')?.value?.trim() || myRfid;
+    if (!rfid) return;
+    myRfid = rfid;
+
+    const data = await apiFetch(`/api/karnety?cardId=${encodeURIComponent(rfid)}`);
+    const listaEl = document.getElementById('zwrot-karnety-lista');
+    if (!listaEl) return;
+
+    const aktywne = data ? data.filter(p => p.status === 'aktywny' || p.status === 'aktywny_przyszly') : [];
+    if (aktywne.length === 0) {
+      listaEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Brak karnetów możliwych do zwrotu dla tej karty.</div>';
+      return;
+    }
+
+    listaEl.innerHTML = aktywne.map((p, i) => {
+      const from = p.validFrom ? new Date(p.validFrom).toLocaleDateString('pl-PL') : '—';
+      const to   = p.validTo   ? new Date(p.validTo).toLocaleDateString('pl-PL')   : '—';
+      return `<label style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px solid var(--border);border-radius:8px;cursor:pointer" id="zwrot-label-${p.id}">
+        <input type="radio" name="karnet-zwrot" style="accent-color:var(--primary)" value="${p.id}" onchange="wybierzKarnet(${p.id})">
+        <div>
+          <div style="font-weight:600">${p.tariff ?? '—'}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${from} – ${to} · ${p.status} · ${p.cardId}</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <span class="badge badge-success">${p.status}</span>
+        </div>
+      </label>`;
+    }).join('');
+  }
+
+  async function wybierzKarnet(passId) {
+    selectedPassId = passId;
+    // Podświetl wybraną labelkę
+    document.querySelectorAll('#zwrot-karnety-lista label').forEach(l => l.style.borderColor = 'var(--border)');
+    const lbl = document.getElementById(`zwrot-label-${passId}`);
+    if (lbl) lbl.style.borderColor = 'var(--primary)';
+
+    await odswiezPodglad();
+  }
+
+  async function odswiezPodglad() {
+    if (!selectedPassId) return;
+    const returnCard = document.getElementById('zwrot-return-card')?.checked ?? false;
+    const data = await apiFetch(`/api/karnety/${selectedPassId}/symulacja-zwrotu?returnCard=${returnCard}`);
+    const previewEl = document.getElementById('zwrot-preview-body');
+    if (!previewEl || !data) return;
+
+    previewEl.innerHTML = `<div style="display:grid;gap:10px">
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-muted)">Cena karnetu</span><span style="font-weight:600">${data.grossAmount.toFixed(2)} zł</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-muted)">Dni wykupione</span><span>${data.totalDays} dni</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-muted)">Dni wykorzystane</span><span>${data.usedDays} dni</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-muted)">Kwota za niewykorzystane dni</span><span style="font-weight:600;color:var(--success)">${data.refundForUnusedDays.toFixed(2)} zł</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-muted)">Opłata manipulacyjna</span><span style="color:var(--danger)">−${data.manipulationFee.toFixed(2)} zł</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-muted)">Kaucja za kartę</span><span style="color:var(--success)">+${data.depositReturn.toFixed(2)} zł</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:12px 0;font-size:18px;font-weight:700">
+        <span>RAZEM ZWROT</span><span style="color:var(--success)">${data.totalRefund.toFixed(2)} zł</span>
+      </div>
+    </div>`;
+  }
+
+  async function zlozWniosek() {
+    if (!selectedPassId) { alert('⚠️ Wybierz karnet do zwrotu.'); return; }
+    const reason     = document.getElementById('zwrot-reason')?.value?.trim() || 'Brak podanego powodu';
+    const returnCard = document.getElementById('zwrot-return-card')?.checked ?? false;
+    const resultEl   = document.getElementById('zwrot-result');
+    const btn        = document.getElementById('zwrot-btn');
+
+    btn.disabled = true; btn.textContent = '⏳ Wysyłanie…';
+    try {
+      const res = await fetch(`${API}/api/karnety/${selectedPassId}/zwrot`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ reason, returnCard })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (resultEl) {
+          resultEl.innerHTML = `<div class="alert alert-success">✅ Wniosek o zwrot złożony. Kwota zwrotu: <strong>${data.totalRefund.toFixed(2)} zł</strong>. Kasjer przetworzy zwrot przy kasie.</div>`;
+          resultEl.style.display = 'block';
+        }
+        selectedPassId = null;
+        zaladujZwrot();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        if (resultEl) {
+          resultEl.innerHTML = `<div class="alert alert-warning">❌ Błąd: ${err.message ?? res.status}</div>`;
+          resultEl.style.display = 'block';
+        }
+      }
+    } catch (e) {
+      if (resultEl) { resultEl.innerHTML = `<div class="alert alert-warning">❌ Brak połączenia z API</div>`; resultEl.style.display = 'block'; }
+    } finally {
+      btn.disabled = false; btn.textContent = '↩️ Złóż wniosek o zwrot';
+    }
   }
 
   async function loadWyciagi() {

@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SystemStacjiNarciarskiejDLL;
 
 namespace SystemAPI.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/taryfy")]
 public class TaryfyController(SkiResortDbContext db) : ControllerBase

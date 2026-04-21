@@ -227,9 +227,11 @@
     <input class="form-input" type="email" id="loginInput" value="kasjer@stacja.pl" placeholder="e-mail lub login">
 
     <label class="form-label">Hasło</label>
-    <input class="form-input" type="password" value="••••••••" placeholder="••••••••">
+    <input class="form-input" type="password" id="passwordInput" placeholder="••••••••">
 
-    <a href="kasjer.html" class="btn-login" id="loginBtn">Zaloguj się</a>
+    <div id="login-error" style="display:none;margin-bottom:12px;padding:10px 14px;background:#FFEBEE;border-left:3px solid #C62828;border-radius:4px;font-size:13px;color:#C62828;"></div>
+
+    <button type="button" class="btn-login" onclick="doLogin()">Zaloguj się</button>
 
     <div class="divider">lub</div>
 
@@ -238,12 +240,15 @@
     </div>
 
     <div class="demo-hint">
-      <strong>Mockup — dane demonstracyjne</strong>
-      Kasjer: kasjer@stacja.pl | Hasło: dowolne
+      <strong>Dane testowe</strong>
+      Kasjer: kasjer@stacja.pl / haslo123 &nbsp;|&nbsp; Narciarz: narciarz@example.com / haslo123
     </div>
   </div>
 
   <script>
+    const API = 'http://localhost:5000';
+    let currentRole = 'kasjer';
+
     // Śnieżynki w tle
     const container = document.getElementById('snowflakes');
     const flakes = ['❄', '❅', '❆', '✻', '✼'];
@@ -260,18 +265,56 @@
 
     // Przełącznik roli
     function selectRole(role, el) {
+      currentRole = role;
       document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
       el.classList.add('active');
-      const btn = document.getElementById('loginBtn');
-      const input = document.getElementById('loginInput');
-      if (role === 'kasjer') {
-        btn.href = 'kasjer.html';
-        input.value = 'kasjer@stacja.pl';
-      } else {
-        btn.href = 'narciarz.html';
-        input.value = 'narciarz@example.com';
+      document.getElementById('loginInput').value =
+        role === 'kasjer' ? 'kasjer@stacja.pl' : 'narciarz@example.com';
+    }
+
+    // Logowanie przez API
+    async function doLogin() {
+      const email    = document.getElementById('loginInput').value.trim();
+      const password = document.getElementById('passwordInput').value;
+      const errorEl  = document.getElementById('login-error');
+      errorEl.style.display = 'none';
+
+      if (!email || !password) {
+        errorEl.textContent = 'Podaj login i hasło.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, role: currentRole })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          errorEl.textContent = err.message ?? 'Nieprawidłowy login lub hasło.';
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        const data = await res.json();
+        localStorage.setItem('token',  data.token);
+        localStorage.setItem('userId', data.userId);
+        localStorage.setItem('role',   data.role);
+
+        window.location.href = data.role === 'kasjer' ? 'kasjer.html' : 'narciarz.html';
+
+      } catch (e) {
+        errorEl.textContent = `Brak połączenia z API (${e.message}). Czy docker compose up jest uruchomiony?`;
+        errorEl.style.display = 'block';
       }
     }
+
+    // Enter na hasłe triggeruje login
+    document.getElementById('passwordInput')
+      .addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
   </script>
 </body>
 </html>

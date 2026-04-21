@@ -61,19 +61,19 @@ SELECT setval(pg_get_serial_sequence('"dict_report_type"',       'id'), 10);
 -- ========== UŻYTKOWNICY ==========
 
 INSERT INTO "cashier" (id, login, password_hash, is_active) VALUES
-  (1, 'kasjer@stacja.pl',  'hashed_password', true),
-  (2, 'kasjer2@stacja.pl', 'hashed_password', true);
+  (1, 'kasjer@stacja.pl',  '$2a$11$qClV91s8x9Gerg/zss45t.D.JaJq4AK.yd8xHVV5qJ0Y0kibjcDYu', true),
+  (2, 'kasjer2@stacja.pl', '$2a$11$qClV91s8x9Gerg/zss45t.D.JaJq4AK.yd8xHVV5qJ0Y0kibjcDYu', true);
 
 INSERT INTO "administrator" (id, login, password_hash, is_active) VALUES
-  (1, 'admin@stacja.pl', 'hashed_password', true);
+  (1, 'admin@stacja.pl', '$2a$11$qClV91s8x9Gerg/zss45t.D.JaJq4AK.yd8xHVV5qJ0Y0kibjcDYu', true);
 
 INSERT INTO "trail_planner" (id, login, password_hash, is_active) VALUES
-  (1, 'planista@stacja.pl', 'hashed_password', true);
+  (1, 'planista@stacja.pl', '$2a$11$qClV91s8x9Gerg/zss45t.D.JaJq4AK.yd8xHVV5qJ0Y0kibjcDYu', true);
 
 INSERT INTO "user" (id, email, password_hash, created_at) VALUES
-  (1, 'anna.nowak@gmail.com',  'hashed_password', NOW()),
-  (2, 'piotr.kowal@gmail.com', 'hashed_password', NOW()),
-  (3, 'maria.test@gmail.com',  'hashed_password', NOW());
+  (1, 'anna.nowak@gmail.com',  '$2a$11$qClV91s8x9Gerg/zss45t.D.JaJq4AK.yd8xHVV5qJ0Y0kibjcDYu', NOW()),
+  (2, 'piotr.kowal@gmail.com', '$2a$11$qClV91s8x9Gerg/zss45t.D.JaJq4AK.yd8xHVV5qJ0Y0kibjcDYu', NOW()),
+  (3, 'maria.test@gmail.com',  '$2a$11$qClV91s8x9Gerg/zss45t.D.JaJq4AK.yd8xHVV5qJ0Y0kibjcDYu', NOW());
 
 SELECT setval(pg_get_serial_sequence('"cashier"',      'id'), 10);
 SELECT setval(pg_get_serial_sequence('"administrator"','id'), 10);

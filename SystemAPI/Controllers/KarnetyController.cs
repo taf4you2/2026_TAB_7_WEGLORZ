@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SystemStacjiNarciarskiejDLL;
@@ -5,6 +7,7 @@ using SystemStacjiNarciarskiejDLL.Models;
 
 namespace SystemAPI.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/karnety")]
 public class KarnetyController(SkiResortDbContext db) : ControllerBase
@@ -60,6 +63,9 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         if (tariff == null)
             return BadRequest(new { message = "Taryfa nie istnieje." });
 
+        if (req.UserId.HasValue && !await db.Users.AnyAsync(u => u.Id == req.UserId))
+            return BadRequest(new { message = $"Użytkownik {req.UserId} nie istnieje." });
+
         // TODO: pobrać właściwy status "aktywny" z DictPassStatus
         var activeStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "aktywny");
         // TODO: pobrać właściwy status rezerwacji z DictReservationStatus
@@ -71,8 +77,8 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         {
             ReservationNumber = $"RES-{DateTime.UtcNow:yyyyMMddHHmmssfff}",
             ReservationDate = DateTime.UtcNow,
-            StatusId = reservationStatus?.Id
-            // UserId — TODO: przypiąć do zalogowanego użytkownika (z JWT)
+            StatusId = reservationStatus?.Id,
+            UserId = req.UserId
         };
         db.Reservations.Add(reservation);
         await db.SaveChangesAsync();
@@ -88,13 +94,14 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         };
         db.SkiPasses.Add(pass);
 
+        var cashierId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var transaction = new Transaction
         {
             ReservationId = reservation.Id,
+            CashierId = cashierId,
             OperationTypeId = opType?.Id,
             Amount = tariff.Price ?? 0,
             TransactionDate = DateTime.UtcNow
-            // CashierId — TODO: z zalogowanej sesji kasjera
         };
         db.Transactions.Add(transaction);
 
@@ -201,7 +208,7 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
     );
 }
 
-public record CreatePassRequest(string CardId, int TariffId, DateTime ValidFrom, DateTime ValidTo);
+public record CreatePassRequest(string CardId, int TariffId, DateTime ValidFrom, DateTime ValidTo, int? UserId);
 public record BlockPassRequest(string Reason);
 public record ReturnPassRequest(string Reason, bool ReturnCard);
 

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SystemStacjiNarciarskiejDLL;
@@ -5,6 +6,7 @@ using SystemStacjiNarciarskiejDLL.Models;
 
 namespace SystemAPI.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/karty")]
 public class KartyController(SkiResortDbContext db) : ControllerBase

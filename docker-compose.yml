@@ -30,6 +30,7 @@ services:
       ASPNETCORE_HTTP_PORTS: "8080"
       ConnectionStrings__DefaultConnection: "Host=postgres;Database=ski_resort;Username=postgres;"
       DbPassword: "postgres"
+      JwtSecret: "super-tajny-klucz-stacji-narciarskiej-weglorz-2026!"
     depends_on:
       postgres:
         condition: service_healthy

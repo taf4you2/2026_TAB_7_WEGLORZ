@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SystemStacjiNarciarskiejDLL;
 
 namespace SystemAPI.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/transakcje")]
 public class TransakcjeController(SkiResortDbContext db) : ControllerBase

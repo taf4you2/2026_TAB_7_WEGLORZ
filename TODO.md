@@ -27,10 +27,10 @@
 
 ## Krytyczne (blokuje działanie)
 
-- [ ] **Auth: weryfikacja hasła** — w `AuthController` login zwraca `stub-token` bez sprawdzenia hasła. Dodać BCrypt/PBKDF2.
-- [ ] **Auth: JWT** — zastąpić `stub-token` prawdziwym JWT; dodać middleware weryfikacji tokenu.
-- [ ] **CashierId z sesji** — kontrolery `BiletyController`, `KarnetyController`, `RaportZmianyController` mają `// TODO: z sesji kasjera`. Po wdrożeniu JWT odczytywać CashierId z claimu.
-- [ ] **UserId z sesji** — `KarnetyController.CreatePass` nie przypisuje rezerwacji do użytkownika.
+- [OK] **Auth: weryfikacja hasła** — w `AuthController` login zwraca `stub-token` bez sprawdzenia hasła. Dodać BCrypt/PBKDF2.
+- [OK ] **Auth: JWT** — zastąpić `stub-token` prawdziwym JWT; dodać middleware weryfikacji tokenu.
+- [OK] **CashierId z sesji** — kontrolery `BiletyController`, `KarnetyController`, `RaportZmianyController` mają `// TODO: z sesji kasjera`. Po wdrożeniu JWT odczytywać CashierId z claimu.
+- [OK] **UserId z sesji** — `KarnetyController.CreatePass` nie przypisuje rezerwacji do użytkownika.
 
 ## Ważne (brakujące funkcje)
 
@@ -39,7 +39,7 @@
 - [ ] **Status oczekuje\_na\_zwrot** — brak endpointu do zmiany statusu karnetu na `oczekuje_na_zwrot` (narciarz składa wniosek online). Dodać `POST /api/karnety/{id}/wniosek-zwrotu`. *(przeniesione do backlogu)*
 - [ ] **Raport zmiany: gotówka vs karta** — `ShiftReportDto.cashAmount` i `cardAmount` zawsze `0`. Wymaga pola `payment_method` w tabeli `transaction`.
 - [ ] **Zamknięcie zmiany** — `POST /api/raport-zmiany/zamknij` działa ale nie sprawdza czy zmiana jest już zamknięta (jest TODO w kodzie).
-- [ ] **Mockup login.html** — formularz logowania nie wywołuje `POST /api/auth/login`. Dodać `fetch` i przekierowanie do panelu.
+- [OK ] **Mockup login.html** — formularz logowania nie wywołuje `POST /api/auth/login`. Dodać `fetch` i przekierowanie do panelu.
 - [ ] **Transakcje — karta RFID** — kolumna „Karta" w tabeli transakcji w kasjer.html pokazuje `—`; `TransactionDto` nie zawiera `cardId`. Dodać pole do DTO i zapytania w `TransakcjeController`.
 
 ## Jakość / tech debt

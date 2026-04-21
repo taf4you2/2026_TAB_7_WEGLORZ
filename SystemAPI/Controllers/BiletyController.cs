@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SystemStacjiNarciarskiejDLL;
@@ -5,6 +7,7 @@ using SystemStacjiNarciarskiejDLL.Models;
 
 namespace SystemAPI.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/bilety")]
 public class BiletyController(SkiResortDbContext db) : ControllerBase
@@ -57,13 +60,14 @@ public class BiletyController(SkiResortDbContext db) : ControllerBase
             });
         }
 
+        var cashierId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         db.Transactions.Add(new Transaction
         {
             ReservationId = reservation.Id,
+            CashierId = cashierId,
             OperationTypeId = opType?.Id,
             Amount = (tariff.Price ?? 0) * req.Quantity,
             TransactionDate = DateTime.UtcNow
-            // CashierId — TODO: z sesji
         });
 
         await db.SaveChangesAsync();

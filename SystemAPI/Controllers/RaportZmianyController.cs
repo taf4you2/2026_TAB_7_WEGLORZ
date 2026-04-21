@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SystemStacjiNarciarskiejDLL;
@@ -5,15 +7,17 @@ using SystemStacjiNarciarskiejDLL.Models;
 
 namespace SystemAPI.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/raport-zmiany")]
 public class RaportZmianyController(SkiResortDbContext db) : ControllerBase
 {
-    // GET /api/raport-zmiany?cashierId=1
-    // Agreguje transakcje bieżącej zmiany dla danego kasjera.
+    // GET /api/raport-zmiany
+    // Agreguje transakcje bieżącej zmiany zalogowanego kasjera.
     [HttpGet]
-    public async Task<IActionResult> GetShiftReport([FromQuery] int cashierId)
+    public async Task<IActionResult> GetShiftReport()
     {
+        var cashierId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var todayUtc = DateTime.UtcNow.Date;
         var tomorrowUtc = todayUtc.AddDays(1);
 
@@ -47,11 +51,12 @@ public class RaportZmianyController(SkiResortDbContext db) : ControllerBase
         ));
     }
 
-    // POST /api/raport-zmiany/zamknij?cashierId=1
-    // Zamknięcie zmiany — zapisuje ShiftReport i oznacza zmianę jako zakończoną.
+    // POST /api/raport-zmiany/zamknij
+    // Zamknięcie zmiany zalogowanego kasjera — zapisuje ShiftReport.
     [HttpPost("zamknij")]
-    public async Task<IActionResult> CloseShift([FromQuery] int cashierId)
+    public async Task<IActionResult> CloseShift()
     {
+        var cashierId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var todayUtc = DateTime.UtcNow.Date;
         var tomorrowUtc = todayUtc.AddDays(1);
 

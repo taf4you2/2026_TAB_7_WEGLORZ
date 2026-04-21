@@ -438,7 +438,7 @@
   </nav>
 
   <div class="sidebar-bottom">
-    <button class="btn-logout" onclick="window.location='login.html'">
+    <button class="btn-logout" onclick="logout()">
       <span>↩️</span> Wyloguj się
     </button>
   </div>
@@ -769,26 +769,21 @@
       <div class="section-title">Blokada i zwroty</div>
       <div class="section-sub">UC3 Zablokuj bilet · UC11 Zwróć karnet</div>
 
-      <div class="alert alert-warning">
-        ⚠️ Są 2 wnioski o zwrot oczekujące na obsługę
-      </div>
+      <div id="blokuj-alert" class="alert alert-warning" style="display:none"></div>
 
       <div class="card">
-        <div class="card-header"><h3>Wyszukaj karnet / bilet</h3></div>
+        <div class="card-header"><h3>Wyszukaj karnet po karcie RFID</h3></div>
         <div class="card-body">
           <div class="form-row cols-2">
             <div class="form-group">
               <label class="form-label">Karta RFID lub numer karnetu</label>
               <div class="rfid-input-wrap">
-                <input class="form-input" type="text" placeholder="Skanuj kartę lub wpisz numer">
-                <button class="btn btn-primary">🔍 Szukaj</button>
+                <input class="form-input" type="text" id="blokuj-rfid" placeholder="Skanuj kartę lub wpisz numer">
+                <button class="btn btn-primary" onclick="szukajKarnet()">🔍 Szukaj</button>
               </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Lub imię i nazwisko</label>
-              <input class="form-input" type="text" placeholder="Jan Kowalski">
-            </div>
           </div>
+          <div id="blokuj-szukaj-result" style="margin-top:12px"></div>
         </div>
       </div>
 
@@ -798,31 +793,8 @@
           <thead>
             <tr><th>Narciarz</th><th>Karta RFID</th><th>Karnet</th><th>Ważny do</th><th>Pozostało dni</th><th>Zwrot szacunkowy</th><th>Akcja</th></tr>
           </thead>
-          <tbody>
-            <tr>
-              <td><strong>Marta Nowak</strong></td>
-              <td><span class="chip">E9:CC:01:A3</span></td>
-              <td>5-dniowy · Dorosły</td>
-              <td>20.04.2026</td>
-              <td><span class="badge badge-info">4 dni</span></td>
-              <td><strong>356 zł</strong></td>
-              <td>
-                <button class="btn btn-danger btn-sm">Zwróć</button>
-                <button class="btn btn-outline btn-sm">Blokuj</button>
-              </td>
-            </tr>
-            <tr>
-              <td><strong>Tomasz Wiśniewski</strong></td>
-              <td><span class="chip">B1:23:FC:D4</span></td>
-              <td>3-dniowy · Senior</td>
-              <td>16.04.2026</td>
-              <td><span class="badge badge-warning">1 dzień</span></td>
-              <td><strong>69 zł</strong></td>
-              <td>
-                <button class="btn btn-danger btn-sm">Zwróć</button>
-                <button class="btn btn-outline btn-sm">Blokuj</button>
-              </td>
-            </tr>
+          <tbody id="blokuj-tbody">
+            <tr><td colspan="7" style="text-align:center;color:var(--text-muted)">Ładowanie…</td></tr>
           </tbody>
         </table>
       </div>
@@ -998,13 +970,28 @@
     el.classList.add('selected');
   }
 
+  // ========== AUTH GUARD ==========
+  const token = localStorage.getItem('token');
+  if (!token || localStorage.getItem('role') !== 'kasjer') {
+    window.location.replace('login.html');
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('role');
+    window.location.href = 'login.html';
+  }
+
   // ========== API ==========
   const API = 'http://localhost:5000';
-  const CASHIER_ID = 1;
+  const CASHIER_ID = parseInt(localStorage.getItem('userId')) || 1;
 
   async function apiFetch(path) {
     try {
-      const res = await fetch(API + path);
+      const res = await fetch(API + path, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (!res.ok) throw new Error(res.status);
       return await res.json();
     } catch (e) {
@@ -1165,7 +1152,7 @@
     try {
       const res = await fetch(`${API}/api/karnety`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(body)
       });
       console.log('[karnet] status:', res.status);
@@ -1215,7 +1202,7 @@
     try {
       const res = await fetch(`${API}/api/bilety`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(body)
       });
       console.log('[bilet] status:', res.status);
@@ -1245,6 +1232,116 @@
   document.getElementById('btnSprzedajKarnet')
     ?.addEventListener('click', sprzedajKarnet);
 
+  // ========== BLOKUJ / ZWROTY ==========
+  async function loadZwroty() {
+    const data = await apiFetch('/api/zwroty/oczekujace');
+    const alertEl = document.getElementById('blokuj-alert');
+    const tbody   = document.getElementById('blokuj-tbody');
+    if (!alertEl || !tbody) return;
+
+    if (!data) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">Błąd ładowania danych</td></tr>';
+      return;
+    }
+
+    alertEl.textContent = data.length > 0
+      ? `⚠️ Jest ${data.length} wniosek(ów) o zwrot oczekujący na obsługę`
+      : '✅ Brak oczekujących wniosków o zwrot';
+    alertEl.className = data.length > 0 ? 'alert alert-warning' : 'alert alert-success';
+    alertEl.style.display = 'block';
+
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">Brak wniosków</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.map(r => {
+      const validTo = r.validTo ? new Date(r.validTo).toLocaleDateString('pl-PL') : '—';
+      const daysClass = r.remainingDays <= 1 ? 'badge-warning' : 'badge-info';
+      return `<tr>
+        <td><strong>${r.ownerEmail ?? '—'}</strong></td>
+        <td><span class="chip">${r.cardRfid}</span></td>
+        <td>${r.passType ?? '—'}</td>
+        <td>${validTo}</td>
+        <td><span class="badge ${daysClass}">${r.remainingDays} dni</span></td>
+        <td><strong>${r.estimatedRefund.toFixed(2)} zł</strong></td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="zwrocKarnet(${r.passId})">Zwróć</button>
+          <button class="btn btn-outline btn-sm" onclick="blokujKarnet(${r.passId})">Blokuj</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function blokujKarnet(passId) {
+    const reason = prompt('Podaj powód blokady:');
+    if (!reason) return;
+    try {
+      const res = await fetch(`${API}/api/karnety/${passId}/blokuj`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ reason })
+      });
+      if (res.status === 204) {
+        alert('✅ Karnet zablokowany.');
+        loadZwroty();
+        document.getElementById('blokuj-szukaj-result').innerHTML = '';
+      } else {
+        alert(`❌ Błąd: ${await parseError(res)}`);
+      }
+    } catch (e) { alert('❌ Brak połączenia z API'); }
+  }
+
+  async function zwrocKarnet(passId) {
+    if (!confirm('Czy na pewno wykonać zwrot tego karnetu?')) return;
+    try {
+      const res = await fetch(`${API}/api/karnety/${passId}/zwrot`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ reason: 'Wniosek klienta', returnCard: false })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        alert(`✅ Zwrot wykonany. Kwota zwrotu: ${data.totalRefund.toFixed(2)} zł`);
+        loadZwroty();
+        document.getElementById('blokuj-szukaj-result').innerHTML = '';
+      } else {
+        alert(`❌ Błąd: ${await parseError(res)}`);
+      }
+    } catch (e) { alert('❌ Brak połączenia z API'); }
+  }
+
+  async function szukajKarnet() {
+    const rfid = document.getElementById('blokuj-rfid')?.value?.trim();
+    const resultEl = document.getElementById('blokuj-szukaj-result');
+    if (!rfid || !resultEl) return;
+
+    const data = await apiFetch(`/api/karnety?cardId=${encodeURIComponent(rfid)}`);
+    if (!data || data.length === 0) {
+      resultEl.innerHTML = '<div class="alert alert-warning">⚠️ Nie znaleziono karnetów dla tej karty.</div>';
+      return;
+    }
+
+    resultEl.innerHTML = `<table>
+      <thead><tr><th>ID</th><th>Taryfa</th><th>Status</th><th>Od</th><th>Do</th><th>Akcja</th></tr></thead>
+      <tbody>${data.map(p => {
+        const from = p.validFrom ? new Date(p.validFrom).toLocaleDateString('pl-PL') : '—';
+        const to   = p.validTo   ? new Date(p.validTo).toLocaleDateString('pl-PL')   : '—';
+        const sc   = p.status === 'aktywny' ? 'badge-success' : p.status === 'zablokowany' ? 'badge-danger' : 'badge-warning';
+        return `<tr>
+          <td>#${p.id}</td>
+          <td>${p.tariff ?? '—'}</td>
+          <td><span class="badge ${sc}">${p.status ?? '—'}</span></td>
+          <td>${from}</td><td>${to}</td>
+          <td>
+            <button class="btn btn-danger btn-sm" onclick="zwrocKarnet(${p.id})">Zwróć</button>
+            <button class="btn btn-outline btn-sm" onclick="blokujKarnet(${p.id})">Blokuj</button>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+
   // Ładuj przy starcie
   loadDashboard();
   loadTaryfy();
@@ -1256,6 +1353,7 @@
     if (id === 'transakcje') loadTransakcje();
     if (id === 'raport')     loadRaport();
     if (id === 'karty')      loadKarty();
+    if (id === 'blokuj')     loadZwroty();
   };
 </script>
 </body>

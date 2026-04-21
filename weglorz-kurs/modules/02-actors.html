@@ -1,0 +1,235 @@
+<section class="module" id="module-2" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+
+    <!-- SCREEN 1: Intro do aktorów -->
+    <div class="screen">
+      <div class="module-eyebrow">Moduł 2</div>
+      <h1 class="module-title">Trzej aktorzy systemu</h1>
+      <p class="module-subtitle">Każdy dobry system ma wyraźnie podzielone role. Tutaj mamy trzech "aktorów" — każdy ma jeden, dobrze zdefiniowany obowiązek.</p>
+
+      <div class="callout callout-accent" style="margin-top: var(--space-8)">
+        <div class="callout-icon">🎭</div>
+        <div class="callout-content">
+          <strong class="callout-title">Metafora: Straż pożarna</strong>
+          <p>Dyspozytor (BramkaAPI) odbiera zgłoszenia. Strażacy (Bramka) są na miejscu zdarzenia. Regulamin (DLL) mówi wszystkim, czym jest "pożar", "wóz" i "hydrant". Każdy robi swoje.</p>
+        </div>
+      </div>
+
+      <div class="pattern-cards" style="margin-top: var(--space-8)">
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-1)">
+          <div class="pattern-icon" style="background: var(--color-actor-1)">🖥️</div>
+          <h4 class="pattern-title">Bramka</h4>
+          <p class="pattern-desc">Aplikacja konsolowa. Widzi klawiaturę, wyświetla zegar, wczytuje ID karty.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+          <div class="pattern-icon" style="background: var(--color-actor-2)">🌐</div>
+          <h4 class="pattern-title">BramkaAPI</h4>
+          <p class="pattern-desc">Serwer webowy. Przyjmuje zapytania HTTP, pyta bazę danych, odsyła odpowiedź.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+          <div class="pattern-icon" style="background: var(--color-actor-3)">📦</div>
+          <h4 class="pattern-title">SystemDLL</h4>
+          <p class="pattern-desc">Biblioteka modeli. Nie robi nic sama — ale dostarcza definicje, z których korzystają pozostali.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: Bramka - terminal konsolowy -->
+    <div class="screen">
+      <h2 class="screen-title">Aktor #1 — Terminal bramkowy</h2>
+      <p>Plik: <code class="inline-code">Bramka/Program.cs</code></p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <span class="translation-label">KOD</span>
+          <pre><code>
+<span class="code-line"><span class="code-keyword">string</span> url = <span class="code-string">$"http://localhost:49226/api/bramka/sprawdz-karte/{cardId}"</span>;</span>
+<span class="code-line"></span>
+<span class="code-line">Task&lt;HttpResponseMessage&gt; getTask = client.<span class="code-function">GetAsync</span>(url);</span>
+<span class="code-line"></span>
+<span class="code-line"><span class="code-keyword">while</span> (!getTask.IsCompleted)</span>
+<span class="code-line">{</span>
+<span class="code-line">    <span class="code-function">OdswiezNaglowek</span>();</span>
+<span class="code-line">    <span class="code-keyword">await</span> Task.<span class="code-function">Delay</span>(<span class="code-number">200</span>);</span>
+<span class="code-line">}</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PO POLSKU</span>
+          <div class="translation-lines">
+            <p class="tl">Buduje <span class="tooltip-term" data-tooltip="URL (Uniform Resource Locator) to adres w sieci — jak adres pocztowy, ale dla stron i serwisów. Tutaj wskazuje, gdzie mieszka BramkaAPI.">URL</span> do BramkaAPI, wklejając ID karty do ścieżki.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Wysyła zapytanie <span class="tooltip-term" data-tooltip="HTTP GET to rodzaj zapytania sieciowego — &quot;daj mi informację o tym adresie&quot;. Jak wysłanie pytania przez radio.">HTTP GET</span> do API — ale nie czeka bezczynnie.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Dopóki odpowiedź nie wróci, odświeża zegar w nagłówku co 200ms...</p>
+            <p class="tl">...żeby ekran nie wyglądał na zamrożony podczas czekania.</p>
+            <p class="tl">&nbsp;</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-info" style="margin-top: var(--space-6)">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <strong class="callout-title">Wzorzec: programowanie asynchroniczne</strong>
+          <p>Terminal nie "zamraża się" czekając na odpowiedź — robi coś pożytecznego (odświeża zegar). To jak pisanie e-maila podczas czekania na odpowiedź, zamiast siedzenia z wpatrzonymi oczami w skrzynkę.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: BramkaAPI -->
+    <div class="screen">
+      <h2 class="screen-title">Aktor #2 — BramkaAPI</h2>
+      <p>Plik: <code class="inline-code">BramkaAPI/Controllers/BramkaController.cs</code></p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <span class="translation-label">KOD</span>
+          <pre><code>
+<span class="code-line">[<span class="code-function">HttpGet</span>(<span class="code-string">"sprawdz-karte/{id}"</span>)]</span>
+<span class="code-line"><span class="code-keyword">public async</span> Task&lt;IActionResult&gt; <span class="code-function">SprawdzKarte</span>(<span class="code-keyword">string</span> id)</span>
+<span class="code-line">{</span>
+<span class="code-line">    <span class="code-keyword">var</span> karta = <span class="code-keyword">await</span> _context.Cards</span>
+<span class="code-line">        .<span class="code-function">FirstOrDefaultAsync</span>(c => c.Id == id);</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="code-keyword">if</span> (karta == <span class="code-keyword">null</span>)</span>
+<span class="code-line">        <span class="code-keyword">return</span> <span class="code-function">NotFound</span>(<span class="code-keyword">new</span> { Wiadomosc = <span class="code-string">"Karta nie istnieje."</span> });</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="code-keyword">bool</span> czyAktywna = karta.StatusId == <span class="code-number">1</span>;</span>
+<span class="code-line">    <span class="code-keyword">return</span> <span class="code-function">Ok</span>(<span class="code-keyword">new</span> { Aktywna = czyAktywna });</span>
+<span class="code-line">}</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PO POLSKU</span>
+          <div class="translation-lines">
+            <p class="tl">Ta funkcja obsługuje zapytania GET pod ścieżką /sprawdz-karte/{id}.</p>
+            <p class="tl">Przyjmuje ID karty jako parametr w adresie URL.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Pyta bazę danych: "Czy istnieje karta o tym ID?"</p>
+            <p class="tl">Bierze pierwszą pasującą kartę (lub nic, jeśli nie ma).</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Jeśli karta nie istnieje — odsyła błąd 404 z wyjaśnieniem.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">StatusId == 1 oznacza "aktywna". Sprawdza to jak strażnik na liście.</p>
+            <p class="tl">Zwraca odpowiedź: aktywna = tak lub nie.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: DLL - biblioteka modeli -->
+    <div class="screen">
+      <h2 class="screen-title">Aktor #3 — Biblioteka modeli (DLL)</h2>
+      <p>Plik: <code class="inline-code">SystemStacjiNarciarskiejDLL/Models/Card.cs</code></p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <span class="translation-label">KOD</span>
+          <pre><code>
+<span class="code-line">[<span class="code-function">Table</span>(<span class="code-string">"card"</span>)]</span>
+<span class="code-line"><span class="code-keyword">public class</span> <span class="code-type">Card</span></span>
+<span class="code-line">{</span>
+<span class="code-line">    [<span class="code-function">Key</span>]</span>
+<span class="code-line">    <span class="code-keyword">public string</span> Id { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; } = <span class="code-keyword">null</span>!;</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="code-keyword">public int</span>? StatusId { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">    <span class="code-keyword">public virtual</span> DictCardStatus? Status { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="code-keyword">public virtual</span> ICollection&lt;SkiPass&gt; SkiPasses { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">}</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PO POLSKU</span>
+          <div class="translation-lines">
+            <p class="tl">Ta klasa odpowiada tabeli "card" w bazie danych.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">[Key] = "To jest unikalny identyfikator" — jak numer PESEL dla karty.</p>
+            <p class="tl">Id to ciąg znaków (tekst), np. numer seryjny na karcie RFID.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">StatusId to liczba (1 = aktywna, 2 = nieaktywna itd.).</p>
+            <p class="tl">Status to pełny obiekt statusu — Entity Framework pobiera go sam z bazy.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Karta może mieć wiele karnetów (SkiPasses) przez lata użytkowania.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-accent" style="margin-top: var(--space-6)">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <strong class="callout-title">Kluczowe pojęcie: Model danych</strong>
+          <p><span class="tooltip-term" data-tooltip="Model danych (klasa) to blueprint — szablon opisujący, jak wygląda pewna rzecz w systemie. Klasa Card mówi: &quot;każda karta ma ID, status i listę karnetów&quot;.">Model danych</span> to blueprint dla danych — jak formularz, który musi być wypełniony. Zamiast mówić "mam jakiś obiekt z jakimiś polami", mówisz: "mam Card z Id, StatusId i SkiPasses". Precyzja pomaga AI generować właściwy kod.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: Chat między aktorami -->
+    <div class="screen">
+      <h2 class="screen-title">Jak aktorzy "rozmawiają" ze sobą</h2>
+      <p>Wyobraź sobie, że narciarz właśnie odbił kartę. Oto co się dzieje w systemie:</p>
+
+      <div class="chat-window" id="chat-module2" style="margin-top: var(--space-6)">
+        <div class="chat-messages">
+          <div class="chat-message" data-msg="0" data-sender="bramka" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-1)">B</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-1)">Terminal (Bramka)</span>
+              <p>Ktoś przyłożył kartę! ID: <strong>SKI-2024-1337</strong>. Hej API, czy ta karta jest aktywna?</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-msg="1" data-sender="api" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">A</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-2)">BramkaAPI</span>
+              <p>Na mnie! Sprawdzam w bazie... <em>(zapytanie SQL leci do PostgreSQL...)</em></p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-msg="2" data-sender="db" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-4)">DB</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-4)">PostgreSQL</span>
+              <p>Znalazłem! Karta SKI-2024-1337, StatusId = 1. Tu masz obiekt Card.</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-msg="3" data-sender="api" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">A</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-2)">BramkaAPI</span>
+              <p>StatusId == 1, więc aktywna = true. Odpowiadam terminalowi: <code>{"Aktywna": true}</code></p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-msg="4" data-sender="bramka" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-1)">B</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-1)">Terminal (Bramka)</span>
+              <p>Aktywna = true! Wyświetlam na ekranie: <strong style="color: var(--color-success)">&gt;&gt;&gt; ZAPRASZAMY &lt;&lt;&lt;</strong> 🎿</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-typing" id="chat-typing-module2" style="display:none">
+          <div class="chat-avatar" id="typing-avatar">?</div>
+          <div class="chat-typing-dots">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+          </div>
+        </div>
+
+        <div class="chat-controls">
+          <button class="btn chat-next-btn">Następna wiadomość</button>
+          <button class="btn chat-all-btn">Odtwórz wszystkie</button>
+          <button class="btn chat-reset-btn">Zacznij od nowa</button>
+          <span class="chat-progress"></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>

@@ -1,0 +1,207 @@
+<section class="module" id="module-3" style="background: var(--color-bg)">
+  <div class="module-content">
+
+    <!-- SCREEN 1: Intro -->
+    <div class="screen">
+      <div class="module-eyebrow">Moduł 3</div>
+      <h1 class="module-title">Podróż karty przez system</h1>
+      <p class="module-subtitle">Prześledźmy krok po kroku, co dokładnie dzieje się od momentu przyłożenia karty do wyświetlenia wyniku — jak prąd płynący przez obwód.</p>
+
+      <div class="callout callout-info" style="margin-top: var(--space-8)">
+        <div class="callout-icon">⚡</div>
+        <div class="callout-content">
+          <strong class="callout-title">Metafora: Obwód elektryczny</strong>
+          <p>Odbicie karty to wciśnięcie włącznika. Sygnał (ID karty) płynie przez kolejne "stacje" jak prąd przez obwód. Każda stacja robi swoje i przekazuje wynik dalej — aż do żarówki (ekranu bramki), która się zapala lub nie.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: Animacja przepływu danych -->
+    <div class="screen">
+      <h2 class="screen-title">Animacja: przepływ danych krok po kroku</h2>
+      <p>Kliknij "Następny krok", żeby zobaczyć, przez kogo przechodzi ID karty:</p>
+
+      <div class="flow-animation" style="margin-top: var(--space-6)" data-steps='[
+        {"highlight":"flow-actor-1","label":"Narciarz przykłada kartę. Terminal odczytuje ID i wyswietla: Sprawdzanie karty..."},
+        {"highlight":"flow-actor-1","label":"Terminal buduje URL i wysyla zapytanie HTTP GET do BramkaAPI przez siec lokalną","packet":true,"from":"actor-1","to":"actor-2"},
+        {"highlight":"flow-actor-2","label":"BramkaAPI odbiera zapytanie. Kontroler SprawdzKarte zostaje wywolany z parametrem ID."},
+        {"highlight":"flow-actor-2","label":"BramkaAPI wysyla zapytanie SQL do bazy danych: SELECT * FROM card WHERE id = &apos;...&apos;","packet":true,"from":"actor-2","to":"actor-3"},
+        {"highlight":"flow-actor-3","label":"PostgreSQL szuka karty w tabeli. Zwraca rekord z StatusId = 1 (aktywna).","packet":true,"from":"actor-3","to":"actor-2"},
+        {"highlight":"flow-actor-2","label":"BramkaAPI sprawdza: StatusId == 1? Tak. Buduje odpowiedz JSON: {Aktywna: true}"},
+        {"highlight":"flow-actor-2","label":"BramkaAPI odsyla odpowiedz HTTP 200 OK z danymi do Terminala","packet":true,"from":"actor-2","to":"actor-1"},
+        {"highlight":"flow-actor-1","label":"Terminal odczytuje JSON. Aktywna = true. Wyswietla zielony napis: ZAPRASZAMY!"}
+      ]'>
+        <div class="flow-actors">
+          <div class="flow-actor" id="flow-actor-1">
+            <div class="flow-actor-icon">🖥️</div>
+            <span>Terminal (Bramka)</span>
+          </div>
+          <div class="flow-actor" id="flow-actor-2">
+            <div class="flow-actor-icon">🌐</div>
+            <span>BramkaAPI</span>
+          </div>
+          <div class="flow-actor" id="flow-actor-3">
+            <div class="flow-actor-icon">🗄️</div>
+            <span>PostgreSQL</span>
+          </div>
+        </div>
+
+        <div class="flow-packet" id="flow-packet"></div>
+
+        <div class="flow-step-label" id="flow-label">Kliknij "Następny krok", żeby zacząć</div>
+
+        <div class="flow-controls">
+          <button class="btn flow-next-btn">Następny krok</button>
+          <button class="btn flow-reset-btn">Zacznij od nowa</button>
+          <span class="flow-progress"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: HTTP i JSON w szczegółach -->
+    <div class="screen">
+      <h2 class="screen-title">Co to jest HTTP i JSON?</h2>
+      <p>Terminal i BramkaAPI rozmawiają przez sieć. Używają do tego dwóch konwencji:</p>
+
+      <div class="pattern-cards" style="margin-top: var(--space-8)">
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+          <div class="pattern-icon" style="background: var(--color-actor-2)">📨</div>
+          <h4 class="pattern-title"><span class="tooltip-term" data-tooltip="HTTP (HyperText Transfer Protocol) to język, którym programy rozmawiają przez sieć. GET oznacza &quot;pobierz dane&quot;, POST — &quot;wyślij dane&quot;. Każda odpowiedź ma kod: 200 = OK, 404 = nie znaleziono, 500 = błąd serwera.">HTTP</span> — język konwersacji</h4>
+          <p class="pattern-desc">Zapytanie: <code style="font-family: var(--font-mono); font-size: 0.8em">GET /api/bramka/sprawdz-karte/SKI-123</code></p>
+          <p class="pattern-desc">Odpowiedź: <code style="font-family: var(--font-mono); font-size: 0.8em">200 OK</code> (lub 404 Not Found)</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-1)">
+          <div class="pattern-icon" style="background: var(--color-actor-1)">📦</div>
+          <h4 class="pattern-title"><span class="tooltip-term" data-tooltip="JSON (JavaScript Object Notation) to popularny format wymiany danych — jak paczka z danymi opisanymi jako {klucz: wartość}. Czytelny zarówno dla ludzi, jak i komputerów.">JSON</span> — format paczki z danymi</h4>
+          <p class="pattern-desc">Odpowiedź API wygląda tak:</p>
+          <pre style="background: var(--color-bg-code); color: #CDD6F4; padding: var(--space-3); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.8em; white-space: pre-wrap; margin-top: var(--space-2)">{ "Aktywna": true, "Wiadomosc": "Karta jest aktywna." }</pre>
+        </div>
+      </div>
+
+      <div class="translation-block animate-in" style="margin-top: var(--space-8)">
+        <div class="translation-code">
+          <span class="translation-label">KOD</span>
+          <pre><code>
+<span class="code-line"><span class="code-keyword">string</span> jsonResponse = <span class="code-keyword">await</span> response.Content.<span class="code-function">ReadAsStringAsync</span>();</span>
+<span class="code-line"></span>
+<span class="code-line"><span class="code-keyword">using</span> JsonDocument doc = JsonDocument.<span class="code-function">Parse</span>(jsonResponse);</span>
+<span class="code-line">JsonElement root = doc.RootElement;</span>
+<span class="code-line"></span>
+<span class="code-line"><span class="code-keyword">if</span> (root.<span class="code-function">TryGetProperty</span>(<span class="code-string">"aktywna"</span>, <span class="code-keyword">out</span> JsonElement prop)</span>
+<span class="code-line">    || root.<span class="code-function">TryGetProperty</span>(<span class="code-string">"Aktywna"</span>, <span class="code-keyword">out</span> prop))</span>
+<span class="code-line">{</span>
+<span class="code-line">    czyAktywna = prop.<span class="code-function">GetBoolean</span>();</span>
+<span class="code-line">}</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PO POLSKU</span>
+          <div class="translation-lines">
+            <p class="tl">Odczytuje treść odpowiedzi jako tekst (ciąg JSON).</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Zamienia tekst JSON w strukturę, po której można "chodzić" jak po drzewie.</p>
+            <p class="tl">Bierze korzeń tej struktury.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Szuka pola o nazwie "aktywna" (małymi literami)...</p>
+            <p class="tl">...albo "Aktywna" (wielką literą). Sprawdza obydwa warianty, bo JSON jest case-sensitive!</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Jeśli znalazł — odczytuje wartość jako true/false.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: Obsługa błędów -->
+    <div class="screen">
+      <h2 class="screen-title">Co jeśli coś pójdzie nie tak?</h2>
+      <p>System obsługuje trzy różne scenariusze porażki — każdy inaczej:</p>
+
+      <div class="flow-steps" style="margin-top: var(--space-6)">
+        <div class="step-card" style="border-left: 4px solid var(--color-error)">
+          <div class="step-number" style="background: var(--color-error)">!</div>
+          <div class="step-content">
+            <h4>Karta nie istnieje w bazie</h4>
+            <p>API zwraca <span class="tooltip-term" data-tooltip="HTTP 404 Not Found to kod odpowiedzi oznaczający, że szukany zasób nie istnieje. Jak szukanie kogoś w książce telefonicznej, kto tam nie jest.">HTTP 404</span>. Terminal wyświetla czerwony napis: "ODMÓWIONO DOSTĘPU (Karta nie istnieje)".</p>
+          </div>
+        </div>
+        <div class="step-card" style="border-left: 4px solid var(--color-error)">
+          <div class="step-number" style="background: var(--color-error)">!</div>
+          <div class="step-content">
+            <h4>Karta istnieje, ale jest nieaktywna</h4>
+            <p>API zwraca 200 OK, ale z <code style="font-family: var(--font-mono)">"Aktywna": false</code>. Terminal wyświetla: "ODMÓWIONO DOSTĘPU".</p>
+          </div>
+        </div>
+        <div class="step-card" style="border-left: 4px solid var(--color-actor-4)">
+          <div class="step-number" style="background: var(--color-actor-4)">?</div>
+          <div class="step-content">
+            <h4>Brak połączenia z API</h4>
+            <p>Terminal łapie <span class="tooltip-term" data-tooltip="HttpRequestException to błąd rzucany przez program C#, gdy zapytanie HTTP nie może dotrzeć do serwera — np. gdy API jest wyłączone lub sieć jest niedostępna.">HttpRequestException</span> i wyświetla żółty komunikat o błędzie połączenia. Nie crashuje!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-accent" style="margin-top: var(--space-6)">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <strong class="callout-title">Zasada: każdy błąd powinien dać czytelny komunikat</strong>
+          <p>Dobry system nie "wysypuje się" po cichu — pokazuje użytkownikowi, co poszło nie tak i jakim kolorem. Trzy różne scenariusze błędu = trzy różne kolory w terminalu. To wzorzec warty skopiowania w każdym projekcie.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: Quiz -->
+    <div class="screen">
+      <h2 class="screen-title">Przetestuj swoje rozumienie przepływu</h2>
+
+      <div class="quiz-container" id="quiz-module3">
+        <div class="quiz-question-block"
+             data-correct="option-b"
+             data-explanation-right="Dokładnie! BramkaAPI działa jako pośrednik — Terminal nie rozmawia bezpośrednio z bazą danych. To ważny wzorzec: oddzielenie warstwy logiki od danych."
+             data-explanation-wrong="Niezupełnie. Terminal nigdy nie odpytuje bazy bezpośrednio — zawsze przez BramkaAPI. Dzięki temu można zmienić bazę danych bez dotykania terminala.">
+          <h3 class="quiz-question">Terminal chce sprawdzić kartę o ID "SKI-999". Do kogo wysyła zapytanie?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Bezpośrednio do bazy danych PostgreSQL</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Do BramkaAPI przez HTTP GET</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Do biblioteki DLL przez wywołanie funkcji</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <div class="quiz-question-block"
+             data-correct="option-c"
+             data-explanation-right="Tak! HTTP 404 = zasób nie istnieje. Terminal obsługuje to osobno — wyświetla inny komunikat niż w przypadku karty nieaktywnej."
+             data-explanation-wrong="Niekoniecznie — gdy karta nie istnieje w ogóle, API zwraca 404 (nie znaleziono), a nie 200 z Aktywna:false. To dwie różne sytuacje.">
+          <h3 class="quiz-question">Użytkownik wpisał ID karty, której nigdy nie było w systemie. Jaki kod HTTP zwróci BramkaAPI?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>200 OK z Aktywna: false</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>500 Internal Server Error</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>404 Not Found</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-module3')">Sprawdź odpowiedzi</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module3')">Spróbuj ponownie</button>
+      </div>
+    </div>
+
+  </div>
+</section>

@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Stacji Narciarskiej — Kurs Interaktywny</title>
+
+  <!-- Google Fonts: Bricolage Grotesque · DM Sans · JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Teal accent — dopasowany do zimowej, technologicznej atmosfery stacji narciarskiej -->
+  <style>
+    :root {
+      --color-accent:       #2A7B9B;
+      --color-accent-hover: #1F6280;
+      --color-accent-light: #E4F2F7;
+      --color-accent-muted: #5A9DB8;
+    }
+  </style>
+
+  <script src="main.js" defer></script>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+    <div class="nav-inner">
+      <span class="nav-title">System Stacji Narciarskiej</span>
+      <div class="nav-dots" id="nav-dots" role="tablist">
+        <button class="nav-dot" data-target="module-1" data-tooltip="Co to jest?" role="tab" aria-label="Moduł 1: Co to jest?"></button>
+        <button class="nav-dot" data-target="module-2" data-tooltip="Trzej aktorzy" role="tab" aria-label="Moduł 2: Trzej aktorzy"></button>
+        <button class="nav-dot" data-target="module-3" data-tooltip="Podróż karty" role="tab" aria-label="Moduł 3: Podróż karty"></button>
+        <button class="nav-dot" data-target="module-4" data-tooltip="Baza danych" role="tab" aria-label="Moduł 4: Baza danych"></button>
+        <button class="nav-dot" data-target="module-5" data-tooltip="Docker i architektura" role="tab" aria-label="Moduł 5: Docker i architektura"></button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <!-- modules/*.html content is assembled here by build.sh -->
+<section class="module" id="module-1" style="background: var(--color-bg)">
+  <div class="module-content">
+
+    <!-- SCREEN 1: Hero -->
+    <div class="screen">
+      <div class="module-eyebrow">Moduł 1</div>
+      <h1 class="module-title">System Stacji Narciarskiej</h1>
+      <p class="module-subtitle">Wyobraź sobie: przyjeżdżasz na stok. Odbijasz kartę przy wyciągu. Szlaban się otwiera. Co tak naprawdę się właśnie wydarzyło?</p>
+
+      <div class="pattern-cards" style="margin-top: var(--space-10)">
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+          <div class="pattern-icon" style="background: var(--color-actor-2)">🎿</div>
+          <h4 class="pattern-title">Dla narciarza</h4>
+          <p class="pattern-desc">Kupujesz karnet, dostajesz kartę, odbijasz przy bramce — i jedziesz. Proste.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-1)">
+          <div class="pattern-icon" style="background: var(--color-actor-1)">💻</div>
+          <h4 class="pattern-title">Pod spodem</h4>
+          <p class="pattern-desc">Trzy programy rozmawiają ze sobą w ułamku sekundy, zanim szlaban się ruszy.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+          <div class="pattern-icon" style="background: var(--color-actor-3)">🗄️</div>
+          <h4 class="pattern-title">W tle</h4>
+          <p class="pattern-desc">Baza danych przechowuje każdą kartę, karnet, transakcję i skan bramki.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: Scenariusz użytkownika -->
+    <div class="screen">
+      <h2 class="screen-title">Zacznijmy od początku — od Twojej karty</h2>
+      <p>Wyobraź sobie, że jesteś narciarzem. Oto Twoja podróż przez ten system:</p>
+
+      <div class="flow-steps" style="margin-top: var(--space-8)">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>Rezerwujesz online</h4>
+            <p>Twoja <span class="tooltip-term" data-tooltip="Rezerwacja to zarezerwowanie miejsca lub usługi z wyprzedzeniem — system zapisuje ją w bazie danych jako &quot;planowany zakup&quot;.">rezerwacja</span> trafia do bazy danych. Otrzymujesz numer rezerwacji.</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>Przychodzisz do kasy</h4>
+            <p>Kasjer aktywuje Twój karnet — <span class="tooltip-term" data-tooltip="SkiPass to cyfrowy bilet narciarski powiązany z fizyczną kartą RFID. Sam SkiPass to wpis w bazie danych, a karta to plastikowy nośnik.">SkiPass</span> — i przypisuje go do fizycznej karty.</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>Podchodzisz do bramki</h4>
+            <p>Terminal bramkowy czyta ID Twojej karty i pyta <span class="tooltip-term" data-tooltip="API (Application Programming Interface) to &quot;okienko&quot;, przez które programy rozmawiają ze sobą. BramkaAPI to okienko między terminalem a bazą danych.">API</span>, czy możesz wejść.</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h4>Szlaban się otwiera</h4>
+            <p>API sprawdza bazę danych. Karta jest aktywna — terminal wyświetla <strong style="color: var(--color-success)">ZAPRASZAMY</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-accent" style="margin-top: var(--space-8)">
+        <div class="callout-icon">⚡</div>
+        <div class="callout-content">
+          <strong class="callout-title">Wszystko to dzieje się w ułamku sekundy</strong>
+          <p>Od odbicia karty do decyzji systemu mija mniej niż sekunda. Za tą sekundą kryje się sieć połączeń między trzema programami i bazą danych.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: Mapa systemu -->
+    <div class="screen">
+      <h2 class="screen-title">Mapa całego systemu — zanim zagłębimy się w szczegóły</h2>
+
+      <div class="arch-diagram" style="margin-top: var(--space-6)">
+        <div class="arch-zone" style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); margin-bottom: var(--space-4); background: var(--color-surface-warm)">
+          <h4 class="arch-zone-label" style="color: var(--color-actor-1); font-weight: 700; margin-bottom: var(--space-4)">🖥️ Terminal bramkowy (Bramka)</h4>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary)">Program konsolowy uruchomiony przy każdym wyciągu. Wyświetla zegar, pyta o ID karty, pokazuje wynik.</p>
+        </div>
+        <div style="text-align: center; font-size: var(--text-2xl); color: var(--color-accent); margin: var(--space-2) 0">↕</div>
+        <div class="arch-zone" style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); margin-bottom: var(--space-4); background: var(--color-surface-warm)">
+          <h4 class="arch-zone-label" style="color: var(--color-actor-2); font-weight: 700; margin-bottom: var(--space-4)">🌐 BramkaAPI</h4>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary)"><span class="tooltip-term" data-tooltip="Web API to serwer, który odpowiada na zapytania przez internet (lub sieć lokalną). Działa jak kelner — przyjmuje zamówienia i przynosi odpowiedzi.">Web API</span> — serwer pośredniczący między terminalem a bazą danych. Weryfikuje karty i zwraca decyzję.</p>
+        </div>
+        <div style="text-align: center; font-size: var(--text-2xl); color: var(--color-accent); margin: var(--space-2) 0">↕</div>
+        <div class="arch-zone" style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); margin-bottom: var(--space-4); background: var(--color-surface-warm)">
+          <h4 class="arch-zone-label" style="color: var(--color-actor-3); font-weight: 700; margin-bottom: var(--space-4)">📦 SystemStacjiNarciarskiejDLL</h4>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary)">Wspólna <span class="tooltip-term" data-tooltip="Biblioteka (DLL) to zestaw gotowych narzędzi, które inne programy mogą pożyczać. Zamiast pisać ten sam kod dwa razy, wkładasz go do biblioteki.">biblioteka</span> z modelami danych — definicje tego, czym jest Karta, Karnet, Bramka, Użytkownik.</p>
+        </div>
+        <div style="text-align: center; font-size: var(--text-2xl); color: var(--color-accent); margin: var(--space-2) 0">↕</div>
+        <div class="arch-zone" style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); background: var(--color-surface-warm)">
+          <h4 class="arch-zone-label" style="color: var(--color-actor-4); font-weight: 700; margin-bottom: var(--space-4)">🗄️ PostgreSQL</h4>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary)"><span class="tooltip-term" data-tooltip="PostgreSQL to relacyjna baza danych — program do przechowywania danych w tabelach, między którymi istnieją powiązania (relacje).">Relacyjna baza danych</span> przechowująca karty, karnety, rezerwacje, transakcje i logi skanów.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: Quiz -->
+    <div class="screen">
+      <h2 class="screen-title">Sprawdź, czy to "kliknęło"</h2>
+
+      <div class="quiz-container" id="quiz-module1">
+        <div class="quiz-question-block"
+             data-correct="option-b"
+             data-explanation-right="Dokładnie! Terminal (Bramka) zadaje pytanie, BramkaAPI szuka odpowiedzi w bazie danych, a DLL dostarcza wspólny słownik pojęć."
+             data-explanation-wrong="Niemal — ale to Terminal pyta API, a nie odwrotnie. To ważna kolejność: zawsze klient pyta serwer.">
+          <h3 class="quiz-question">Narciarz odbija kartę przy bramce. W jakiej kolejności reagują elementy systemu?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>BramkaAPI → Terminal → Baza danych</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Terminal → BramkaAPI → Baza danych</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Baza danych → BramkaAPI → Terminal</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <div class="quiz-question-block"
+             data-correct="option-c"
+             data-explanation-right="Właśnie! DLL to wspólny słownik. Gdyby API i Terminal miały własne, różne definicje karty, kod szybko by się pokłócił ze sobą."
+             data-explanation-wrong="Niekoniecznie — główna rola DLL to nie komunikacja ani przechowywanie danych, ale dostarczenie wspólnych definicji dla wszystkich pozostałych.">
+          <h3 class="quiz-question">Po co istnieje osobna biblioteka DLL (SystemStacjiNarciarskiejDLL)?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Żeby komunikować się z Internetem</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Żeby przechowywać dane narciarzy</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Żeby BramkaAPI i Bramka używały tych samych definicji kart i karnetów</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-module1')">Sprawdź odpowiedzi</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module1')">Spróbuj ponownie</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+<section class="module" id="module-2" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+
+    <!-- SCREEN 1: Intro do aktorów -->
+    <div class="screen">
+      <div class="module-eyebrow">Moduł 2</div>
+      <h1 class="module-title">Trzej aktorzy systemu</h1>
+      <p class="module-subtitle">Każdy dobry system ma wyraźnie podzielone role. Tutaj mamy trzech "aktorów" — każdy ma jeden, dobrze zdefiniowany obowiązek.</p>
+
+      <div class="callout callout-accent" style="margin-top: var(--space-8)">
+        <div class="callout-icon">🎭</div>
+        <div class="callout-content">
+          <strong class="callout-title">Metafora: Straż pożarna</strong>
+          <p>Dyspozytor (BramkaAPI) odbiera zgłoszenia. Strażacy (Bramka) są na miejscu zdarzenia. Regulamin (DLL) mówi wszystkim, czym jest "pożar", "wóz" i "hydrant". Każdy robi swoje.</p>
+        </div>
+      </div>
+
+      <div class="pattern-cards" style="margin-top: var(--space-8)">
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-1)">
+          <div class="pattern-icon" style="background: var(--color-actor-1)">🖥️</div>
+          <h4 class="pattern-title">Bramka</h4>
+          <p class="pattern-desc">Aplikacja konsolowa. Widzi klawiaturę, wyświetla zegar, wczytuje ID karty.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+          <div class="pattern-icon" style="background: var(--color-actor-2)">🌐</div>
+          <h4 class="pattern-title">BramkaAPI</h4>
+          <p class="pattern-desc">Serwer webowy. Przyjmuje zapytania HTTP, pyta bazę danych, odsyła odpowiedź.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+          <div class="pattern-icon" style="background: var(--color-actor-3)">📦</div>
+          <h4 class="pattern-title">SystemDLL</h4>
+          <p class="pattern-desc">Biblioteka modeli. Nie robi nic sama — ale dostarcza definicje, z których korzystają pozostali.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: Bramka - terminal konsolowy -->
+    <div class="screen">
+      <h2 class="screen-title">Aktor #1 — Terminal bramkowy</h2>
+      <p>Plik: <code class="inline-code">Bramka/Program.cs</code></p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <span class="translation-label">KOD</span>
+          <pre><code>
+<span class="code-line"><span class="code-keyword">string</span> url = <span class="code-string">$"http://localhost:49226/api/bramka/sprawdz-karte/{cardId}"</span>;</span>
+<span class="code-line"></span>
+<span class="code-line">Task&lt;HttpResponseMessage&gt; getTask = client.<span class="code-function">GetAsync</span>(url);</span>
+<span class="code-line"></span>
+<span class="code-line"><span class="code-keyword">while</span> (!getTask.IsCompleted)</span>
+<span class="code-line">{</span>
+<span class="code-line">    <span class="code-function">OdswiezNaglowek</span>();</span>
+<span class="code-line">    <span class="code-keyword">await</span> Task.<span class="code-function">Delay</span>(<span class="code-number">200</span>);</span>
+<span class="code-line">}</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PO POLSKU</span>
+          <div class="translation-lines">
+            <p class="tl">Buduje <span class="tooltip-term" data-tooltip="URL (Uniform Resource Locator) to adres w sieci — jak adres pocztowy, ale dla stron i serwisów. Tutaj wskazuje, gdzie mieszka BramkaAPI.">URL</span> do BramkaAPI, wklejając ID karty do ścieżki.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Wysyła zapytanie <span class="tooltip-term" data-tooltip="HTTP GET to rodzaj zapytania sieciowego — &quot;daj mi informację o tym adresie&quot;. Jak wysłanie pytania przez radio.">HTTP GET</span> do API — ale nie czeka bezczynnie.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Dopóki odpowiedź nie wróci, odświeża zegar w nagłówku co 200ms...</p>
+            <p class="tl">...żeby ekran nie wyglądał na zamrożony podczas czekania.</p>
+            <p class="tl">&nbsp;</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-info" style="margin-top: var(--space-6)">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <strong class="callout-title">Wzorzec: programowanie asynchroniczne</strong>
+          <p>Terminal nie "zamraża się" czekając na odpowiedź — robi coś pożytecznego (odświeża zegar). To jak pisanie e-maila podczas czekania na odpowiedź, zamiast siedzenia z wpatrzonymi oczami w skrzynkę.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: BramkaAPI -->
+    <div class="screen">
+      <h2 class="screen-title">Aktor #2 — BramkaAPI</h2>
+      <p>Plik: <code class="inline-code">BramkaAPI/Controllers/BramkaController.cs</code></p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <span class="translation-label">KOD</span>
+          <pre><code>
+<span class="code-line">[<span class="code-function">HttpGet</span>(<span class="code-string">"sprawdz-karte/{id}"</span>)]</span>
+<span class="code-line"><span class="code-keyword">public async</span> Task&lt;IActionResult&gt; <span class="code-function">SprawdzKarte</span>(<span class="code-keyword">string</span> id)</span>
+<span class="code-line">{</span>
+<span class="code-line">    <span class="code-keyword">var</span> karta = <span class="code-keyword">await</span> _context.Cards</span>
+<span class="code-line">        .<span class="code-function">FirstOrDefaultAsync</span>(c => c.Id == id);</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="code-keyword">if</span> (karta == <span class="code-keyword">null</span>)</span>
+<span class="code-line">        <span class="code-keyword">return</span> <span class="code-function">NotFound</span>(<span class="code-keyword">new</span> { Wiadomosc = <span class="code-string">"Karta nie istnieje."</span> });</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="code-keyword">bool</span> czyAktywna = karta.StatusId == <span class="code-number">1</span>;</span>
+<span class="code-line">    <span class="code-keyword">return</span> <span class="code-function">Ok</span>(<span class="code-keyword">new</span> { Aktywna = czyAktywna });</span>
+<span class="code-line">}</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PO POLSKU</span>
+          <div class="translation-lines">
+            <p class="tl">Ta funkcja obsługuje zapytania GET pod ścieżką /sprawdz-karte/{id}.</p>
+            <p class="tl">Przyjmuje ID karty jako parametr w adresie URL.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Pyta bazę danych: "Czy istnieje karta o tym ID?"</p>
+            <p class="tl">Bierze pierwszą pasującą kartę (lub nic, jeśli nie ma).</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Jeśli karta nie istnieje — odsyła błąd 404 z wyjaśnieniem.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">StatusId == 1 oznacza "aktywna". Sprawdza to jak strażnik na liście.</p>
+            <p class="tl">Zwraca odpowiedź: aktywna = tak lub nie.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: DLL - biblioteka modeli -->
+    <div class="screen">
+      <h2 class="screen-title">Aktor #3 — Biblioteka modeli (DLL)</h2>
+      <p>Plik: <code class="inline-code">SystemStacjiNarciarskiejDLL/Models/Card.cs</code></p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <span class="translation-label">KOD</span>
+          <pre><code>
+<span class="code-line">[<span class="code-function">Table</span>(<span class="code-string">"card"</span>)]</span>
+<span class="code-line"><span class="code-keyword">public class</span> <span class="code-type">Card</span></span>
+<span class="code-line">{</span>
+<span class="code-line">    [<span class="code-function">Key</span>]</span>
+<span class="code-line">    <span class="code-keyword">public string</span> Id { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; } = <span class="code-keyword">null</span>!;</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="code-keyword">public int</span>? StatusId { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">    <span class="code-keyword">public virtual</span> DictCardStatus? Status { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="code-keyword">public virtual</span> ICollection&lt;SkiPass&gt; SkiPasses { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">}</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PO POLSKU</span>
+          <div class="translation-lines">
+            <p class="tl">Ta klasa odpowiada tabeli "card" w bazie danych.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">[Key] = "To jest unikalny identyfikator" — jak numer PESEL dla karty.</p>
+            <p class="tl">Id to ciąg znaków (tekst), np. numer seryjny na karcie RFID.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">StatusId to liczba (1 = aktywna, 2 = nieaktywna itd.).</p>
+            <p class="tl">Status to pełny obiekt statusu — Entity Framework pobiera go sam z bazy.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Karta może mieć wiele karnetów (SkiPasses) przez lata użytkowania.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-accent" style="margin-top: var(--space-6)">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <strong class="callout-title">Kluczowe pojęcie: Model danych</strong>
+          <p><span class="tooltip-term" data-tooltip="Model danych (klasa) to blueprint — szablon opisujący, jak wygląda pewna rzecz w systemie. Klasa Card mówi: &quot;każda karta ma ID, status i listę karnetów&quot;.">Model danych</span> to blueprint dla danych — jak formularz, który musi być wypełniony. Zamiast mówić "mam jakiś obiekt z jakimiś polami", mówisz: "mam Card z Id, StatusId i SkiPasses". Precyzja pomaga AI generować właściwy kod.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: Chat między aktorami -->
+    <div class="screen">
+      <h2 class="screen-title">Jak aktorzy "rozmawiają" ze sobą</h2>
+      <p>Wyobraź sobie, że narciarz właśnie odbił kartę. Oto co się dzieje w systemie:</p>
+
+      <div class="chat-window" id="chat-module2" style="margin-top: var(--space-6)">
+        <div class="chat-messages">
+          <div class="chat-message" data-msg="0" data-sender="bramka" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-1)">B</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-1)">Terminal (Bramka)</span>
+              <p>Ktoś przyłożył kartę! ID: <strong>SKI-2024-1337</strong>. Hej API, czy ta karta jest aktywna?</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-msg="1" data-sender="api" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">A</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-2)">BramkaAPI</span>
+              <p>Na mnie! Sprawdzam w bazie... <em>(zapytanie SQL leci do PostgreSQL...)</em></p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-msg="2" data-sender="db" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-4)">DB</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-4)">PostgreSQL</span>
+              <p>Znalazłem! Karta SKI-2024-1337, StatusId = 1. Tu masz obiekt Card.</p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-msg="3" data-sender="api" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2)">A</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-2)">BramkaAPI</span>
+              <p>StatusId == 1, więc aktywna = true. Odpowiadam terminalowi: <code>{"Aktywna": true}</code></p>
+            </div>
+          </div>
+
+          <div class="chat-message" data-msg="4" data-sender="bramka" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-1)">B</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-1)">Terminal (Bramka)</span>
+              <p>Aktywna = true! Wyświetlam na ekranie: <strong style="color: var(--color-success)">&gt;&gt;&gt; ZAPRASZAMY &lt;&lt;&lt;</strong> 🎿</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-typing" id="chat-typing-module2" style="display:none">
+          <div class="chat-avatar" id="typing-avatar">?</div>
+          <div class="chat-typing-dots">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+          </div>
+        </div>
+
+        <div class="chat-controls">
+          <button class="btn chat-next-btn">Następna wiadomość</button>
+          <button class="btn chat-all-btn">Odtwórz wszystkie</button>
+          <button class="btn chat-reset-btn">Zacznij od nowa</button>
+          <span class="chat-progress"></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+<section class="module" id="module-3" style="background: var(--color-bg)">
+  <div class="module-content">
+
+    <!-- SCREEN 1: Intro -->
+    <div class="screen">
+      <div class="module-eyebrow">Moduł 3</div>
+      <h1 class="module-title">Podróż karty przez system</h1>
+      <p class="module-subtitle">Prześledźmy krok po kroku, co dokładnie dzieje się od momentu przyłożenia karty do wyświetlenia wyniku — jak prąd płynący przez obwód.</p>
+
+      <div class="callout callout-info" style="margin-top: var(--space-8)">
+        <div class="callout-icon">⚡</div>
+        <div class="callout-content">
+          <strong class="callout-title">Metafora: Obwód elektryczny</strong>
+          <p>Odbicie karty to wciśnięcie włącznika. Sygnał (ID karty) płynie przez kolejne "stacje" jak prąd przez obwód. Każda stacja robi swoje i przekazuje wynik dalej — aż do żarówki (ekranu bramki), która się zapala lub nie.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: Animacja przepływu danych -->
+    <div class="screen">
+      <h2 class="screen-title">Animacja: przepływ danych krok po kroku</h2>
+      <p>Kliknij "Następny krok", żeby zobaczyć, przez kogo przechodzi ID karty:</p>
+
+      <div class="flow-animation" style="margin-top: var(--space-6)" data-steps='[
+        {"highlight":"flow-actor-1","label":"Narciarz przykłada kartę. Terminal odczytuje ID i wyswietla: Sprawdzanie karty..."},
+        {"highlight":"flow-actor-1","label":"Terminal buduje URL i wysyla zapytanie HTTP GET do BramkaAPI przez siec lokalną","packet":true,"from":"actor-1","to":"actor-2"},
+        {"highlight":"flow-actor-2","label":"BramkaAPI odbiera zapytanie. Kontroler SprawdzKarte zostaje wywolany z parametrem ID."},
+        {"highlight":"flow-actor-2","label":"BramkaAPI wysyla zapytanie SQL do bazy danych: SELECT * FROM card WHERE id = &apos;...&apos;","packet":true,"from":"actor-2","to":"actor-3"},
+        {"highlight":"flow-actor-3","label":"PostgreSQL szuka karty w tabeli. Zwraca rekord z StatusId = 1 (aktywna).","packet":true,"from":"actor-3","to":"actor-2"},
+        {"highlight":"flow-actor-2","label":"BramkaAPI sprawdza: StatusId == 1? Tak. Buduje odpowiedz JSON: {Aktywna: true}"},
+        {"highlight":"flow-actor-2","label":"BramkaAPI odsyla odpowiedz HTTP 200 OK z danymi do Terminala","packet":true,"from":"actor-2","to":"actor-1"},
+        {"highlight":"flow-actor-1","label":"Terminal odczytuje JSON. Aktywna = true. Wyswietla zielony napis: ZAPRASZAMY!"}
+      ]'>
+        <div class="flow-actors">
+          <div class="flow-actor" id="flow-actor-1">
+            <div class="flow-actor-icon">🖥️</div>
+            <span>Terminal (Bramka)</span>
+          </div>
+          <div class="flow-actor" id="flow-actor-2">
+            <div class="flow-actor-icon">🌐</div>
+            <span>BramkaAPI</span>
+          </div>
+          <div class="flow-actor" id="flow-actor-3">
+            <div class="flow-actor-icon">🗄️</div>
+            <span>PostgreSQL</span>
+          </div>
+        </div>
+
+        <div class="flow-packet" id="flow-packet"></div>
+
+        <div class="flow-step-label" id="flow-label">Kliknij "Następny krok", żeby zacząć</div>
+
+        <div class="flow-controls">
+          <button class="btn flow-next-btn">Następny krok</button>
+          <button class="btn flow-reset-btn">Zacznij od nowa</button>
+          <span class="flow-progress"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: HTTP i JSON w szczegółach -->
+    <div class="screen">
+      <h2 class="screen-title">Co to jest HTTP i JSON?</h2>
+      <p>Terminal i BramkaAPI rozmawiają przez sieć. Używają do tego dwóch konwencji:</p>
+
+      <div class="pattern-cards" style="margin-top: var(--space-8)">
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+          <div class="pattern-icon" style="background: var(--color-actor-2)">📨</div>
+          <h4 class="pattern-title"><span class="tooltip-term" data-tooltip="HTTP (HyperText Transfer Protocol) to język, którym programy rozmawiają przez sieć. GET oznacza &quot;pobierz dane&quot;, POST — &quot;wyślij dane&quot;. Każda odpowiedź ma kod: 200 = OK, 404 = nie znaleziono, 500 = błąd serwera.">HTTP</span> — język konwersacji</h4>
+          <p class="pattern-desc">Zapytanie: <code style="font-family: var(--font-mono); font-size: 0.8em">GET /api/bramka/sprawdz-karte/SKI-123</code></p>
+          <p class="pattern-desc">Odpowiedź: <code style="font-family: var(--font-mono); font-size: 0.8em">200 OK</code> (lub 404 Not Found)</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-1)">
+          <div class="pattern-icon" style="background: var(--color-actor-1)">📦</div>
+          <h4 class="pattern-title"><span class="tooltip-term" data-tooltip="JSON (JavaScript Object Notation) to popularny format wymiany danych — jak paczka z danymi opisanymi jako {klucz: wartość}. Czytelny zarówno dla ludzi, jak i komputerów.">JSON</span> — format paczki z danymi</h4>
+          <p class="pattern-desc">Odpowiedź API wygląda tak:</p>
+          <pre style="background: var(--color-bg-code); color: #CDD6F4; padding: var(--space-3); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.8em; white-space: pre-wrap; margin-top: var(--space-2)">{ "Aktywna": true, "Wiadomosc": "Karta jest aktywna." }</pre>
+        </div>
+      </div>
+
+      <div class="translation-block animate-in" style="margin-top: var(--space-8)">
+        <div class="translation-code">
+          <span class="translation-label">KOD</span>
+          <pre><code>
+<span class="code-line"><span class="code-keyword">string</span> jsonResponse = <span class="code-keyword">await</span> response.Content.<span class="code-function">ReadAsStringAsync</span>();</span>
+<span class="code-line"></span>
+<span class="code-line"><span class="code-keyword">using</span> JsonDocument doc = JsonDocument.<span class="code-function">Parse</span>(jsonResponse);</span>
+<span class="code-line">JsonElement root = doc.RootElement;</span>
+<span class="code-line"></span>
+<span class="code-line"><span class="code-keyword">if</span> (root.<span class="code-function">TryGetProperty</span>(<span class="code-string">"aktywna"</span>, <span class="code-keyword">out</span> JsonElement prop)</span>
+<span class="code-line">    || root.<span class="code-function">TryGetProperty</span>(<span class="code-string">"Aktywna"</span>, <span class="code-keyword">out</span> prop))</span>
+<span class="code-line">{</span>
+<span class="code-line">    czyAktywna = prop.<span class="code-function">GetBoolean</span>();</span>
+<span class="code-line">}</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PO POLSKU</span>
+          <div class="translation-lines">
+            <p class="tl">Odczytuje treść odpowiedzi jako tekst (ciąg JSON).</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Zamienia tekst JSON w strukturę, po której można "chodzić" jak po drzewie.</p>
+            <p class="tl">Bierze korzeń tej struktury.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Szuka pola o nazwie "aktywna" (małymi literami)...</p>
+            <p class="tl">...albo "Aktywna" (wielką literą). Sprawdza obydwa warianty, bo JSON jest case-sensitive!</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Jeśli znalazł — odczytuje wartość jako true/false.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: Obsługa błędów -->
+    <div class="screen">
+      <h2 class="screen-title">Co jeśli coś pójdzie nie tak?</h2>
+      <p>System obsługuje trzy różne scenariusze porażki — każdy inaczej:</p>
+
+      <div class="flow-steps" style="margin-top: var(--space-6)">
+        <div class="step-card" style="border-left: 4px solid var(--color-error)">
+          <div class="step-number" style="background: var(--color-error)">!</div>
+          <div class="step-content">
+            <h4>Karta nie istnieje w bazie</h4>
+            <p>API zwraca <span class="tooltip-term" data-tooltip="HTTP 404 Not Found to kod odpowiedzi oznaczający, że szukany zasób nie istnieje. Jak szukanie kogoś w książce telefonicznej, kto tam nie jest.">HTTP 404</span>. Terminal wyświetla czerwony napis: "ODMÓWIONO DOSTĘPU (Karta nie istnieje)".</p>
+          </div>
+        </div>
+        <div class="step-card" style="border-left: 4px solid var(--color-error)">
+          <div class="step-number" style="background: var(--color-error)">!</div>
+          <div class="step-content">
+            <h4>Karta istnieje, ale jest nieaktywna</h4>
+            <p>API zwraca 200 OK, ale z <code style="font-family: var(--font-mono)">"Aktywna": false</code>. Terminal wyświetla: "ODMÓWIONO DOSTĘPU".</p>
+          </div>
+        </div>
+        <div class="step-card" style="border-left: 4px solid var(--color-actor-4)">
+          <div class="step-number" style="background: var(--color-actor-4)">?</div>
+          <div class="step-content">
+            <h4>Brak połączenia z API</h4>
+            <p>Terminal łapie <span class="tooltip-term" data-tooltip="HttpRequestException to błąd rzucany przez program C#, gdy zapytanie HTTP nie może dotrzeć do serwera — np. gdy API jest wyłączone lub sieć jest niedostępna.">HttpRequestException</span> i wyświetla żółty komunikat o błędzie połączenia. Nie crashuje!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-accent" style="margin-top: var(--space-6)">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <strong class="callout-title">Zasada: każdy błąd powinien dać czytelny komunikat</strong>
+          <p>Dobry system nie "wysypuje się" po cichu — pokazuje użytkownikowi, co poszło nie tak i jakim kolorem. Trzy różne scenariusze błędu = trzy różne kolory w terminalu. To wzorzec warty skopiowania w każdym projekcie.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: Quiz -->
+    <div class="screen">
+      <h2 class="screen-title">Przetestuj swoje rozumienie przepływu</h2>
+
+      <div class="quiz-container" id="quiz-module3">
+        <div class="quiz-question-block"
+             data-correct="option-b"
+             data-explanation-right="Dokładnie! BramkaAPI działa jako pośrednik — Terminal nie rozmawia bezpośrednio z bazą danych. To ważny wzorzec: oddzielenie warstwy logiki od danych."
+             data-explanation-wrong="Niezupełnie. Terminal nigdy nie odpytuje bazy bezpośrednio — zawsze przez BramkaAPI. Dzięki temu można zmienić bazę danych bez dotykania terminala.">
+          <h3 class="quiz-question">Terminal chce sprawdzić kartę o ID "SKI-999". Do kogo wysyła zapytanie?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Bezpośrednio do bazy danych PostgreSQL</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Do BramkaAPI przez HTTP GET</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Do biblioteki DLL przez wywołanie funkcji</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <div class="quiz-question-block"
+             data-correct="option-c"
+             data-explanation-right="Tak! HTTP 404 = zasób nie istnieje. Terminal obsługuje to osobno — wyświetla inny komunikat niż w przypadku karty nieaktywnej."
+             data-explanation-wrong="Niekoniecznie — gdy karta nie istnieje w ogóle, API zwraca 404 (nie znaleziono), a nie 200 z Aktywna:false. To dwie różne sytuacje.">
+          <h3 class="quiz-question">Użytkownik wpisał ID karty, której nigdy nie było w systemie. Jaki kod HTTP zwróci BramkaAPI?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>200 OK z Aktywna: false</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>500 Internal Server Error</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>404 Not Found</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-module3')">Sprawdź odpowiedzi</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module3')">Spróbuj ponownie</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+<section class="module" id="module-4" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+
+    <!-- SCREEN 1: Intro -->
+    <div class="screen">
+      <div class="module-eyebrow">Moduł 4</div>
+      <h1 class="module-title">Baza danych — rdzeń systemu</h1>
+      <p class="module-subtitle">Wszystkie dane narciarzy, karty, karnety, rezerwacje — żyją w jednym miejscu. Jak to jest zorganizowane i dlaczego to ma znaczenie?</p>
+
+      <div class="callout callout-accent" style="margin-top: var(--space-8)">
+        <div class="callout-icon">📚</div>
+        <div class="callout-content">
+          <strong class="callout-title">Metafora: Główna księga rachunkowa</strong>
+          <p>Baza danych to jak wielka księga rachunkowa w tradycyjnej firmie — każda transakcja, każda karta, każdy skan jest zapisany w odpowiedniej kolumnie, każdy wiersz to inny rekord. Zmieniasz jedną pozycję — zmiana jest widoczna wszędzie.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: Tabele w bazie danych -->
+    <div class="screen">
+      <h2 class="screen-title">Co siedzi w bazie danych?</h2>
+      <p>System ma 20+ tabel. Oto te, które są w centrum akcji:</p>
+
+      <div class="pattern-cards" style="margin-top: var(--space-6)">
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+          <div class="pattern-icon" style="background: var(--color-actor-2)">💳</div>
+          <h4 class="pattern-title">card</h4>
+          <p class="pattern-desc">Fizyczna karta RFID. Ma unikalne ID (tekst), status (1=aktywna, 2=nieaktywna) i datę dodania.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-1)">
+          <div class="pattern-icon" style="background: var(--color-actor-1)">🎫</div>
+          <h4 class="pattern-title">ski_pass</h4>
+          <p class="pattern-desc">Karnet narciarski. Powiązany z kartą, taryfą i rezerwacją. Ma daty ważności i status.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+          <div class="pattern-icon" style="background: var(--color-actor-3)">🚪</div>
+          <h4 class="pattern-title">gate_scan</h4>
+          <p class="pattern-desc">Log każdego skanowania bramki. Kto, kiedy, przy której bramce, z jakim wynikiem.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-4)">
+          <div class="pattern-icon" style="background: var(--color-actor-4)">📋</div>
+          <h4 class="pattern-title">reservation</h4>
+          <p class="pattern-desc">Rezerwacja zakupu karnetu. Łączy użytkownika z zamówieniem, ma numer i status.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-5)">
+          <div class="pattern-icon" style="background: var(--color-actor-5)">💰</div>
+          <h4 class="pattern-title">transaction</h4>
+          <p class="pattern-desc">Każda operacja finansowa: zakup, zwrot depozytu. Powiązana z kasjerem i rezerwacją.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-text-secondary)">
+          <div class="pattern-icon" style="background: var(--color-text-secondary)">📖</div>
+          <h4 class="pattern-title">dict_*</h4>
+          <p class="pattern-desc">Słowniki: statusy kart, typy karnetów, trudność tras itd. Dają nazwy liczbom-statusom.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: Entity Framework -->
+    <div class="screen">
+      <h2 class="screen-title">Entity Framework — tłumacz między C# a bazą danych</h2>
+      <p>API nie pisze ręcznie zapytań SQL. Używa <span class="tooltip-term" data-tooltip="Entity Framework Core to ORM (Object-Relational Mapper) — narzędzie, które automatycznie tłumaczy operacje na obiektach C# na zapytania SQL do bazy danych. Zamiast pisać SELECT * FROM card, piszesz _context.Cards.Find(id).">Entity Framework Core</span> — warstwy, która zamienia kod C# na SQL automatycznie.</p>
+
+      <div class="translation-block animate-in" style="margin-top: var(--space-6)">
+        <div class="translation-code">
+          <span class="translation-label">KOD C#</span>
+          <pre><code>
+<span class="code-line"><span class="code-keyword">var</span> karty = <span class="code-keyword">await</span> _context.Cards</span>
+<span class="code-line">    .<span class="code-function">Select</span>(c => <span class="code-keyword">new</span></span>
+<span class="code-line">    {</span>
+<span class="code-line">        c.Id,</span>
+<span class="code-line">        c.StatusId,</span>
+<span class="code-line">        c.PhysicalCondition,</span>
+<span class="code-line">        c.AddedToPoolAt</span>
+<span class="code-line">    })</span>
+<span class="code-line">    .<span class="code-function">ToListAsync</span>();</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">CO TO ROBI</span>
+          <div class="translation-lines">
+            <p class="tl">Pyta bazę danych o wszystkie karty w tabeli "card"...</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">...ale nie pobieramy całych obiektów Card — tylko wybrane kolumny.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Chcemy: ID, status, stan fizyczny i datę dodania do puli.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">ToListAsync = wykonaj zapytanie i wróć z listą wyników (asynchronicznie).</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: var(--space-6); padding: var(--space-4); background: var(--color-bg-code); border-radius: var(--radius-md); font-family: var(--font-mono); font-size: var(--text-sm); color: #CDD6F4; white-space: pre-wrap">
+<span style="color: #89DCEB">-- Co Entity Framework generuje w tle:</span>
+SELECT id, status_id, physical_condition, added_to_pool_at
+FROM card
+      </div>
+    </div>
+
+    <!-- SCREEN 4: DbContext jako "kontrola ruchu" -->
+    <div class="screen">
+      <h2 class="screen-title">DbContext — zarządca połączeń</h2>
+      <p>Plik: <code class="inline-code">SystemStacjiNarciarskiejDLL/SkiResortDbContext.cs</code></p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <span class="translation-label">KOD</span>
+          <pre><code>
+<span class="code-line"><span class="code-keyword">public class</span> <span class="code-type">SkiResortDbContext</span> : <span class="code-type">DbContext</span></span>
+<span class="code-line">{</span>
+<span class="code-line">    <span class="code-keyword">public</span> DbSet&lt;<span class="code-type">Card</span>&gt; Cards { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">    <span class="code-keyword">public</span> DbSet&lt;<span class="code-type">SkiPass</span>&gt; SkiPasses { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">    <span class="code-keyword">public</span> DbSet&lt;<span class="code-type">Gate</span>&gt; Gates { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">    <span class="code-keyword">public</span> DbSet&lt;<span class="code-type">GateScan</span>&gt; GateScans { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">    <span class="code-keyword">public</span> DbSet&lt;<span class="code-type">Reservation</span>&gt; Reservations { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">    <span class="code-keyword">public</span> DbSet&lt;<span class="code-type">Transaction</span>&gt; Transactions { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">}</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PO POLSKU</span>
+          <div class="translation-lines">
+            <p class="tl">DbContext to "brama" do bazy danych. Dziedziczy gotowe mechanizmy.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Każde DbSet to "okno" do jednej tabeli. Cards = tabela "card".</p>
+            <p class="tl">SkiPasses = tabela "ski_pass". Przez te okna czytasz i piszesz dane.</p>
+            <p class="tl">Gates = tabela "gate". Fizyczne bramki wjazdowe.</p>
+            <p class="tl">GateScans = tabela "gate_scan". Historia skanowań.</p>
+            <p class="tl">Reservations = tabela "reservation". Zamówienia online.</p>
+            <p class="tl">Transactions = tabela "transaction". Historia płatności.</p>
+            <p class="tl">&nbsp;</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-info" style="margin-top: var(--space-6)">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <strong class="callout-title">DbContext jako "pojedynczy punkt prawdy"</strong>
+          <p>Cały system rozmawia z bazą danych przez jeden <span class="tooltip-term" data-tooltip="DbContext (Database Context) to klasa zarządzająca połączeniem z bazą danych i wszystkimi tabelami. To jak centrala telefoniczna — wszystkie zapytania do bazy idą przez nią.">DbContext</span>. Dzięki temu masz jeden punkt, który kontroluje dostęp do danych — łatwo logować, łatwo testować, łatwo zmienić bazę danych.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: Relacje między tabelami -->
+    <div class="screen">
+      <h2 class="screen-title">Jak tabele są ze sobą powiązane?</h2>
+      <p>Tabele to nie izolowane wyspy — są ze sobą połączone <span class="tooltip-term" data-tooltip="Klucz obcy (foreign key) to pole w tabeli wskazujące na rekord w innej tabeli. Np. ski_pass.card_id wskazuje na card.id — każdy karnet wie, do której karty należy.">kluczami obcymi</span>. Oto główna sieć powiązań:</p>
+
+      <div style="margin-top: var(--space-6); display: grid; gap: var(--space-3)">
+        <div style="padding: var(--space-4); background: var(--color-surface); border-radius: var(--radius-sm); border: 1px solid var(--color-border); display: flex; align-items: center; gap: var(--space-4)">
+          <span style="font-size: 1.5rem">👤</span>
+          <div>
+            <strong>user</strong> → <strong>reservation</strong>
+            <span style="color: var(--color-text-secondary); font-size: var(--text-sm); display: block">Użytkownik może mieć wiele rezerwacji</span>
+          </div>
+        </div>
+        <div style="padding: var(--space-4); background: var(--color-surface); border-radius: var(--radius-sm); border: 1px solid var(--color-border); display: flex; align-items: center; gap: var(--space-4)">
+          <span style="font-size: 1.5rem">📋</span>
+          <div>
+            <strong>reservation</strong> → <strong>ski_pass</strong>
+            <span style="color: var(--color-text-secondary); font-size: var(--text-sm); display: block">Rezerwacja rodzi karnet, karnet ma daty ważności</span>
+          </div>
+        </div>
+        <div style="padding: var(--space-4); background: var(--color-surface); border-radius: var(--radius-sm); border: 1px solid var(--color-border); display: flex; align-items: center; gap: var(--space-4)">
+          <span style="font-size: 1.5rem">💳</span>
+          <div>
+            <strong>ski_pass</strong> → <strong>card</strong>
+            <span style="color: var(--color-text-secondary); font-size: var(--text-sm); display: block">Karnet jest załadowany na fizyczną kartę RFID</span>
+          </div>
+        </div>
+        <div style="padding: var(--space-4); background: var(--color-surface); border-radius: var(--radius-sm); border: 1px solid var(--color-border); display: flex; align-items: center; gap: var(--space-4)">
+          <span style="font-size: 1.5rem">🚪</span>
+          <div>
+            <strong>card</strong> → <strong>gate_scan</strong>
+            <span style="color: var(--color-text-secondary); font-size: var(--text-sm); display: block">Każde skanowanie karty przy bramce jest logowane</span>
+          </div>
+        </div>
+        <div style="padding: var(--space-4); background: var(--color-surface); border-radius: var(--radius-sm); border: 1px solid var(--color-border); display: flex; align-items: center; gap: var(--space-4)">
+          <span style="font-size: 1.5rem">🎿</span>
+          <div>
+            <strong>lift</strong> ↔ <strong>trail</strong>
+            <span style="color: var(--color-text-secondary); font-size: var(--text-sm); display: block">Wyciągi i trasy są połączone przez tabelę lift_trail (jeden wyciąg, wiele tras)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 6: Quiz -->
+    <div class="screen">
+      <h2 class="screen-title">Sprawdź rozumienie bazy danych</h2>
+
+      <div class="quiz-container" id="quiz-module4">
+        <div class="quiz-question-block"
+             data-correct="option-a"
+             data-explanation-right="Dokładnie! Entity Framework automatycznie tłumaczy kod C# na SQL. Nie piszesz SELECT ręcznie — piszesz _context.Cards.Find(id)."
+             data-explanation-wrong="Nie całkiem. Entity Framework Core to ORM — tłumaczy operacje na obiektach C# na SQL. Nie jest to narzędzie do ręcznego pisania SQL ani do zarządzania Dockerem.">
+          <h3 class="quiz-question">Nowy kolega pyta: "Gdzie w kodzie są zapytania SQL?" Jak odpowiesz?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Nie ma ręcznego SQL — Entity Framework generuje je automatycznie z kodu C#</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>SQL jest w pliku BramkaController.cs w komentarzach</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>SQL jest w docker-compose.yml jako konfiguracja bazy danych</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <div class="quiz-question-block"
+             data-correct="option-b"
+             data-explanation-right="Właśnie! Status karty to liczba (1 = aktywna) w tabeli card. Tabele dict_card_status tłumaczą liczby na czytelne nazwy. BramkaAPI sprawdza StatusId == 1."
+             data-explanation-wrong="Niekoniecznie — aktywność karty sprawdzana jest przez StatusId w tabeli card (pole numeryczne), nie przez nazwę tekstu ani przez tabelę karnetów.">
+          <h3 class="quiz-question">Chcesz sprawdzić, czy karta jest aktywna. Które pole w bazie danych o tym decyduje?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Pole "name" w tabeli dict_card_status</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Pole "status_id" w tabeli card (wartość 1 = aktywna)</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Pole "is_active" w tabeli ski_pass</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-module4')">Sprawdź odpowiedzi</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module4')">Spróbuj ponownie</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+<section class="module" id="module-5" style="background: var(--color-bg)">
+  <div class="module-content">
+
+    <!-- SCREEN 1: Intro -->
+    <div class="screen">
+      <div class="module-eyebrow">Moduł 5</div>
+      <h1 class="module-title">Docker — jak to wszystko uruchomić</h1>
+      <p class="module-subtitle">System składa się z trzech projektów i bazy danych. Docker sprawia, że wszystko startuje jedną komendą — bez ręcznej konfiguracji środowiska.</p>
+
+      <div class="callout callout-accent" style="margin-top: var(--space-8)">
+        <div class="callout-icon">📦</div>
+        <div class="callout-content">
+          <strong class="callout-title">Metafora: Kontenery na statku towarowym</strong>
+          <p><span class="tooltip-term" data-tooltip="Docker to narzędzie do uruchamiania programów w izolowanych &quot;kontenerach&quot; — każdy kontener ma własne środowisko, zależności i konfigurację. Działa tak samo na każdym komputerze.">Docker</span> to jak system kontenerów morskich: każda usługa (API, baza danych) jedzie w swoim szczelnym kontenerze. Kontener na każdym porcie wygląda tak samo. Zero "u mnie działało!"</p>
+        </div>
+      </div>
+
+      <div class="pattern-cards" style="margin-top: var(--space-8)">
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-4)">
+          <div class="pattern-icon" style="background: var(--color-actor-4)">🐘</div>
+          <h4 class="pattern-title">Kontener: postgres</h4>
+          <p class="pattern-desc">Baza danych PostgreSQL 17. Uruchamia się z gotowym schematem SQL przy pierwszym starcie.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+          <div class="pattern-icon" style="background: var(--color-actor-2)">🌐</div>
+          <h4 class="pattern-title">Kontener: bramka-api</h4>
+          <p class="pattern-desc">ASP.NET Core Web API. Czeka na PostgreSQL (healthcheck), potem startuje na porcie 49226.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: docker-compose.yml -->
+    <div class="screen">
+      <h2 class="screen-title">Plik docker-compose.yml — przepis na środowisko</h2>
+      <p>Plik: <code class="inline-code">docker-compose.yml</code></p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <span class="translation-label">KOD</span>
+          <pre><code>
+<span class="code-line">services:</span>
+<span class="code-line">  postgres:</span>
+<span class="code-line">    image: postgres:17</span>
+<span class="code-line">    environment:</span>
+<span class="code-line">      POSTGRES_DB: ski_resort</span>
+<span class="code-line">      POSTGRES_USER: postgres</span>
+<span class="code-line">    volumes:</span>
+<span class="code-line">      - ./Dokumentacja/baza_danych/baza_danych_kod.sql:</span>
+<span class="code-line">          /docker-entrypoint-initdb.d/01_schema.sql</span>
+<span class="code-line">    healthcheck:</span>
+<span class="code-line">      test: ["CMD-SHELL", "pg_isready -U postgres"]</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PO POLSKU</span>
+          <div class="translation-lines">
+            <p class="tl">Definicja usług (kontenerów) do uruchomienia.</p>
+            <p class="tl">Usługa "postgres" — baza danych.</p>
+            <p class="tl">Użyj gotowego obrazu PostgreSQL w wersji 17.</p>
+            <p class="tl">Zmienne środowiskowe: nazwa bazy i użytkownik.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Skopiuj plik SQL do katalogu startowego — baza sama wykona schemat przy pierwszym starcie!</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Healthcheck: co 5 sekund sprawdza, czy baza jest gotowa do połączeń.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: BramkaAPI w Docker -->
+    <div class="screen">
+      <h2 class="screen-title">Jak API startuje po bazie?</h2>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <span class="translation-label">DOCKER-COMPOSE</span>
+          <pre><code>
+<span class="code-line">  bramka-api:</span>
+<span class="code-line">    build:</span>
+<span class="code-line">      context: .</span>
+<span class="code-line">      dockerfile: BramkaAPI/Dockerfile</span>
+<span class="code-line">    ports:</span>
+<span class="code-line">      - "49226:8080"</span>
+<span class="code-line">    environment:</span>
+<span class="code-line">      ConnectionStrings__DefaultConnection:</span>
+<span class="code-line">        "Host=postgres;Database=ski_resort;"</span>
+<span class="code-line">    depends_on:</span>
+<span class="code-line">      postgres:</span>
+<span class="code-line">        condition: service_healthy</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PO POLSKU</span>
+          <div class="translation-lines">
+            <p class="tl">Usługa "bramka-api" — nasz serwer API.</p>
+            <p class="tl">Zbuduj obraz z pliku Dockerfile...</p>
+            <p class="tl">...znajdującego się w katalogu BramkaAPI.</p>
+            <p class="tl">Port zewnętrzny 49226 → port wewnętrzny 8080.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Przekaż string połączeniowy do bazy...</p>
+            <p class="tl">..."postgres" to nazwa usługi w sieci Docker!</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Nie startuj, dopóki...</p>
+            <p class="tl">...baza danych nie przejdzie healthchecka.</p>
+            <p class="tl">Koniec wyścigu między API a bazą.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-info" style="margin-top: var(--space-6)">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <strong class="callout-title">Wzorzec: depends_on z condition</strong>
+          <p>Bez <code style="font-family: var(--font-mono)">depends_on</code> API mogłoby spróbować połączyć się z bazą danych, zanim ta jest gotowa — i wysypać się z błędem. <code style="font-family: var(--font-mono)">service_healthy</code> czeka na zielone światło z healthchecka. To wzorzec wart zapamiętania przy każdej usłudze zależnej.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: Przepływ startowy z animacją -->
+    <div class="screen">
+      <h2 class="screen-title">Co się dzieje po wpisaniu docker compose up?</h2>
+
+      <div class="flow-animation" style="margin-top: var(--space-6)" data-steps='[
+        {"highlight":"flow-actor-1","label":"Docker Compose czyta plik docker-compose.yml i planuje start kontenerow."},
+        {"highlight":"flow-actor-2","label":"Kontener postgres startuje. Przy pierwszym uruchomieniu wykonuje baza_danych_kod.sql — tworzy wszystkie tabele.","packet":true,"from":"actor-1","to":"actor-2"},
+        {"highlight":"flow-actor-2","label":"PostgreSQL odpowiada na healthcheck: pg_isready. Jesli baza gotowa — zielone swiatlo dla API."},
+        {"highlight":"flow-actor-3","label":"Docker pozwala teraz wystartowac bramka-api. Kontener buduje sie z Dockerfile.","packet":true,"from":"actor-2","to":"actor-3"},
+        {"highlight":"flow-actor-3","label":"BramkaAPI laczy sie z PostgreSQL. Adres: Host=postgres (nazwa uslugi w sieci Dockera)."},
+        {"highlight":"flow-actor-3","label":"API gotowe! Nasluchuje na porcie 8080 wewnatrz Dockera, dostepne z zewnatrz przez port 49226."}
+      ]'>
+        <div class="flow-actors">
+          <div class="flow-actor" id="flow-actor-1">
+            <div class="flow-actor-icon">🐳</div>
+            <span>Docker Compose</span>
+          </div>
+          <div class="flow-actor" id="flow-actor-2">
+            <div class="flow-actor-icon">🐘</div>
+            <span>PostgreSQL</span>
+          </div>
+          <div class="flow-actor" id="flow-actor-3">
+            <div class="flow-actor-icon">🌐</div>
+            <span>BramkaAPI</span>
+          </div>
+        </div>
+
+        <div class="flow-packet" id="flow-packet"></div>
+        <div class="flow-step-label" id="flow-label">Kliknij "Następny krok", żeby prześledzić start systemu</div>
+
+        <div class="flow-controls">
+          <button class="btn flow-next-btn">Następny krok</button>
+          <button class="btn flow-reset-btn">Zacznij od nowa</button>
+          <span class="flow-progress"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: Pełna architektura -->
+    <div class="screen">
+      <h2 class="screen-title">Pełna architektura — wielki obraz</h2>
+      <p>Teraz, gdy znasz wszystkich aktorów i ich relacje, oto cały system:</p>
+
+      <div style="margin-top: var(--space-6); display: grid; gap: var(--space-4)">
+
+        <div style="border: 2px solid var(--color-actor-1); border-radius: var(--radius-md); padding: var(--space-5); background: var(--color-surface)">
+          <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3)">
+            <span style="font-size: 1.5rem">🖥️</span>
+            <strong style="color: var(--color-actor-1)">Terminal (Bramka)</strong>
+            <span style="font-size: var(--text-xs); color: var(--color-text-muted); margin-left: auto">Bramka/Program.cs</span>
+          </div>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary)">Aplikacja konsolowa C# .NET. Uruchamiana lokalnie przy każdym wyciągu. Czyta kartę, wywołuje API, wyświetla wynik.</p>
+        </div>
+
+        <div style="text-align: center; color: var(--color-accent); font-size: var(--text-lg)">HTTP (port 49226)</div>
+
+        <div style="border: 2px solid var(--color-actor-2); border-radius: var(--radius-md); padding: var(--space-5); background: var(--color-surface)">
+          <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3)">
+            <span style="font-size: 1.5rem">🌐</span>
+            <strong style="color: var(--color-actor-2)">BramkaAPI</strong>
+            <span style="font-size: var(--text-xs); color: var(--color-text-muted); margin-left: auto">BramkaAPI/ — w Dockerze</span>
+          </div>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary)">ASP.NET Core Web API. Kontener Docker. Obsługuje endpointy weryfikacji kart, listowania kart. Korzysta z DLL i EF Core.</p>
+        </div>
+
+        <div style="text-align: center; color: var(--color-accent); font-size: var(--text-lg)">EF Core / SQL (sieć Docker)</div>
+
+        <div style="border: 2px solid var(--color-actor-4); border-radius: var(--radius-md); padding: var(--space-5); background: var(--color-surface)">
+          <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3)">
+            <span style="font-size: 1.5rem">🗄️</span>
+            <strong style="color: var(--color-actor-4)">PostgreSQL</strong>
+            <span style="font-size: var(--text-xs); color: var(--color-text-muted); margin-left: auto">Kontener Docker, port 5432</span>
+          </div>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary)">Baza danych PostgreSQL 17. Schema inicjalizowana z SQL przy starcie. Dane trwałe dzięki wolumenowi Docker.</p>
+        </div>
+
+        <div style="text-align: center; color: var(--color-actor-3); font-size: var(--text-sm); padding: var(--space-3); background: var(--color-surface); border-radius: var(--radius-sm); border: 1px dashed var(--color-actor-3)">
+          📦 <strong style="color: var(--color-actor-3)">SystemStacjiNarciarskiejDLL</strong> — wspólna biblioteka modeli używana przez BramkaAPI
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 6: Ostatni quiz -->
+    <div class="screen">
+      <h2 class="screen-title">Quiz końcowy — wielki obraz</h2>
+
+      <div class="quiz-container" id="quiz-module5">
+        <div class="quiz-question-block"
+             data-correct="option-b"
+             data-explanation-right="Dokładnie! depends_on z condition: service_healthy zapewnia, że API nie startuje przed bazą danych. To kluczowy pattern przy usługach zależnych."
+             data-explanation-wrong="Niezupełnie — Docker uruchamia usługi w kolejności, ale bez depends_on API mogłoby wystartować przed bazą i fail. Właśnie do tego służy depends_on z healthcheckiem.">
+          <h3 class="quiz-question">Chcesz dodać do systemu nowy serwis (np. serwis emailowy) zależny od bazy danych. Co musisz dodać w docker-compose.yml?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Nic — Docker sam ogarnie kolejność startowania</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>depends_on: postgres z condition: service_healthy</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Skopiować credentials bazy bezpośrednio do kodu serwisu</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <div class="quiz-question-block"
+             data-correct="option-a"
+             data-explanation-right="Tak! Terminal jest aplikacją konsolową uruchamianą lokalnie — nie jest w Dockerze. Tylko baza danych i API są skonteneryzowane."
+             data-explanation-wrong="Niezupełnie — sprawdź plik docker-compose.yml. Jest tam tylko postgres i bramka-api. Terminal (Bramka/Program.cs) to lokalna aplikacja konsolowa.">
+          <h3 class="quiz-question">Kolega pyta: "Czy aplikacja terminalowa Bramka jest w Dockerze?" Jak odpowiesz?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Nie — tylko PostgreSQL i BramkaAPI są w kontenerach Docker</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Tak — wszystkie trzy projekty są w docker-compose.yml</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Terminal jest w osobnym pliku docker-compose.prod.yml</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <div class="quiz-question-block"
+             data-correct="option-c"
+             data-explanation-right="Właśnie! W Dockerze, nazwy usług (postgres, bramka-api) działają jak nazwy DNS w sieci. API łączy się z bazą pisząc Host=postgres — Docker zamienia to na prawdziwy adres IP kontenera."
+             data-explanation-wrong="Nie do końca — w sieci Docker, usługi komunikują się przez nazwy (postgres, bramka-api), nie przez localhost ani zewnętrzne IP. To wewnętrzna sieć Docker Compose.">
+          <h3 class="quiz-question">BramkaAPI chce połączyć się z bazą danych. Jaki adres hosta wpisuje w connection stringu?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>localhost:5432</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>127.0.0.1:5432</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>postgres (nazwa usługi Docker)</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-module5')">Sprawdź odpowiedzi</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module5')">Spróbuj ponownie</button>
+      </div>
+
+      <div class="callout callout-accent" style="margin-top: var(--space-8)">
+        <div class="callout-icon">🎿</div>
+        <div class="callout-content">
+          <strong class="callout-title">Gratulacje — znasz system od środka!</strong>
+          <p>Teraz gdy widzisz kod tego systemu, rozumiesz: dlaczego trzy projekty, po co DLL, jak płyną dane przy skanowaniu karty, jak baza danych organizuje informacje i jak Docker scala to wszystko w jedno środowisko.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+  </main>
+
+</body>
+</html>

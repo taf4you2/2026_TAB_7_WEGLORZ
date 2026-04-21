@@ -1,0 +1,287 @@
+<section class="module" id="module-5" style="background: var(--color-bg)">
+  <div class="module-content">
+
+    <!-- SCREEN 1: Intro -->
+    <div class="screen">
+      <div class="module-eyebrow">Moduł 5</div>
+      <h1 class="module-title">Docker — jak to wszystko uruchomić</h1>
+      <p class="module-subtitle">System składa się z trzech projektów i bazy danych. Docker sprawia, że wszystko startuje jedną komendą — bez ręcznej konfiguracji środowiska.</p>
+
+      <div class="callout callout-accent" style="margin-top: var(--space-8)">
+        <div class="callout-icon">📦</div>
+        <div class="callout-content">
+          <strong class="callout-title">Metafora: Kontenery na statku towarowym</strong>
+          <p><span class="tooltip-term" data-tooltip="Docker to narzędzie do uruchamiania programów w izolowanych &quot;kontenerach&quot; — każdy kontener ma własne środowisko, zależności i konfigurację. Działa tak samo na każdym komputerze.">Docker</span> to jak system kontenerów morskich: każda usługa (API, baza danych) jedzie w swoim szczelnym kontenerze. Kontener na każdym porcie wygląda tak samo. Zero "u mnie działało!"</p>
+        </div>
+      </div>
+
+      <div class="pattern-cards" style="margin-top: var(--space-8)">
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-4)">
+          <div class="pattern-icon" style="background: var(--color-actor-4)">🐘</div>
+          <h4 class="pattern-title">Kontener: postgres</h4>
+          <p class="pattern-desc">Baza danych PostgreSQL 17. Uruchamia się z gotowym schematem SQL przy pierwszym starcie.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+          <div class="pattern-icon" style="background: var(--color-actor-2)">🌐</div>
+          <h4 class="pattern-title">Kontener: bramka-api</h4>
+          <p class="pattern-desc">ASP.NET Core Web API. Czeka na PostgreSQL (healthcheck), potem startuje na porcie 49226.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: docker-compose.yml -->
+    <div class="screen">
+      <h2 class="screen-title">Plik docker-compose.yml — przepis na środowisko</h2>
+      <p>Plik: <code class="inline-code">docker-compose.yml</code></p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <span class="translation-label">KOD</span>
+          <pre><code>
+<span class="code-line">services:</span>
+<span class="code-line">  postgres:</span>
+<span class="code-line">    image: postgres:17</span>
+<span class="code-line">    environment:</span>
+<span class="code-line">      POSTGRES_DB: ski_resort</span>
+<span class="code-line">      POSTGRES_USER: postgres</span>
+<span class="code-line">    volumes:</span>
+<span class="code-line">      - ./Dokumentacja/baza_danych/baza_danych_kod.sql:</span>
+<span class="code-line">          /docker-entrypoint-initdb.d/01_schema.sql</span>
+<span class="code-line">    healthcheck:</span>
+<span class="code-line">      test: ["CMD-SHELL", "pg_isready -U postgres"]</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PO POLSKU</span>
+          <div class="translation-lines">
+            <p class="tl">Definicja usług (kontenerów) do uruchomienia.</p>
+            <p class="tl">Usługa "postgres" — baza danych.</p>
+            <p class="tl">Użyj gotowego obrazu PostgreSQL w wersji 17.</p>
+            <p class="tl">Zmienne środowiskowe: nazwa bazy i użytkownik.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Skopiuj plik SQL do katalogu startowego — baza sama wykona schemat przy pierwszym starcie!</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Healthcheck: co 5 sekund sprawdza, czy baza jest gotowa do połączeń.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: BramkaAPI w Docker -->
+    <div class="screen">
+      <h2 class="screen-title">Jak API startuje po bazie?</h2>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <span class="translation-label">DOCKER-COMPOSE</span>
+          <pre><code>
+<span class="code-line">  bramka-api:</span>
+<span class="code-line">    build:</span>
+<span class="code-line">      context: .</span>
+<span class="code-line">      dockerfile: BramkaAPI/Dockerfile</span>
+<span class="code-line">    ports:</span>
+<span class="code-line">      - "49226:8080"</span>
+<span class="code-line">    environment:</span>
+<span class="code-line">      ConnectionStrings__DefaultConnection:</span>
+<span class="code-line">        "Host=postgres;Database=ski_resort;"</span>
+<span class="code-line">    depends_on:</span>
+<span class="code-line">      postgres:</span>
+<span class="code-line">        condition: service_healthy</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PO POLSKU</span>
+          <div class="translation-lines">
+            <p class="tl">Usługa "bramka-api" — nasz serwer API.</p>
+            <p class="tl">Zbuduj obraz z pliku Dockerfile...</p>
+            <p class="tl">...znajdującego się w katalogu BramkaAPI.</p>
+            <p class="tl">Port zewnętrzny 49226 → port wewnętrzny 8080.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Przekaż string połączeniowy do bazy...</p>
+            <p class="tl">..."postgres" to nazwa usługi w sieci Docker!</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Nie startuj, dopóki...</p>
+            <p class="tl">...baza danych nie przejdzie healthchecka.</p>
+            <p class="tl">Koniec wyścigu między API a bazą.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-info" style="margin-top: var(--space-6)">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <strong class="callout-title">Wzorzec: depends_on z condition</strong>
+          <p>Bez <code style="font-family: var(--font-mono)">depends_on</code> API mogłoby spróbować połączyć się z bazą danych, zanim ta jest gotowa — i wysypać się z błędem. <code style="font-family: var(--font-mono)">service_healthy</code> czeka na zielone światło z healthchecka. To wzorzec wart zapamiętania przy każdej usłudze zależnej.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: Przepływ startowy z animacją -->
+    <div class="screen">
+      <h2 class="screen-title">Co się dzieje po wpisaniu docker compose up?</h2>
+
+      <div class="flow-animation" style="margin-top: var(--space-6)" data-steps='[
+        {"highlight":"flow-actor-1","label":"Docker Compose czyta plik docker-compose.yml i planuje start kontenerow."},
+        {"highlight":"flow-actor-2","label":"Kontener postgres startuje. Przy pierwszym uruchomieniu wykonuje baza_danych_kod.sql — tworzy wszystkie tabele.","packet":true,"from":"actor-1","to":"actor-2"},
+        {"highlight":"flow-actor-2","label":"PostgreSQL odpowiada na healthcheck: pg_isready. Jesli baza gotowa — zielone swiatlo dla API."},
+        {"highlight":"flow-actor-3","label":"Docker pozwala teraz wystartowac bramka-api. Kontener buduje sie z Dockerfile.","packet":true,"from":"actor-2","to":"actor-3"},
+        {"highlight":"flow-actor-3","label":"BramkaAPI laczy sie z PostgreSQL. Adres: Host=postgres (nazwa uslugi w sieci Dockera)."},
+        {"highlight":"flow-actor-3","label":"API gotowe! Nasluchuje na porcie 8080 wewnatrz Dockera, dostepne z zewnatrz przez port 49226."}
+      ]'>
+        <div class="flow-actors">
+          <div class="flow-actor" id="flow-actor-1">
+            <div class="flow-actor-icon">🐳</div>
+            <span>Docker Compose</span>
+          </div>
+          <div class="flow-actor" id="flow-actor-2">
+            <div class="flow-actor-icon">🐘</div>
+            <span>PostgreSQL</span>
+          </div>
+          <div class="flow-actor" id="flow-actor-3">
+            <div class="flow-actor-icon">🌐</div>
+            <span>BramkaAPI</span>
+          </div>
+        </div>
+
+        <div class="flow-packet" id="flow-packet"></div>
+        <div class="flow-step-label" id="flow-label">Kliknij "Następny krok", żeby prześledzić start systemu</div>
+
+        <div class="flow-controls">
+          <button class="btn flow-next-btn">Następny krok</button>
+          <button class="btn flow-reset-btn">Zacznij od nowa</button>
+          <span class="flow-progress"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: Pełna architektura -->
+    <div class="screen">
+      <h2 class="screen-title">Pełna architektura — wielki obraz</h2>
+      <p>Teraz, gdy znasz wszystkich aktorów i ich relacje, oto cały system:</p>
+
+      <div style="margin-top: var(--space-6); display: grid; gap: var(--space-4)">
+
+        <div style="border: 2px solid var(--color-actor-1); border-radius: var(--radius-md); padding: var(--space-5); background: var(--color-surface)">
+          <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3)">
+            <span style="font-size: 1.5rem">🖥️</span>
+            <strong style="color: var(--color-actor-1)">Terminal (Bramka)</strong>
+            <span style="font-size: var(--text-xs); color: var(--color-text-muted); margin-left: auto">Bramka/Program.cs</span>
+          </div>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary)">Aplikacja konsolowa C# .NET. Uruchamiana lokalnie przy każdym wyciągu. Czyta kartę, wywołuje API, wyświetla wynik.</p>
+        </div>
+
+        <div style="text-align: center; color: var(--color-accent); font-size: var(--text-lg)">HTTP (port 49226)</div>
+
+        <div style="border: 2px solid var(--color-actor-2); border-radius: var(--radius-md); padding: var(--space-5); background: var(--color-surface)">
+          <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3)">
+            <span style="font-size: 1.5rem">🌐</span>
+            <strong style="color: var(--color-actor-2)">BramkaAPI</strong>
+            <span style="font-size: var(--text-xs); color: var(--color-text-muted); margin-left: auto">BramkaAPI/ — w Dockerze</span>
+          </div>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary)">ASP.NET Core Web API. Kontener Docker. Obsługuje endpointy weryfikacji kart, listowania kart. Korzysta z DLL i EF Core.</p>
+        </div>
+
+        <div style="text-align: center; color: var(--color-accent); font-size: var(--text-lg)">EF Core / SQL (sieć Docker)</div>
+
+        <div style="border: 2px solid var(--color-actor-4); border-radius: var(--radius-md); padding: var(--space-5); background: var(--color-surface)">
+          <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3)">
+            <span style="font-size: 1.5rem">🗄️</span>
+            <strong style="color: var(--color-actor-4)">PostgreSQL</strong>
+            <span style="font-size: var(--text-xs); color: var(--color-text-muted); margin-left: auto">Kontener Docker, port 5432</span>
+          </div>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary)">Baza danych PostgreSQL 17. Schema inicjalizowana z SQL przy starcie. Dane trwałe dzięki wolumenowi Docker.</p>
+        </div>
+
+        <div style="text-align: center; color: var(--color-actor-3); font-size: var(--text-sm); padding: var(--space-3); background: var(--color-surface); border-radius: var(--radius-sm); border: 1px dashed var(--color-actor-3)">
+          📦 <strong style="color: var(--color-actor-3)">SystemStacjiNarciarskiejDLL</strong> — wspólna biblioteka modeli używana przez BramkaAPI
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 6: Ostatni quiz -->
+    <div class="screen">
+      <h2 class="screen-title">Quiz końcowy — wielki obraz</h2>
+
+      <div class="quiz-container" id="quiz-module5">
+        <div class="quiz-question-block"
+             data-correct="option-b"
+             data-explanation-right="Dokładnie! depends_on z condition: service_healthy zapewnia, że API nie startuje przed bazą danych. To kluczowy pattern przy usługach zależnych."
+             data-explanation-wrong="Niezupełnie — Docker uruchamia usługi w kolejności, ale bez depends_on API mogłoby wystartować przed bazą i fail. Właśnie do tego służy depends_on z healthcheckiem.">
+          <h3 class="quiz-question">Chcesz dodać do systemu nowy serwis (np. serwis emailowy) zależny od bazy danych. Co musisz dodać w docker-compose.yml?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Nic — Docker sam ogarnie kolejność startowania</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>depends_on: postgres z condition: service_healthy</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Skopiować credentials bazy bezpośrednio do kodu serwisu</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <div class="quiz-question-block"
+             data-correct="option-a"
+             data-explanation-right="Tak! Terminal jest aplikacją konsolową uruchamianą lokalnie — nie jest w Dockerze. Tylko baza danych i API są skonteneryzowane."
+             data-explanation-wrong="Niezupełnie — sprawdź plik docker-compose.yml. Jest tam tylko postgres i bramka-api. Terminal (Bramka/Program.cs) to lokalna aplikacja konsolowa.">
+          <h3 class="quiz-question">Kolega pyta: "Czy aplikacja terminalowa Bramka jest w Dockerze?" Jak odpowiesz?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Nie — tylko PostgreSQL i BramkaAPI są w kontenerach Docker</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Tak — wszystkie trzy projekty są w docker-compose.yml</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Terminal jest w osobnym pliku docker-compose.prod.yml</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <div class="quiz-question-block"
+             data-correct="option-c"
+             data-explanation-right="Właśnie! W Dockerze, nazwy usług (postgres, bramka-api) działają jak nazwy DNS w sieci. API łączy się z bazą pisząc Host=postgres — Docker zamienia to na prawdziwy adres IP kontenera."
+             data-explanation-wrong="Nie do końca — w sieci Docker, usługi komunikują się przez nazwy (postgres, bramka-api), nie przez localhost ani zewnętrzne IP. To wewnętrzna sieć Docker Compose.">
+          <h3 class="quiz-question">BramkaAPI chce połączyć się z bazą danych. Jaki adres hosta wpisuje w connection stringu?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>localhost:5432</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>127.0.0.1:5432</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>postgres (nazwa usługi Docker)</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-module5')">Sprawdź odpowiedzi</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module5')">Spróbuj ponownie</button>
+      </div>
+
+      <div class="callout callout-accent" style="margin-top: var(--space-8)">
+        <div class="callout-icon">🎿</div>
+        <div class="callout-content">
+          <strong class="callout-title">Gratulacje — znasz system od środka!</strong>
+          <p>Teraz gdy widzisz kod tego systemu, rozumiesz: dlaczego trzy projekty, po co DLL, jak płyną dane przy skanowaniu karty, jak baza danych organizuje informacje i jak Docker scala to wszystko w jedno środowisko.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>

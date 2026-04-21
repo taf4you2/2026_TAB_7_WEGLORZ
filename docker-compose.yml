@@ -10,12 +10,29 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./Dokumentacja/baza_danych/baza_danych_kod.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./BazaDanych/skrypty_inicjacyjne/baza_danych_kod.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./BazaDanych/skrypty_inicjacyjne/02_sekwencje.sql:/docker-entrypoint-initdb.d/02_sekwencje.sql
+      - ./BazaDanych/skrypty_inicjacyjne/03_dane_testowe.sql:/docker-entrypoint-initdb.d/03_dane_testowe.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d ski_resort"]
       interval: 5s
       timeout: 5s
       retries: 10
+
+  system-api:
+    build:
+      context: .
+      dockerfile: SystemAPI/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5000:8080"
+    environment:
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=ski_resort;Username=postgres;"
+      DbPassword: "postgres"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   bramka-api:
     build:

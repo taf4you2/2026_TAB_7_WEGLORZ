@@ -1,0 +1,156 @@
+<section class="module" id="module-1" style="background: var(--color-bg)">
+  <div class="module-content">
+
+    <!-- SCREEN 1: Hero -->
+    <div class="screen">
+      <div class="module-eyebrow">Moduł 1</div>
+      <h1 class="module-title">System Stacji Narciarskiej</h1>
+      <p class="module-subtitle">Wyobraź sobie: przyjeżdżasz na stok. Odbijasz kartę przy wyciągu. Szlaban się otwiera. Co tak naprawdę się właśnie wydarzyło?</p>
+
+      <div class="pattern-cards" style="margin-top: var(--space-10)">
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+          <div class="pattern-icon" style="background: var(--color-actor-2)">🎿</div>
+          <h4 class="pattern-title">Dla narciarza</h4>
+          <p class="pattern-desc">Kupujesz karnet, dostajesz kartę, odbijasz przy bramce — i jedziesz. Proste.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-1)">
+          <div class="pattern-icon" style="background: var(--color-actor-1)">💻</div>
+          <h4 class="pattern-title">Pod spodem</h4>
+          <p class="pattern-desc">Trzy programy rozmawiają ze sobą w ułamku sekundy, zanim szlaban się ruszy.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+          <div class="pattern-icon" style="background: var(--color-actor-3)">🗄️</div>
+          <h4 class="pattern-title">W tle</h4>
+          <p class="pattern-desc">Baza danych przechowuje każdą kartę, karnet, transakcję i skan bramki.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: Scenariusz użytkownika -->
+    <div class="screen">
+      <h2 class="screen-title">Zacznijmy od początku — od Twojej karty</h2>
+      <p>Wyobraź sobie, że jesteś narciarzem. Oto Twoja podróż przez ten system:</p>
+
+      <div class="flow-steps" style="margin-top: var(--space-8)">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>Rezerwujesz online</h4>
+            <p>Twoja <span class="tooltip-term" data-tooltip="Rezerwacja to zarezerwowanie miejsca lub usługi z wyprzedzeniem — system zapisuje ją w bazie danych jako &quot;planowany zakup&quot;.">rezerwacja</span> trafia do bazy danych. Otrzymujesz numer rezerwacji.</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>Przychodzisz do kasy</h4>
+            <p>Kasjer aktywuje Twój karnet — <span class="tooltip-term" data-tooltip="SkiPass to cyfrowy bilet narciarski powiązany z fizyczną kartą RFID. Sam SkiPass to wpis w bazie danych, a karta to plastikowy nośnik.">SkiPass</span> — i przypisuje go do fizycznej karty.</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>Podchodzisz do bramki</h4>
+            <p>Terminal bramkowy czyta ID Twojej karty i pyta <span class="tooltip-term" data-tooltip="API (Application Programming Interface) to &quot;okienko&quot;, przez które programy rozmawiają ze sobą. BramkaAPI to okienko między terminalem a bazą danych.">API</span>, czy możesz wejść.</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h4>Szlaban się otwiera</h4>
+            <p>API sprawdza bazę danych. Karta jest aktywna — terminal wyświetla <strong style="color: var(--color-success)">ZAPRASZAMY</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-accent" style="margin-top: var(--space-8)">
+        <div class="callout-icon">⚡</div>
+        <div class="callout-content">
+          <strong class="callout-title">Wszystko to dzieje się w ułamku sekundy</strong>
+          <p>Od odbicia karty do decyzji systemu mija mniej niż sekunda. Za tą sekundą kryje się sieć połączeń między trzema programami i bazą danych.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: Mapa systemu -->
+    <div class="screen">
+      <h2 class="screen-title">Mapa całego systemu — zanim zagłębimy się w szczegóły</h2>
+
+      <div class="arch-diagram" style="margin-top: var(--space-6)">
+        <div class="arch-zone" style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); margin-bottom: var(--space-4); background: var(--color-surface-warm)">
+          <h4 class="arch-zone-label" style="color: var(--color-actor-1); font-weight: 700; margin-bottom: var(--space-4)">🖥️ Terminal bramkowy (Bramka)</h4>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary)">Program konsolowy uruchomiony przy każdym wyciągu. Wyświetla zegar, pyta o ID karty, pokazuje wynik.</p>
+        </div>
+        <div style="text-align: center; font-size: var(--text-2xl); color: var(--color-accent); margin: var(--space-2) 0">↕</div>
+        <div class="arch-zone" style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); margin-bottom: var(--space-4); background: var(--color-surface-warm)">
+          <h4 class="arch-zone-label" style="color: var(--color-actor-2); font-weight: 700; margin-bottom: var(--space-4)">🌐 BramkaAPI</h4>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary)"><span class="tooltip-term" data-tooltip="Web API to serwer, który odpowiada na zapytania przez internet (lub sieć lokalną). Działa jak kelner — przyjmuje zamówienia i przynosi odpowiedzi.">Web API</span> — serwer pośredniczący między terminalem a bazą danych. Weryfikuje karty i zwraca decyzję.</p>
+        </div>
+        <div style="text-align: center; font-size: var(--text-2xl); color: var(--color-accent); margin: var(--space-2) 0">↕</div>
+        <div class="arch-zone" style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); margin-bottom: var(--space-4); background: var(--color-surface-warm)">
+          <h4 class="arch-zone-label" style="color: var(--color-actor-3); font-weight: 700; margin-bottom: var(--space-4)">📦 SystemStacjiNarciarskiejDLL</h4>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary)">Wspólna <span class="tooltip-term" data-tooltip="Biblioteka (DLL) to zestaw gotowych narzędzi, które inne programy mogą pożyczać. Zamiast pisać ten sam kod dwa razy, wkładasz go do biblioteki.">biblioteka</span> z modelami danych — definicje tego, czym jest Karta, Karnet, Bramka, Użytkownik.</p>
+        </div>
+        <div style="text-align: center; font-size: var(--text-2xl); color: var(--color-accent); margin: var(--space-2) 0">↕</div>
+        <div class="arch-zone" style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); background: var(--color-surface-warm)">
+          <h4 class="arch-zone-label" style="color: var(--color-actor-4); font-weight: 700; margin-bottom: var(--space-4)">🗄️ PostgreSQL</h4>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary)"><span class="tooltip-term" data-tooltip="PostgreSQL to relacyjna baza danych — program do przechowywania danych w tabelach, między którymi istnieją powiązania (relacje).">Relacyjna baza danych</span> przechowująca karty, karnety, rezerwacje, transakcje i logi skanów.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: Quiz -->
+    <div class="screen">
+      <h2 class="screen-title">Sprawdź, czy to "kliknęło"</h2>
+
+      <div class="quiz-container" id="quiz-module1">
+        <div class="quiz-question-block"
+             data-correct="option-b"
+             data-explanation-right="Dokładnie! Terminal (Bramka) zadaje pytanie, BramkaAPI szuka odpowiedzi w bazie danych, a DLL dostarcza wspólny słownik pojęć."
+             data-explanation-wrong="Niemal — ale to Terminal pyta API, a nie odwrotnie. To ważna kolejność: zawsze klient pyta serwer.">
+          <h3 class="quiz-question">Narciarz odbija kartę przy bramce. W jakiej kolejności reagują elementy systemu?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>BramkaAPI → Terminal → Baza danych</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Terminal → BramkaAPI → Baza danych</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Baza danych → BramkaAPI → Terminal</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <div class="quiz-question-block"
+             data-correct="option-c"
+             data-explanation-right="Właśnie! DLL to wspólny słownik. Gdyby API i Terminal miały własne, różne definicje karty, kod szybko by się pokłócił ze sobą."
+             data-explanation-wrong="Niekoniecznie — główna rola DLL to nie komunikacja ani przechowywanie danych, ale dostarczenie wspólnych definicji dla wszystkich pozostałych.">
+          <h3 class="quiz-question">Po co istnieje osobna biblioteka DLL (SystemStacjiNarciarskiejDLL)?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Żeby komunikować się z Internetem</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Żeby przechowywać dane narciarzy</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Żeby BramkaAPI i Bramka używały tych samych definicji kart i karnetów</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-module1')">Sprawdź odpowiedzi</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module1')">Spróbuj ponownie</button>
+      </div>
+    </div>
+
+  </div>
+</section>

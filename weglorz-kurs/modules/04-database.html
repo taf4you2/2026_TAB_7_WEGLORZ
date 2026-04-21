@@ -1,0 +1,245 @@
+<section class="module" id="module-4" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+
+    <!-- SCREEN 1: Intro -->
+    <div class="screen">
+      <div class="module-eyebrow">Moduł 4</div>
+      <h1 class="module-title">Baza danych — rdzeń systemu</h1>
+      <p class="module-subtitle">Wszystkie dane narciarzy, karty, karnety, rezerwacje — żyją w jednym miejscu. Jak to jest zorganizowane i dlaczego to ma znaczenie?</p>
+
+      <div class="callout callout-accent" style="margin-top: var(--space-8)">
+        <div class="callout-icon">📚</div>
+        <div class="callout-content">
+          <strong class="callout-title">Metafora: Główna księga rachunkowa</strong>
+          <p>Baza danych to jak wielka księga rachunkowa w tradycyjnej firmie — każda transakcja, każda karta, każdy skan jest zapisany w odpowiedniej kolumnie, każdy wiersz to inny rekord. Zmieniasz jedną pozycję — zmiana jest widoczna wszędzie.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: Tabele w bazie danych -->
+    <div class="screen">
+      <h2 class="screen-title">Co siedzi w bazie danych?</h2>
+      <p>System ma 20+ tabel. Oto te, które są w centrum akcji:</p>
+
+      <div class="pattern-cards" style="margin-top: var(--space-6)">
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+          <div class="pattern-icon" style="background: var(--color-actor-2)">💳</div>
+          <h4 class="pattern-title">card</h4>
+          <p class="pattern-desc">Fizyczna karta RFID. Ma unikalne ID (tekst), status (1=aktywna, 2=nieaktywna) i datę dodania.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-1)">
+          <div class="pattern-icon" style="background: var(--color-actor-1)">🎫</div>
+          <h4 class="pattern-title">ski_pass</h4>
+          <p class="pattern-desc">Karnet narciarski. Powiązany z kartą, taryfą i rezerwacją. Ma daty ważności i status.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+          <div class="pattern-icon" style="background: var(--color-actor-3)">🚪</div>
+          <h4 class="pattern-title">gate_scan</h4>
+          <p class="pattern-desc">Log każdego skanowania bramki. Kto, kiedy, przy której bramce, z jakim wynikiem.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-4)">
+          <div class="pattern-icon" style="background: var(--color-actor-4)">📋</div>
+          <h4 class="pattern-title">reservation</h4>
+          <p class="pattern-desc">Rezerwacja zakupu karnetu. Łączy użytkownika z zamówieniem, ma numer i status.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-actor-5)">
+          <div class="pattern-icon" style="background: var(--color-actor-5)">💰</div>
+          <h4 class="pattern-title">transaction</h4>
+          <p class="pattern-desc">Każda operacja finansowa: zakup, zwrot depozytu. Powiązana z kasjerem i rezerwacją.</p>
+        </div>
+        <div class="pattern-card" style="border-top: 3px solid var(--color-text-secondary)">
+          <div class="pattern-icon" style="background: var(--color-text-secondary)">📖</div>
+          <h4 class="pattern-title">dict_*</h4>
+          <p class="pattern-desc">Słowniki: statusy kart, typy karnetów, trudność tras itd. Dają nazwy liczbom-statusom.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: Entity Framework -->
+    <div class="screen">
+      <h2 class="screen-title">Entity Framework — tłumacz między C# a bazą danych</h2>
+      <p>API nie pisze ręcznie zapytań SQL. Używa <span class="tooltip-term" data-tooltip="Entity Framework Core to ORM (Object-Relational Mapper) — narzędzie, które automatycznie tłumaczy operacje na obiektach C# na zapytania SQL do bazy danych. Zamiast pisać SELECT * FROM card, piszesz _context.Cards.Find(id).">Entity Framework Core</span> — warstwy, która zamienia kod C# na SQL automatycznie.</p>
+
+      <div class="translation-block animate-in" style="margin-top: var(--space-6)">
+        <div class="translation-code">
+          <span class="translation-label">KOD C#</span>
+          <pre><code>
+<span class="code-line"><span class="code-keyword">var</span> karty = <span class="code-keyword">await</span> _context.Cards</span>
+<span class="code-line">    .<span class="code-function">Select</span>(c => <span class="code-keyword">new</span></span>
+<span class="code-line">    {</span>
+<span class="code-line">        c.Id,</span>
+<span class="code-line">        c.StatusId,</span>
+<span class="code-line">        c.PhysicalCondition,</span>
+<span class="code-line">        c.AddedToPoolAt</span>
+<span class="code-line">    })</span>
+<span class="code-line">    .<span class="code-function">ToListAsync</span>();</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">CO TO ROBI</span>
+          <div class="translation-lines">
+            <p class="tl">Pyta bazę danych o wszystkie karty w tabeli "card"...</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">...ale nie pobieramy całych obiektów Card — tylko wybrane kolumny.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Chcemy: ID, status, stan fizyczny i datę dodania do puli.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">ToListAsync = wykonaj zapytanie i wróć z listą wyników (asynchronicznie).</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: var(--space-6); padding: var(--space-4); background: var(--color-bg-code); border-radius: var(--radius-md); font-family: var(--font-mono); font-size: var(--text-sm); color: #CDD6F4; white-space: pre-wrap">
+<span style="color: #89DCEB">-- Co Entity Framework generuje w tle:</span>
+SELECT id, status_id, physical_condition, added_to_pool_at
+FROM card
+      </div>
+    </div>
+
+    <!-- SCREEN 4: DbContext jako "kontrola ruchu" -->
+    <div class="screen">
+      <h2 class="screen-title">DbContext — zarządca połączeń</h2>
+      <p>Plik: <code class="inline-code">SystemStacjiNarciarskiejDLL/SkiResortDbContext.cs</code></p>
+
+      <div class="translation-block animate-in">
+        <div class="translation-code">
+          <span class="translation-label">KOD</span>
+          <pre><code>
+<span class="code-line"><span class="code-keyword">public class</span> <span class="code-type">SkiResortDbContext</span> : <span class="code-type">DbContext</span></span>
+<span class="code-line">{</span>
+<span class="code-line">    <span class="code-keyword">public</span> DbSet&lt;<span class="code-type">Card</span>&gt; Cards { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">    <span class="code-keyword">public</span> DbSet&lt;<span class="code-type">SkiPass</span>&gt; SkiPasses { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">    <span class="code-keyword">public</span> DbSet&lt;<span class="code-type">Gate</span>&gt; Gates { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">    <span class="code-keyword">public</span> DbSet&lt;<span class="code-type">GateScan</span>&gt; GateScans { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">    <span class="code-keyword">public</span> DbSet&lt;<span class="code-type">Reservation</span>&gt; Reservations { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">    <span class="code-keyword">public</span> DbSet&lt;<span class="code-type">Transaction</span>&gt; Transactions { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; }</span>
+<span class="code-line">}</span>
+          </code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PO POLSKU</span>
+          <div class="translation-lines">
+            <p class="tl">DbContext to "brama" do bazy danych. Dziedziczy gotowe mechanizmy.</p>
+            <p class="tl">&nbsp;</p>
+            <p class="tl">Każde DbSet to "okno" do jednej tabeli. Cards = tabela "card".</p>
+            <p class="tl">SkiPasses = tabela "ski_pass". Przez te okna czytasz i piszesz dane.</p>
+            <p class="tl">Gates = tabela "gate". Fizyczne bramki wjazdowe.</p>
+            <p class="tl">GateScans = tabela "gate_scan". Historia skanowań.</p>
+            <p class="tl">Reservations = tabela "reservation". Zamówienia online.</p>
+            <p class="tl">Transactions = tabela "transaction". Historia płatności.</p>
+            <p class="tl">&nbsp;</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-info" style="margin-top: var(--space-6)">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <strong class="callout-title">DbContext jako "pojedynczy punkt prawdy"</strong>
+          <p>Cały system rozmawia z bazą danych przez jeden <span class="tooltip-term" data-tooltip="DbContext (Database Context) to klasa zarządzająca połączeniem z bazą danych i wszystkimi tabelami. To jak centrala telefoniczna — wszystkie zapytania do bazy idą przez nią.">DbContext</span>. Dzięki temu masz jeden punkt, który kontroluje dostęp do danych — łatwo logować, łatwo testować, łatwo zmienić bazę danych.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: Relacje między tabelami -->
+    <div class="screen">
+      <h2 class="screen-title">Jak tabele są ze sobą powiązane?</h2>
+      <p>Tabele to nie izolowane wyspy — są ze sobą połączone <span class="tooltip-term" data-tooltip="Klucz obcy (foreign key) to pole w tabeli wskazujące na rekord w innej tabeli. Np. ski_pass.card_id wskazuje na card.id — każdy karnet wie, do której karty należy.">kluczami obcymi</span>. Oto główna sieć powiązań:</p>
+
+      <div style="margin-top: var(--space-6); display: grid; gap: var(--space-3)">
+        <div style="padding: var(--space-4); background: var(--color-surface); border-radius: var(--radius-sm); border: 1px solid var(--color-border); display: flex; align-items: center; gap: var(--space-4)">
+          <span style="font-size: 1.5rem">👤</span>
+          <div>
+            <strong>user</strong> → <strong>reservation</strong>
+            <span style="color: var(--color-text-secondary); font-size: var(--text-sm); display: block">Użytkownik może mieć wiele rezerwacji</span>
+          </div>
+        </div>
+        <div style="padding: var(--space-4); background: var(--color-surface); border-radius: var(--radius-sm); border: 1px solid var(--color-border); display: flex; align-items: center; gap: var(--space-4)">
+          <span style="font-size: 1.5rem">📋</span>
+          <div>
+            <strong>reservation</strong> → <strong>ski_pass</strong>
+            <span style="color: var(--color-text-secondary); font-size: var(--text-sm); display: block">Rezerwacja rodzi karnet, karnet ma daty ważności</span>
+          </div>
+        </div>
+        <div style="padding: var(--space-4); background: var(--color-surface); border-radius: var(--radius-sm); border: 1px solid var(--color-border); display: flex; align-items: center; gap: var(--space-4)">
+          <span style="font-size: 1.5rem">💳</span>
+          <div>
+            <strong>ski_pass</strong> → <strong>card</strong>
+            <span style="color: var(--color-text-secondary); font-size: var(--text-sm); display: block">Karnet jest załadowany na fizyczną kartę RFID</span>
+          </div>
+        </div>
+        <div style="padding: var(--space-4); background: var(--color-surface); border-radius: var(--radius-sm); border: 1px solid var(--color-border); display: flex; align-items: center; gap: var(--space-4)">
+          <span style="font-size: 1.5rem">🚪</span>
+          <div>
+            <strong>card</strong> → <strong>gate_scan</strong>
+            <span style="color: var(--color-text-secondary); font-size: var(--text-sm); display: block">Każde skanowanie karty przy bramce jest logowane</span>
+          </div>
+        </div>
+        <div style="padding: var(--space-4); background: var(--color-surface); border-radius: var(--radius-sm); border: 1px solid var(--color-border); display: flex; align-items: center; gap: var(--space-4)">
+          <span style="font-size: 1.5rem">🎿</span>
+          <div>
+            <strong>lift</strong> ↔ <strong>trail</strong>
+            <span style="color: var(--color-text-secondary); font-size: var(--text-sm); display: block">Wyciągi i trasy są połączone przez tabelę lift_trail (jeden wyciąg, wiele tras)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 6: Quiz -->
+    <div class="screen">
+      <h2 class="screen-title">Sprawdź rozumienie bazy danych</h2>
+
+      <div class="quiz-container" id="quiz-module4">
+        <div class="quiz-question-block"
+             data-correct="option-a"
+             data-explanation-right="Dokładnie! Entity Framework automatycznie tłumaczy kod C# na SQL. Nie piszesz SELECT ręcznie — piszesz _context.Cards.Find(id)."
+             data-explanation-wrong="Nie całkiem. Entity Framework Core to ORM — tłumaczy operacje na obiektach C# na SQL. Nie jest to narzędzie do ręcznego pisania SQL ani do zarządzania Dockerem.">
+          <h3 class="quiz-question">Nowy kolega pyta: "Gdzie w kodzie są zapytania SQL?" Jak odpowiesz?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Nie ma ręcznego SQL — Entity Framework generuje je automatycznie z kodu C#</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>SQL jest w pliku BramkaController.cs w komentarzach</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>SQL jest w docker-compose.yml jako konfiguracja bazy danych</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <div class="quiz-question-block"
+             data-correct="option-b"
+             data-explanation-right="Właśnie! Status karty to liczba (1 = aktywna) w tabeli card. Tabele dict_card_status tłumaczą liczby na czytelne nazwy. BramkaAPI sprawdza StatusId == 1."
+             data-explanation-wrong="Niekoniecznie — aktywność karty sprawdzana jest przez StatusId w tabeli card (pole numeryczne), nie przez nazwę tekstu ani przez tabelę karnetów.">
+          <h3 class="quiz-question">Chcesz sprawdzić, czy karta jest aktywna. Które pole w bazie danych o tym decyduje?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Pole "name" w tabeli dict_card_status</span>
+            </button>
+            <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Pole "status_id" w tabeli card (wartość 1 = aktywna)</span>
+            </button>
+            <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Pole "is_active" w tabeli ski_pass</span>
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-module4')">Sprawdź odpowiedzi</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module4')">Spróbuj ponownie</button>
+      </div>
+    </div>
+
+  </div>
+</section>

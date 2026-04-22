@@ -57,9 +57,7 @@ namespace BramkaAPI.Controllers
                 return NotFound(new { Wiadomosc = "Karta o podanym ID nie istnieje." });
             }
 
-            bool czyAktywna = karta.StatusId == 1;
-
-            if (czyAktywna)
+            if (karta.StatusId == 1)
             {
                 return Ok(new { Aktywna = true, Wiadomosc = "Karta jest aktywna. Dostęp przyznany." });
             }

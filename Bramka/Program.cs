@@ -7,7 +7,6 @@ namespace Bramka
 {
     class Program
     {
-
         static async Task Main(string[] args)
         {
             using HttpClient client = new();
@@ -16,7 +15,7 @@ namespace Bramka
             {
                 db.Database.EnsureCreated();
 
-                // Wstawia początkowe dane testowe.
+
                 if (!db.KartyLokalne.Any())
                 {
                     db.KartyLokalne.Add(new KartaLokalna { Id = "12345", CzyAktywna = true });
@@ -36,14 +35,11 @@ namespace Bramka
 
                 if (!string.IsNullOrEmpty(cardId))
                 {
-                    //Console.Clear();
-
-                    //Console.WriteLine("\nSprawdzanie karty...");
+                    Console.Clear();
+                    Console.WriteLine("\nSprawdzanie karty...");
 
                     if (!string.IsNullOrEmpty(cardId))
                     {
-                        Console.Clear();
-                        Console.WriteLine("\nSprawdzanie karty (Offline)...");
 
                         using (var db = new BramkaDbContext())
                         {
@@ -52,95 +48,68 @@ namespace Bramka
                             Console.WriteLine();
                             if (karta != null)
                             {
-                                if (karta.CzyAktywna)
-                                {
-                                    Console.ForegroundColor = ConsoleColor.Green;
-                                    Console.WriteLine(">>> ZAPRASZAMY <<<");
-                                }
-                                else
-                                {
-                                    Console.ForegroundColor = ConsoleColor.Red;
-                                    Console.WriteLine(">>> ODMÓWIONO DOSTĘPU <<<");
-                                }
+                                WyswietlStatusKarty(karta.CzyAktywna, false);
                             }
                             else
                             {
-                                Console.ForegroundColor = ConsoleColor.Red;
-                                Console.WriteLine(">>> ODMÓWIONO DOSTĘPU (nie istnieje) <<<");
+
+                                string url = $"http://localhost:49226/api/bramka/sprawdz-karte/{cardId}";
+
+                                try
+                                {
+                                    Task<HttpResponseMessage> getTask = client.GetAsync(url);
+
+                                    while (!getTask.IsCompleted)
+                                    {
+                                        OdswiezNaglowek();
+                                        await Task.Delay(200);
+                                    }
+
+                                    HttpResponseMessage response = await getTask;
+
+                                    if (response.IsSuccessStatusCode)
+                                    {
+                                        string jsonResponse = await response.Content.ReadAsStringAsync();
+
+                                        using JsonDocument doc = JsonDocument.Parse(jsonResponse);
+                                        JsonElement root = doc.RootElement;
+
+                                        bool czyAktywna = false;
+                                        if (root.TryGetProperty("aktywna", out JsonElement prop) || root.TryGetProperty("Aktywna", out prop))
+                                        {
+                                            czyAktywna = prop.GetBoolean();
+                                        }
+
+                                        // Dodaje karte do lokalnej bazy
+                                        db.KartyLokalne.Add(new KartaLokalna { Id = cardId, CzyAktywna = czyAktywna });
+                                        await db.SaveChangesAsync();
+
+                                        Console.WriteLine("[Serwer API] Karta zsynchronizowana pomyślnie.");
+                                        WyswietlStatusKarty(czyAktywna, true);
+                                    }
+                                    else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                                    {
+                                        Console.WriteLine();
+                                        Console.ForegroundColor = ConsoleColor.Red;
+                                        Console.WriteLine(">>> ODMÓWIONO DOSTĘPU (Karta nie istnieje w systemie) <<<");
+                                        Console.ResetColor();
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine($"\nNieoczekiwany błąd serwera: {response.StatusCode}");
+                                    }
+                                }
+                                catch (HttpRequestException e)
+                                {
+                                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                                    Console.WriteLine($"\nBłąd połączenia z serwerem API: {e.Message}");
+                                    Console.WriteLine("Bramka w trybie offline nie może zweryfikować nowej karty!");
+                                    Console.ResetColor();
+                                }
                             }
                             Console.ResetColor();
                         }
-
-                            
                         
-
-                        string url = $"http://localhost:49226/api/bramka/sprawdz-karte/{cardId}";
-
-                        /*try
-                        {
-
-                            Task<HttpResponseMessage> getTask = client.GetAsync(url);
-
-                            while (!getTask.IsCompleted)
-                            {
-                                OdswiezNaglowek();
-                                await Task.Delay(200);
-                            }
-
-
-                            HttpResponseMessage response = await getTask;
-
-                            if (response.IsSuccessStatusCode)
-                            {
-                                string jsonResponse = await response.Content.ReadAsStringAsync();
-
-                                using JsonDocument doc = JsonDocument.Parse(jsonResponse);
-                                JsonElement root = doc.RootElement;
-
-                                bool czyAktywna = false;
-
-                                if (root.TryGetProperty("aktywna", out JsonElement prop) || root.TryGetProperty("Aktywna", out prop))
-                                {
-                                    czyAktywna = prop.GetBoolean();
-                                }
-
-                                Console.WriteLine();
-                                if (czyAktywna)
-                                {
-                                    Console.ForegroundColor = ConsoleColor.Green;
-                                    Console.WriteLine(">>> ZAPRASZAMY <<<");
-                                }
-                                else
-                                {
-                                    Console.ForegroundColor = ConsoleColor.Red;
-                                    Console.WriteLine(">>> ODMÓWIONO DOSTĘPU <<<");
-                                }
-                                Console.ResetColor();
-                            }
-                            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                            {
-                                Console.WriteLine();
-                                Console.ForegroundColor = ConsoleColor.Red;
-                                Console.WriteLine(">>> ODMÓWIONO DOSTĘPU (Karta nie istnieje) <<<");
-                                Console.ResetColor();
-                            }
-                            else
-                            {
-                                Console.WriteLine($"\nNieoczekiwany błąd serwera: {response.StatusCode}");
-                            }
-                        }
-                        catch (HttpRequestException e)
-                        {
-                            Console.ForegroundColor = ConsoleColor.DarkYellow;
-                            Console.WriteLine($"\nBłąd połączenia z serwerem API: {e.Message}");
-                            Console.ResetColor();
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Nieprawidłowy format ID.");
-                    }
-                    */
                         int elapsed = 0;
                         int interval = 100;
                         int waitTime = 5000;
@@ -163,6 +132,24 @@ namespace Bramka
                         }
                     }
                 }
+
+                static void WyswietlStatusKarty(bool czyAktywna, bool pomocnik)
+                {
+                    Console.WriteLine();
+                    if (czyAktywna)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine($">>> ZAPRASZAMY [{(pomocnik ? "serwer" : "lokalnie")}] <<<");
+                        //wywołanie funkcji dodającej czas wejścia do bazy danych
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(">>> ODMOWA DOSTĘPU <<<");
+                    }
+                    Console.ResetColor();
+                }
+
 
                 static async Task<string> PobierzWartoscZOdswiezaniemAsync()
                 {

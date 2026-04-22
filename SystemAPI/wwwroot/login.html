@@ -1,0 +1,33 @@
+﻿<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Logowanie</title>
+</head>
+<body>
+    <h2>Zaloguj się</h2>
+    <input type="email" id="email" value="" placeholder="E-mail"><br><br>
+    <input type="password" id="password" value="" placeholder="Hasło"><br><br>
+    <button onclick="login()">Zaloguj</button>
+
+    <script>async function login() {
+            // pobiera wartości z formularza
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, password: password, role: 'kasjer' })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.token);
+                alert('Logowanie pomyślne.\nToken: ' + data.token);
+            } else {
+                alert('Nieprawidłowy login lub hasło.');
+            }
+        }</script>
+</body>
+</html>

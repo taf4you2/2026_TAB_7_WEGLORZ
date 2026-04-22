@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="All" type="CompoundRunConfigurationType">
+    <toRun name="Docker Compose" type="docker-deploy" />
+    <toRun name="KasjerApp" type="DotNetProject" />
+    <method v="2" />
+  </configuration>
+</component>

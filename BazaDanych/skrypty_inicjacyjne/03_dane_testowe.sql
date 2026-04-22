@@ -73,7 +73,8 @@ INSERT INTO "trail_planner" (id, login, password_hash, is_active) VALUES
 INSERT INTO "user" (id, email, password_hash, created_at) VALUES
   (1, 'anna.nowak@gmail.com',  '$2a$11$qClV91s8x9Gerg/zss45t.D.JaJq4AK.yd8xHVV5qJ0Y0kibjcDYu', NOW()),
   (2, 'piotr.kowal@gmail.com', '$2a$11$qClV91s8x9Gerg/zss45t.D.JaJq4AK.yd8xHVV5qJ0Y0kibjcDYu', NOW()),
-  (3, 'maria.test@gmail.com',  '$2a$11$qClV91s8x9Gerg/zss45t.D.JaJq4AK.yd8xHVV5qJ0Y0kibjcDYu', NOW());
+  (3, 'maria.test@gmail.com',  '$2a$11$qClV91s8x9Gerg/zss45t.D.JaJq4AK.yd8xHVV5qJ0Y0kibjcDYu', NOW()),
+  (4, 'narciarz@example.com',  '$2a$11$qClV91s8x9Gerg/zss45t.D.JaJq4AK.yd8xHVV5qJ0Y0kibjcDYu', NOW());
 
 SELECT setval(pg_get_serial_sequence('"cashier"',      'id'), 10);
 SELECT setval(pg_get_serial_sequence('"administrator"','id'), 10);

@@ -1,0 +1,83 @@
+<UserControl x:Class="KasjerApp.Views.Panels.PassesPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#F0F2F5">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Nagłówek -->
+        <TextBlock Grid.Row="0" Text="Karnety – Blokada (UC3) i Zwrot (UC11)"
+                   FontSize="22" FontWeight="Bold" Foreground="#1565C0" Margin="0,0,0,16"/>
+
+        <!-- Wyszukiwarka -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+            <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="RfidBox" Grid.Column="0" Height="36" Padding="10,8"
+                             FontSize="14" BorderBrush="#CCC" BorderThickness="1"
+                             VerticalContentAlignment="Center"
+                             KeyDown="RfidBox_KeyDown"/>
+                    <Button Grid.Column="1" Content="Szukaj karnetów" Click="SearchBtn_Click"
+                            Background="#1565C0" Foreground="White" BorderThickness="0"
+                            Padding="16,0" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
+                </Grid>
+                <TextBlock x:Name="SearchErrorText" Foreground="#C62828" FontSize="12"
+                           Visibility="Collapsed" Margin="0,8,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Lista karnetów -->
+        <Border Grid.Row="2" Background="White" CornerRadius="8" Margin="0,0,0,16">
+            <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+            <DataGrid x:Name="PassesGrid"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      GridLinesVisibility="Horizontal"
+                      RowBackground="White"
+                      AlternatingRowBackground="#F9FAFB"
+                      BorderThickness="0"
+                      SelectionChanged="PassesGrid_SelectionChanged"
+                      CanUserResizeRows="False"
+                      HeadersVisibility="Column"
+                      ColumnHeaderHeight="40">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID"        Binding="{Binding Id}"        Width="60"/>
+                    <DataGridTextColumn Header="Status"    Binding="{Binding Status}"    Width="120"/>
+                    <DataGridTextColumn Header="Taryfa"    Binding="{Binding Tariff}"    Width="150"/>
+                    <DataGridTextColumn Header="Typ"       Binding="{Binding PassType}"  Width="120"/>
+                    <DataGridTextColumn Header="Ważny od"  Binding="{Binding ValidFrom, StringFormat=dd.MM.yyyy}" Width="100"/>
+                    <DataGridTextColumn Header="Ważny do"  Binding="{Binding ValidTo,   StringFormat=dd.MM.yyyy}" Width="100"/>
+                    <DataGridTextColumn Header="Powód blokady" Binding="{Binding BlockReason}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- Przyciski akcji -->
+        <Border Grid.Row="3" Background="White" CornerRadius="8" Padding="16">
+            <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="BlockBtn" Content="🔒  Zablokuj (UC3)" Click="BlockBtn_Click"
+                        IsEnabled="False"
+                        Background="#F57F17" Foreground="White" BorderThickness="0"
+                        Padding="16,10" Margin="0,0,12,0" FontSize="13" Cursor="Hand"/>
+                <Button x:Name="ReturnBtn" Content="↩  Zwróć karnet (UC11)" Click="ReturnBtn_Click"
+                        IsEnabled="False"
+                        Background="#C62828" Foreground="White" BorderThickness="0"
+                        Padding="16,10" FontSize="13" Cursor="Hand"/>
+                <TextBlock x:Name="ActionMsg" VerticalAlignment="Center"
+                           Margin="16,0,0,0" FontSize="12" Foreground="#555"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

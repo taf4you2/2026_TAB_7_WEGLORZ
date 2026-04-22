@@ -1,0 +1,56 @@
+<Window x:Class="KasjerApp.Views.Panels.ReturnDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Zwrot karnetu (UC11)"
+        Width="480" Height="420"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F0F2F5">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Zwrot karnetu" FontSize="18" FontWeight="Bold"
+                   Foreground="#1565C0" Margin="0,0,0,16"/>
+
+        <!-- Symulacja zwrotu -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+            <Border.Effect><DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+            <StackPanel>
+                <TextBlock Text="Podgląd kalkulacji zwrotu:" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="PreviewText" Foreground="#555" FontSize="12"
+                           TextWrapping="Wrap" Text="Ładowanie..."/>
+            </StackPanel>
+        </Border>
+
+        <!-- Zwrot kaucji -->
+        <CheckBox x:Name="ReturnCardCheck" Grid.Row="2"
+                  Content="Zwróć kartę (+ 20 PLN kaucji)"
+                  Margin="0,0,0,8" FontSize="13"
+                  Checked="ReturnCardCheck_Changed"
+                  Unchecked="ReturnCardCheck_Changed"/>
+
+        <!-- Powód -->
+        <StackPanel Grid.Row="3" Margin="0,8,0,16">
+            <TextBlock Text="Powód zwrotu:" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
+            <TextBox x:Name="ReasonBox" Height="36" Padding="10,8" FontSize="14"
+                     BorderBrush="#CCC" BorderThickness="1"
+                     VerticalContentAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Przyciski -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Anuluj" Click="CancelBtn_Click"
+                    Background="#EEE" Foreground="#333" BorderThickness="0"
+                    Padding="16,9" Margin="0,0,12,0" Cursor="Hand"/>
+            <Button Content="Zatwierdź zwrot" Click="ConfirmBtn_Click"
+                    Background="#C62828" Foreground="White" BorderThickness="0"
+                    Padding="16,9" Cursor="Hand" FontWeight="SemiBold"/>
+        </StackPanel>
+    </Grid>
+</Window>

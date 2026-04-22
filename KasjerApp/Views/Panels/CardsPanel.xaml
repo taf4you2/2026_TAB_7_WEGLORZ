@@ -1,0 +1,70 @@
+<UserControl x:Class="KasjerApp.Views.Panels.CardsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#F0F2F5">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Karty RFID"
+                   FontSize="22" FontWeight="Bold" Foreground="#1565C0" Margin="0,0,0,16"/>
+
+        <!-- Filtry + dodaj -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+            <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="SearchBox" Grid.Column="0" Height="36" Padding="10,8"
+                         FontSize="14" BorderBrush="#CCC" BorderThickness="1"
+                         VerticalContentAlignment="Center"
+                         KeyDown="SearchBox_KeyDown"/>
+                <ComboBox x:Name="StatusCombo" Grid.Column="1" Height="36" Margin="8,0,0,0"
+                          FontSize="13" SelectedIndex="0">
+                    <ComboBoxItem Content="(wszystkie statusy)"/>
+                    <ComboBoxItem Content="wolna"/>
+                    <ComboBoxItem Content="aktywna"/>
+                    <ComboBoxItem Content="zablokowana"/>
+                </ComboBox>
+                <Button Grid.Column="2" Content="Szukaj" Click="SearchBtn_Click"
+                        Background="#1565C0" Foreground="White" BorderThickness="0"
+                        Padding="14,0" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
+                <Button Grid.Column="3" Content="+ Dodaj kartę" Click="AddCardBtn_Click"
+                        Background="#2E7D32" Foreground="White" BorderThickness="0"
+                        Padding="14,0" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
+            </Grid>
+        </Border>
+
+        <!-- DataGrid -->
+        <Border Grid.Row="2" Background="White" CornerRadius="8" Margin="0,0,0,16">
+            <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+            <DataGrid x:Name="CardsGrid"
+                      AutoGenerateColumns="False" IsReadOnly="True"
+                      GridLinesVisibility="Horizontal"
+                      RowBackground="White" AlternatingRowBackground="#F9FAFB"
+                      BorderThickness="0" CanUserResizeRows="False"
+                      HeadersVisibility="Column" ColumnHeaderHeight="40">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="RFID"          Binding="{Binding Id}"            Width="140"/>
+                    <DataGridTextColumn Header="Status"        Binding="{Binding Status}"        Width="100"/>
+                    <DataGridTextColumn Header="Właściciel"    Binding="{Binding Owner}"         Width="160"/>
+                    <DataGridTextColumn Header="Aktywny karnet" Binding="{Binding ActivePassType}" Width="130"/>
+                    <DataGridTextColumn Header="Ważny do"      Binding="{Binding ValidTo, StringFormat=dd.MM.yyyy}" Width="100"/>
+                    <DataGridCheckBoxColumn Header="Kaucja"    Binding="{Binding DepositPaid}"   Width="70"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- Komunikat -->
+        <TextBlock x:Name="MsgText" Grid.Row="3"
+                   Foreground="#C62828" FontSize="12" Visibility="Collapsed"/>
+    </Grid>
+</UserControl>

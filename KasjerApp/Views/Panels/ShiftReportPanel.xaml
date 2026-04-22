@@ -1,0 +1,104 @@
+<UserControl x:Class="KasjerApp.Views.Panels.ShiftReportPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#F0F2F5">
+    <UserControl.Resources>
+        <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#757575"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+        <Style x:Key="ValueStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#212121"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="24" MaxWidth="700" HorizontalAlignment="Left">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Nagłówek -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
+            <TextBlock Text="UC9 – Raport zmiany" FontSize="22" FontWeight="Bold"
+                       Foreground="#1565C0" VerticalAlignment="Center"/>
+            <Button Content="Odśwież" Click="RefreshBtn_Click"
+                    Background="#1565C0" Foreground="White" BorderThickness="0"
+                    Padding="16,7" Margin="20,0,0,0" FontSize="13" Cursor="Hand"/>
+        </StackPanel>
+
+        <!-- Dane raportu -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="24" Margin="0,0,0,20">
+            <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+            <StackPanel x:Name="ReportContent">
+                <TextBlock x:Name="NoReportText" Text="Brak danych raportu na dzisiaj."
+                           Foreground="#999" FontSize="14" Visibility="Collapsed"/>
+                <Grid x:Name="ReportGrid" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="230"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Kasjer:"              Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="R_Cashier"          Style="{StaticResource ValueStyle}"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Data:"                Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="R_Date"             Style="{StaticResource ValueStyle}"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Sprzedaży:"           Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="R_SalesCount"       Style="{StaticResource ValueStyle}"/>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Wartość sprzedaży:"   Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="R_SalesAmount"      Style="{StaticResource ValueStyle}"/>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Zwrotów:"             Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Grid.Row="4" Grid.Column="1" x:Name="R_ReturnsCount"     Style="{StaticResource ValueStyle}"/>
+
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Wartość zwrotów:"     Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Grid.Row="5" Grid.Column="1" x:Name="R_ReturnsAmount"    Style="{StaticResource ValueStyle}"/>
+
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Przychód netto:"      Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Grid.Row="6" Grid.Column="1" x:Name="R_Net"              Style="{StaticResource ValueStyle}" FontWeight="Bold"/>
+
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Gotówka:"             Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Grid.Row="7" Grid.Column="1" x:Name="R_Cash"             Style="{StaticResource ValueStyle}"/>
+
+                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Karta:"               Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Grid.Row="8" Grid.Column="1" x:Name="R_Card"             Style="{StaticResource ValueStyle}"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- Zamknij zmianę -->
+        <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="20">
+            <Border.Effect><DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.08"/></Border.Effect>
+            <StackPanel>
+                <TextBlock Text="Zamknięcie zmiany spowoduje zapisanie raportu w systemie."
+                           Foreground="#757575" FontSize="12" Margin="0,0,0,12"/>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Zamknij zmianę" Click="CloseShiftBtn_Click"
+                            Background="#C62828" Foreground="White" BorderThickness="0"
+                            Padding="18,10" FontSize="14" FontWeight="SemiBold" Cursor="Hand"/>
+                    <TextBlock x:Name="CloseMsg" VerticalAlignment="Center"
+                               Margin="16,0,0,0" FontSize="12" Foreground="#2E7D32"
+                               Visibility="Collapsed"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

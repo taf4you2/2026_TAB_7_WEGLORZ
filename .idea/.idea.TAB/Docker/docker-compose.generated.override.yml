@@ -1,0 +1,40 @@
+# This is a generated file. Not intended for manual editing.
+services:
+  bramka-api:
+    build:
+      context: "D:\\Rider Repos\\2026_TAB_7_WEGLORZ"
+      dockerfile: "BramkaAPI/Dockerfile"
+      target: "base"
+    command: []
+    entrypoint:
+    - "dotnet"
+    - "/app/bin/Debug/net10.0/BramkaAPI.dll"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    image: "bramkaapi:dev"
+    ports: []
+    volumes:
+    - "D:\\Rider Repos\\2026_TAB_7_WEGLORZ\\BramkaAPI:/app:rw"
+    - "D:\\Rider Repos\\2026_TAB_7_WEGLORZ:/src:rw"
+    - "C:\\Users\\Praca\\.nuget\\packages:/home/app/.nuget/packages"
+    working_dir: "/app"
+  system-api:
+    build:
+      context: "D:\\Rider Repos\\2026_TAB_7_WEGLORZ"
+      dockerfile: "SystemAPI/Dockerfile"
+      target: "base"
+    command: []
+    entrypoint:
+    - "dotnet"
+    - "/app/bin/Debug/net10.0/SystemAPI.dll"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    image: "systemapi:dev"
+    ports: []
+    volumes:
+    - "D:\\Rider Repos\\2026_TAB_7_WEGLORZ\\SystemAPI:/app:rw"
+    - "D:\\Rider Repos\\2026_TAB_7_WEGLORZ:/src:rw"
+    - "C:\\Users\\Praca\\.nuget\\packages:/home/app/.nuget/packages"
+    working_dir: "/app"

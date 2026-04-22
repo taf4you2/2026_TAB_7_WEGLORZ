@@ -1,0 +1,81 @@
+<UserControl x:Class="KasjerApp.Views.Panels.SellTicketPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#F0F2F5">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="24" MaxWidth="600" HorizontalAlignment="Left">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Nagłówek -->
+            <TextBlock Grid.Row="0" Text="UC1 – Sprzedaj bilet jednorazowy"
+                       FontSize="22" FontWeight="Bold" Foreground="#1565C0" Margin="0,0,0,20"/>
+
+            <!-- Formularz -->
+            <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="24" Margin="0,0,0,16">
+                <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                <StackPanel>
+
+                    <!-- RFID karty -->
+                    <TextBlock Text="RFID karty" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="RfidBox" Grid.Column="0" Height="36" Padding="10,8"
+                                 FontSize="14" BorderBrush="#CCC" BorderThickness="1"
+                                 VerticalContentAlignment="Center"/>
+                        <Button Grid.Column="1" Content="Weryfikuj" Click="VerifyCard_Click"
+                                Background="#1565C0" Foreground="White" BorderThickness="0"
+                                Padding="14,0" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
+                    </Grid>
+
+                    <!-- Status karty -->
+                    <Border x:Name="CardInfoBorder" Background="#E3F2FD" CornerRadius="6" Padding="12,8"
+                            Margin="0,0,0,16" Visibility="Collapsed">
+                        <TextBlock x:Name="CardInfoText" Foreground="#1565C0" FontSize="13" TextWrapping="Wrap"/>
+                    </Border>
+
+                    <!-- Taryfa -->
+                    <TextBlock Text="Taryfa" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
+                    <ComboBox x:Name="TariffCombo" Height="36" Margin="0,0,0,16"
+                              DisplayMemberPath="DisplayName" FontSize="14"/>
+
+                    <!-- Data ważności -->
+                    <TextBlock Text="Data ważności" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
+                    <DatePicker x:Name="ValidOnPicker" Height="36" Margin="0,0,0,16" FontSize="14"/>
+
+                    <!-- Ilość -->
+                    <TextBlock Text="Ilość (1–50)" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
+                    <TextBox x:Name="QuantityBox" Height="36" Padding="10,8" Text="1"
+                             FontSize="14" BorderBrush="#CCC" BorderThickness="1"
+                             VerticalContentAlignment="Center" Margin="0,0,0,20"/>
+
+                    <!-- Błąd -->
+                    <TextBlock x:Name="ErrorText" Foreground="#C62828" FontSize="12"
+                               Visibility="Collapsed" Margin="0,0,0,12" TextWrapping="Wrap"/>
+
+                    <!-- Przycisk sprzedaj -->
+                    <Button Content="Sprzedaj bilet" Click="SellBtn_Click"
+                            Background="#2E7D32" Foreground="White" BorderThickness="0"
+                            Height="42" FontSize="15" FontWeight="SemiBold" Cursor="Hand"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Potwierdzenie -->
+            <Border Grid.Row="2" x:Name="ConfirmBorder" Background="#E8F5E9" CornerRadius="8"
+                    Padding="20" Visibility="Collapsed">
+                <Border.Effect><DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.08"/></Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="✓ Bilet sprzedany pomyślnie" FontSize="15" FontWeight="Bold"
+                               Foreground="#2E7D32" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="ConfirmText" Foreground="#1B5E20" FontSize="13" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

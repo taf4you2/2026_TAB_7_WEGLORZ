@@ -64,5 +64,21 @@ namespace BramkaAPI.Controllers
 
             return Ok(new { Aktywna = false, Wiadomosc = "Karta jest nieaktywna. Odmowa dostępu." });
         }
+
+        [HttpGet("aktywne-karty")]
+        public async Task<IActionResult> PobierzAktywneKarty()
+        {
+            var karty = await _context.Cards
+                .Where(c => c.StatusId == 1)
+                .Select(c => new
+                {
+                    Id = c.Id,
+                    CzyAktywna = c.StatusId == 1,
+                    WaznaDo = c.SkiPasses.Any() ? c.SkiPasses.Max(sp => sp.ValidTo) : null
+                })
+                .ToListAsync();
+
+            return Ok(karty);
+        }
     }
 }

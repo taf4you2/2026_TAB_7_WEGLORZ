@@ -8,5 +8,6 @@ namespace Bramka
     {
         public string Id { get; set; } = string.Empty;
         public bool CzyAktywna { get; set; }
+        public DateTime? WaznaDo { get; set; }
     }
 }

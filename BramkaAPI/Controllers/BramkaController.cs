@@ -57,14 +57,28 @@ namespace BramkaAPI.Controllers
                 return NotFound(new { Wiadomosc = "Karta o podanym ID nie istnieje." });
             }
 
-            bool czyAktywna = karta.StatusId == 1;
-
-            if (czyAktywna)
+            if (karta.StatusId == 1)
             {
                 return Ok(new { Aktywna = true, Wiadomosc = "Karta jest aktywna. Dostęp przyznany." });
             }
 
             return Ok(new { Aktywna = false, Wiadomosc = "Karta jest nieaktywna. Odmowa dostępu." });
+        }
+
+        [HttpGet("aktywne-karty")]
+        public async Task<IActionResult> PobierzAktywneKarty()
+        {
+            var karty = await _context.Cards
+                .Where(c => c.StatusId == 1)
+                .Select(c => new
+                {
+                    Id = c.Id,
+                    CzyAktywna = c.StatusId == 1,
+                    WaznaDo = c.SkiPasses.Any() ? c.SkiPasses.Max(sp => sp.ValidTo) : null
+                })
+                .ToListAsync();
+
+            return Ok(karty);
         }
     }
 }

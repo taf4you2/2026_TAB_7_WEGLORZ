@@ -1,33 +1,200 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logowanie</title>
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            font-family: Segoe UI, system-ui, sans-serif;
+            background: #eef4fb;
+            color: #172033;
+        }
+
+        .panel {
+            width: min(420px, calc(100vw - 32px));
+            background: #fff;
+            border: 1px solid #dce4ee;
+            border-radius: 8px;
+            padding: 28px;
+            box-shadow: 0 18px 42px rgba(23, 32, 51, 0.14);
+        }
+
+        h1 {
+            margin: 0 0 22px;
+            font-size: 24px;
+        }
+
+        .roles {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .role {
+            border: 1px solid #cbd7e4;
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 600;
+        }
+
+        .role.active {
+            border-color: #1565c0;
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+
+        label {
+            display: block;
+            margin: 14px 0 6px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 11px 12px;
+            border: 1px solid #cbd7e4;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        .submit {
+            width: 100%;
+            margin-top: 18px;
+            padding: 12px;
+            border: 0;
+            border-radius: 8px;
+            background: #1565c0;
+            color: #fff;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .error {
+            display: none;
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-left: 4px solid #c62828;
+            background: #ffebee;
+            color: #9f1b1b;
+            font-size: 14px;
+        }
+
+        .hint {
+            margin-top: 18px;
+            padding: 10px 12px;
+            background: #fff8e1;
+            border-left: 4px solid #ff8f00;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+    </style>
 </head>
 <body>
-    <h2>Zaloguj się</h2>
-    <input type="email" id="email" value="" placeholder="E-mail"><br><br>
-    <input type="password" id="password" value="" placeholder="Hasło"><br><br>
-    <button onclick="login()">Zaloguj</button>
+    <main class="panel">
+        <h1>Logowanie</h1>
 
-    <script>async function login() {
-            // pobiera wartości z formularza
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+        <div class="roles">
+            <button class="role active" type="button" data-role="kasjer">Kasjer</button>
+            <button class="role" type="button" data-role="narciarz">Narciarz</button>
+        </div>
 
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email, password: password, role: 'kasjer' })
+        <label for="email">E-mail</label>
+        <input type="email" id="email" value="kasjer@stacja.pl" autocomplete="username">
+
+        <label for="password">Haslo</label>
+        <input type="password" id="password" value="haslo123" autocomplete="current-password">
+
+        <button class="submit" type="button" id="loginButton">Zaloguj</button>
+        <div class="error" id="error"></div>
+
+        <div class="hint">
+            Dane testowe:<br>
+            Kasjer: kasjer@stacja.pl / haslo123<br>
+            Narciarz: narciarz@example.com / haslo123
+        </div>
+    </main>
+
+    <script>
+        let selectedRole = 'kasjer';
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const errorBox = document.getElementById('error');
+
+        document.querySelectorAll('.role').forEach(button => {
+            button.addEventListener('click', () => {
+                selectedRole = button.dataset.role;
+                document.querySelectorAll('.role').forEach(item => item.classList.remove('active'));
+                button.classList.add('active');
+                emailInput.value = selectedRole === 'kasjer'
+                    ? 'kasjer@stacja.pl'
+                    : 'narciarz@example.com';
+                passwordInput.value = 'haslo123';
+                hideError();
             });
+        });
 
-            if (response.ok) {
+        document.getElementById('loginButton').addEventListener('click', login);
+        passwordInput.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                login();
+            }
+        });
+
+        async function login() {
+            hideError();
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            if (!email || !password) {
+                showError('Podaj e-mail i haslo.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, role: selectedRole })
+                });
+
+                if (!response.ok) {
+                    const details = await response.json().catch(() => ({}));
+                    showError(details.message || 'Nieprawidlowy login lub haslo.');
+                    return;
+                }
+
                 const data = await response.json();
                 localStorage.setItem('token', data.token);
-                alert('Logowanie pomyślne.\nToken: ' + data.token);
-            } else {
-                alert('Nieprawidłowy login lub hasło.');
+                localStorage.setItem('userId', data.userId);
+                localStorage.setItem('role', data.role);
+
+                window.location.href = data.role === 'narciarz' ? 'narciarz.html' : 'login.html';
+            } catch (error) {
+                showError('Brak polaczenia z API: ' + error.message);
             }
-        }</script>
+        }
+
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.style.display = 'block';
+        }
+
+        function hideError() {
+            errorBox.textContent = '';
+            errorBox.style.display = 'none';
+        }
+    </script>
 </body>
 </html>

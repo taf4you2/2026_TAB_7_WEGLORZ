@@ -100,6 +100,14 @@ public class ApiService
         r.EnsureSuccessStatusCode();
     }
 
+    // ── Użytkownicy ───────────────────────────────────────────────────────────
+    public async Task<List<UserDto>> SearchUsersAsync(string email)
+    {
+        var r = await _http.GetAsync($"/api/uzytkownicy?email={Uri.EscapeDataString(email)}");
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<List<UserDto>>() ?? [];
+    }
+
     // ── Bilety (UC1) ──────────────────────────────────────────────────────────
     public async Task<SellTicketResponse?> SellTicketAsync(SellTicketRequest req)
     {

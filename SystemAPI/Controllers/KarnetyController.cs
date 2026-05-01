@@ -55,9 +55,13 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreatePass([FromBody] CreatePassRequest req)
     {
-        var card = await db.Cards.FindAsync(req.CardId);
+        var card = await db.Cards.Include(c => c.Status).AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == req.CardId);
         if (card == null)
             return BadRequest(new { message = $"Karta {req.CardId} nie istnieje." });
+
+        if (card.Status?.Name == "zajeta")
+            return Conflict(new { message = "Karta jest już zajęta – ma aktywny karnet." });
 
         var tariff = await db.Tariffs.FindAsync(req.TariffId);
         if (tariff == null)
@@ -89,8 +93,8 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
             TariffId = req.TariffId,
             ReservationId = reservation.Id,
             StatusId = activeStatus?.Id,
-            ValidFrom = req.ValidFrom,
-            ValidTo = req.ValidTo
+            ValidFrom = DateTime.SpecifyKind(req.ValidFrom, DateTimeKind.Utc),
+            ValidTo = DateTime.SpecifyKind(req.ValidTo, DateTimeKind.Utc)
         };
         db.SkiPasses.Add(pass);
 
@@ -104,8 +108,16 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
             TransactionDate = DateTime.UtcNow
         };
         db.Transactions.Add(transaction);
-
         await db.SaveChangesAsync();
+
+        // Bezpośredni UPDATE statusu karty — ExecuteUpdateAsync omija change tracker
+        var zajetaId = await db.DictCardStatuses
+            .Where(s => s.Name == "zajeta")
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync();
+        if (zajetaId.HasValue)
+            await db.Cards.Where(c => c.Id == req.CardId)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.StatusId, zajetaId.Value));
 
         return CreatedAtAction(nameof(GetById), new { id = pass.Id }, ToDto(pass));
     }
@@ -123,6 +135,14 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         pass.StatusId = blockedStatus?.Id;
         pass.BlockReason = req.Reason;
         await db.SaveChangesAsync();
+
+        var wolnaId = await db.DictCardStatuses
+            .Where(s => s.Name == "wolna")
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync();
+        if (wolnaId.HasValue && pass.CardId != null)
+            await db.Cards.Where(c => c.Id == pass.CardId)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.StatusId, wolnaId.Value));
 
         return NoContent();
     }
@@ -155,8 +175,15 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
             TransactionDate = DateTime.UtcNow
         };
         db.Transactions.Add(refundTransaction);
-
         await db.SaveChangesAsync();
+
+        var wolnaId = await db.DictCardStatuses
+            .Where(s => s.Name == "wolna")
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync();
+        if (wolnaId.HasValue && pass.CardId != null)
+            await db.Cards.Where(c => c.Id == pass.CardId)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.StatusId, wolnaId.Value));
 
         return Ok(preview);
     }

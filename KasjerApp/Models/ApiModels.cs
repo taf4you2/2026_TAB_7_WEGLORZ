@@ -33,6 +33,9 @@ public record GateScanDto(int Id, string? CardId, string? GateName, string? Lift
 public record PendingReturnDto(int PassId, string CardRfid, string? OwnerEmail, string? PassType,
     DateTime? ValidTo, int RemainingDays, decimal EstimatedRefund);
 
+// ── Użytkownicy ───────────────────────────────────────────────────────────────
+public record UserDto(int Id, string Email);
+
 // ── Żądania ───────────────────────────────────────────────────────────────────
 public record SellTicketRequest(string CardId, int TariffId, DateTime ValidOn, int Quantity);
 public record SellTicketResponse(int ReservationId, int Quantity, decimal TotalAmount, DateTime ValidOn);

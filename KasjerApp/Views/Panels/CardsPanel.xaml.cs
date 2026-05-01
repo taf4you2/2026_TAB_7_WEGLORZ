@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using KasjerApp.Models;
 using KasjerApp.Services;
 
 namespace KasjerApp.Views.Panels;
@@ -8,6 +9,7 @@ namespace KasjerApp.Views.Panels;
 public partial class CardsPanel : UserControl
 {
     private readonly ApiService _api;
+    private CardDto? _selectedCard;
 
     public CardsPanel(ApiService api)
     {
@@ -23,9 +25,12 @@ public partial class CardsPanel : UserControl
 
     private async void SearchBtn_Click(object sender, RoutedEventArgs e) => await LoadAsync();
 
+    private async void RefreshBtn_Click(object sender, RoutedEventArgs e) => await LoadAsync();
+
     private async Task LoadAsync()
     {
         MsgText.Visibility = Visibility.Collapsed;
+        ResetPassesSection();
         try
         {
             var search = SearchBox.Text.Trim();
@@ -39,6 +44,39 @@ public partial class CardsPanel : UserControl
         {
             ShowMsg(ex.Message);
         }
+    }
+
+    private async void CardsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        var card = CardsGrid.SelectedItem as CardDto;
+        ResetPassesSection();
+        if (card == null) return;
+        _selectedCard = card;
+
+        PassesLabel.Text = $"Historia karnetów dla karty: {_selectedCard.Id}";
+        try
+        {
+            var passes = await _api.GetPassesByCardAsync(_selectedCard.Id);
+            PassesGrid.ItemsSource = passes;
+            if (passes.Count == 0)
+            {
+                PassesErrorText.Text = "Ta karta nie ma żadnych karnetów.";
+                PassesErrorText.Visibility = Visibility.Visible;
+            }
+        }
+        catch (Exception ex)
+        {
+            PassesErrorText.Text = ex.Message;
+            PassesErrorText.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void ResetPassesSection()
+    {
+        _selectedCard = null;
+        PassesGrid.ItemsSource = null;
+        PassesErrorText.Visibility = Visibility.Collapsed;
+        PassesLabel.Text = "Historia karnetów – wybierz kartę powyżej";
     }
 
     private async void AddCardBtn_Click(object sender, RoutedEventArgs e)

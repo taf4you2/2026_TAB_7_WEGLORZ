@@ -19,7 +19,7 @@
 
                     <!-- RFID -->
                     <TextBlock Text="RFID karty" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
-                    <Grid Margin="0,0,0,16">
+                    <Grid Margin="0,0,0,8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
@@ -32,6 +32,14 @@
                                 Padding="14,0" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
                     </Grid>
 
+                    <!-- Dropdown wolnych kart RFID -->
+                    <TextBlock Text="Lub wybierz wolną kartę z listy:" FontSize="11"
+                               Foreground="#666" Margin="0,0,0,4"/>
+                    <ComboBox x:Name="FreeCardCombo" Height="34" Margin="0,0,0,16"
+                              DisplayMemberPath="DisplayName" FontSize="13"
+                              SelectionChanged="FreeCardCombo_SelectionChanged"
+                              Background="White" BorderBrush="#BBDEFB"/>
+
                     <!-- Status karty -->
                     <Border x:Name="CardInfoBorder" Background="#E3F2FD" CornerRadius="6" Padding="12,8"
                             Margin="0,0,0,16" Visibility="Collapsed">
@@ -41,7 +49,8 @@
                     <!-- Taryfa -->
                     <TextBlock Text="Taryfa karnetu" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
                     <ComboBox x:Name="TariffCombo" Height="36" Margin="0,0,0,16"
-                              DisplayMemberPath="DisplayName" FontSize="14"/>
+                              DisplayMemberPath="DisplayName" FontSize="14"
+                              SelectionChanged="TariffCombo_SelectionChanged"/>
 
                     <!-- Daty -->
                     <Grid Margin="0,0,0,16">
@@ -52,19 +61,44 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
                             <TextBlock Text="Ważny od" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
-                            <DatePicker x:Name="ValidFromPicker" Height="36" FontSize="14"/>
+                            <DatePicker x:Name="ValidFromPicker" Height="36" FontSize="14"
+                                        SelectedDateFormat="Short"
+                                        SelectedDateChanged="ValidFromPicker_SelectedDateChanged"
+                                        ToolTip="Kliknij strzałkę ▼, aby otworzyć kalendarz"/>
+                            <TextBlock Text="dd.MM.rrrr" FontSize="10" Foreground="#AAA" Margin="2,2,0,0"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="Ważny do" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
-                            <DatePicker x:Name="ValidToPicker" Height="36" FontSize="14"/>
+                            <DatePicker x:Name="ValidToPicker" Height="36" FontSize="14"
+                                        SelectedDateFormat="Short"
+                                        ToolTip="Wypełniane automatycznie na podstawie taryfy"/>
+                            <TextBlock Text="dd.MM.rrrr" FontSize="10" Foreground="#AAA" Margin="2,2,0,0"/>
                         </StackPanel>
                     </Grid>
 
-                    <!-- ID narciarza (opcjonalne) -->
-                    <TextBlock Text="ID narciarza (opcjonalne)" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
-                    <TextBox x:Name="UserIdBox" Height="36" Padding="10,8" FontSize="14"
-                             BorderBrush="#CCC" BorderThickness="1"
-                             VerticalContentAlignment="Center" Margin="0,0,0,20"/>
+                    <!-- Narciarz (opcjonalne) -->
+                    <TextBlock Text="Narciarz – email (opcjonalne)" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="UserEmailBox" Grid.Column="0" Height="36" Padding="10,8"
+                                 FontSize="14" BorderBrush="#CCC" BorderThickness="1"
+                                 VerticalContentAlignment="Center"
+                                 ToolTip="Wpisz fragment adresu email narciarza i kliknij Szukaj"/>
+                        <Button Grid.Column="1" Content="Szukaj" Click="UserSearch_Click"
+                                Background="#546E7A" Foreground="White" BorderThickness="0"
+                                Padding="14,0" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
+                    </Grid>
+                    <Border x:Name="UserInfoBorder" CornerRadius="6" Padding="10,7"
+                            Margin="0,0,0,8" Visibility="Collapsed">
+                        <TextBlock x:Name="UserInfoText" FontSize="12" TextWrapping="Wrap"/>
+                    </Border>
+                    <ComboBox x:Name="UserResultCombo" Height="34" Margin="0,0,0,12"
+                              DisplayMemberPath="DisplayName" FontSize="13"
+                              SelectionChanged="UserResultCombo_SelectionChanged"
+                              Visibility="Collapsed" Background="White" BorderBrush="#CE93D8"/>
 
                     <!-- Błąd -->
                     <TextBlock x:Name="ErrorText" Foreground="#C62828" FontSize="12"

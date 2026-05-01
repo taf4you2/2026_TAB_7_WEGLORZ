@@ -164,73 +164,20 @@ INSERT INTO "tariff" (id, name, season_id, pass_type_id, price, pool_limit) VALU
 SELECT setval(pg_get_serial_sequence('"tariff"', 'id'), 20);
 
 -- ========== KARTY RFID ==========
+-- Wszystkie karty startują ze statusem "wolna" (1) — bez przypisanych karnetów.
 
 INSERT INTO "card" (id, status_id, physical_condition, added_to_pool_at) VALUES
-  ('A3:F2:11:CC', 2, 'dobry',   NOW() - INTERVAL '30 days'),
-  ('B7:AA:32:0E', 2, 'dobry',   NOW() - INTERVAL '20 days'),
-  ('C1:DE:84:57', 2, 'dobry',   NOW() - INTERVAL '10 days'),
-  ('E9:CC:01:A3', 1, 'dobry',   NOW() - INTERVAL '5 days'),
-  ('F0:11:22:33', 1, 'dobry',   NOW() - INTERVAL '3 days'),
-  ('AA:BB:CC:DD', 1, 'dobry',   NOW() - INTERVAL '1 day'),
-  ('11:22:33:44', 1, 'nowy',    NOW()),
-  ('55:66:77:88', 1, 'nowy',    NOW());
+  ('A3:F2:11:CC', 1, 'dobry', NOW() - INTERVAL '30 days'),
+  ('B7:AA:32:0E', 1, 'dobry', NOW() - INTERVAL '20 days'),
+  ('C1:DE:84:57', 1, 'dobry', NOW() - INTERVAL '10 days'),
+  ('E9:CC:01:A3', 1, 'dobry', NOW() - INTERVAL '5 days'),
+  ('F0:11:22:33', 1, 'dobry', NOW() - INTERVAL '3 days'),
+  ('AA:BB:CC:DD', 1, 'dobry', NOW() - INTERVAL '1 day'),
+  ('11:22:33:44', 1, 'nowy',  NOW()),
+  ('55:66:77:88', 1, 'nowy',  NOW());
 
 -- ========== REZERWACJE, KARNETY I TRANSAKCJE ==========
-
--- Rezerwacja 1: Anna Nowak, karnet 5-dniowy, aktywny
-INSERT INTO "reservation" (id, reservation_number, user_id, reservation_date, status_id)
-  VALUES (1, 'RES-20260410001', 1, NOW() - INTERVAL '6 days', 1);
-
-INSERT INTO "ski_pass" (id, card_id, tariff_id, reservation_id, status_id, valid_from, valid_to)
-  VALUES (1, 'A3:F2:11:CC', 7, 1, 1,
-          NOW()::date, NOW()::date + INTERVAL '5 days');
-
-INSERT INTO "transaction" (id, reservation_id, cashier_id, operation_type_id, amount, transaction_date)
-  VALUES (1, 1, 1, 2, 459.00, NOW() - INTERVAL '6 days');
-
--- Rezerwacja 2: Piotr Kowal, karnet 3-dniowy, aktywny
-INSERT INTO "reservation" (id, reservation_number, user_id, reservation_date, status_id)
-  VALUES (2, 'RES-20260412002', 2, NOW() - INTERVAL '4 days', 1);
-
-INSERT INTO "ski_pass" (id, card_id, tariff_id, reservation_id, status_id, valid_from, valid_to)
-  VALUES (2, 'B7:AA:32:0E', 6, 2, 1,
-          NOW()::date - INTERVAL '1 day', NOW()::date + INTERVAL '2 days');
-
-INSERT INTO "transaction" (id, reservation_id, cashier_id, operation_type_id, amount, transaction_date)
-  VALUES (2, 2, 1, 2, 299.00, NOW() - INTERVAL '4 days');
-
--- Rezerwacja 3: bilet jednorazowy dzisiaj
-INSERT INTO "reservation" (id, reservation_number, user_id, reservation_date, status_id)
-  VALUES (3, 'RES-20260416003', NULL, NOW(), 1);
-
-INSERT INTO "ski_pass" (id, card_id, tariff_id, reservation_id, status_id, valid_from, valid_to)
-  VALUES (3, 'C1:DE:84:57', 2, 3, 1,
-          NOW()::date, NOW()::date + INTERVAL '1 day');
-
-INSERT INTO "transaction" (id, reservation_id, cashier_id, operation_type_id, amount, transaction_date)
-  VALUES (3, 3, 1, 1, 59.00, NOW());
-
--- Rezerwacja 4: zwrot karnetu (oczekuje)
-INSERT INTO "reservation" (id, reservation_number, user_id, reservation_date, status_id)
-  VALUES (4, 'RES-20260414004', 3, NOW() - INTERVAL '2 days', 1);
-
-INSERT INTO "ski_pass" (id, card_id, tariff_id, reservation_id, status_id, valid_from, valid_to)
-  VALUES (4, 'E9:CC:01:A3', 8, 4, 4,
-          NOW()::date - INTERVAL '1 day', NOW()::date + INTERVAL '6 days');
-
-INSERT INTO "transaction" (id, reservation_id, cashier_id, operation_type_id, amount, transaction_date)
-  VALUES (4, 4, 1, 2, 589.00, NOW() - INTERVAL '2 days');
-
--- Rezerwacja 5: bilet jednorazowy dzisiaj (drugi)
-INSERT INTO "reservation" (id, reservation_number, user_id, reservation_date, status_id)
-  VALUES (5, 'RES-20260416005', NULL, NOW(), 1);
-
-INSERT INTO "ski_pass" (id, card_id, tariff_id, reservation_id, status_id, valid_from, valid_to)
-  VALUES (5, 'F0:11:22:33', 1, 5, 1,
-          NOW()::date, NOW()::date + INTERVAL '1 day');
-
-INSERT INTO "transaction" (id, reservation_id, cashier_id, operation_type_id, amount, transaction_date)
-  VALUES (5, 5, 1, 1, 89.00, NOW());
+-- Brak danych startowych — system gotowy do testowania sprzedaży od zera.
 
 SELECT setval(pg_get_serial_sequence('"reservation"', 'id'), 100);
 SELECT setval(pg_get_serial_sequence('"ski_pass"',    'id'), 100);

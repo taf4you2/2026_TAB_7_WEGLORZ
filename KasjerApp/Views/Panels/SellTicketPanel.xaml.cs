@@ -14,8 +14,12 @@ public partial class SellTicketPanel : UserControl
     {
         InitializeComponent();
         _api = api;
-        ValidOnPicker.SelectedDate = DateTime.Today;
-        Loaded += async (_, _) => await LoadTariffsAsync();
+        ValidOnPicker.SelectedDate = DateTime.Today.AddYears(1);
+        Loaded += async (_, _) =>
+        {
+            await LoadTariffsAsync();
+            await LoadFreeCardsAsync();
+        };
     }
 
     private async Task LoadTariffsAsync()
@@ -43,6 +47,26 @@ public partial class SellTicketPanel : UserControl
             ErrorText.Text = $"Błąd pobierania taryf: {ex.Message}";
             ErrorText.Visibility = Visibility.Visible;
         }
+    }
+
+    private async Task LoadFreeCardsAsync()
+    {
+        try
+        {
+            var cards = await _api.GetCardsAsync();
+            var free = cards
+                .Where(c => c.Status is "wolna" or "free" or "available")
+                .Select(c => new CardItem(c))
+                .ToList();
+            FreeCardCombo.ItemsSource = free;
+        }
+        catch { /* ignoruj — pole ręczne nadal działa */ }
+    }
+
+    private void FreeCardCombo_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (FreeCardCombo.SelectedItem is CardItem card)
+            RfidBox.Text = card.Id;
     }
 
     private async void VerifyCard_Click(object sender, RoutedEventArgs e)
@@ -83,7 +107,7 @@ public partial class SellTicketPanel : UserControl
         if (ValidOnPicker.SelectedDate is not DateTime validOn) { ShowError("Wybierz datę ważności."); return; }
         if (!int.TryParse(QuantityBox.Text.Trim(), out int qty) || qty < 1 || qty > 50)
         {
-            ShowError("Ilość musi być liczbą całkowitą 1–50."); return;
+            ShowError("Liczba zjazdów musi być liczbą całkowitą 1–50."); return;
         }
 
         try
@@ -111,6 +135,14 @@ public partial class SellTicketPanel : UserControl
     private record TariffItem(TariffDto Dto)
     {
         public int Id => Dto.Id;
-        public string DisplayName => $"{Dto.Name}  ({Dto.Season})  —  {Dto.Price:N2} PLN";
+        public string DisplayName => $"{Dto.Name}  ·  {Dto.Price:N2} zł  ({Dto.Season})";
+    }
+
+    private record CardItem(CardDto Dto)
+    {
+        public string Id => Dto.Id;
+        public string DisplayName => Dto.Owner != null
+            ? $"{Dto.Id}  ·  {Dto.Owner}"
+            : Dto.Id;
     }
 }

@@ -21,7 +21,7 @@
 
                     <!-- RFID karty -->
                     <TextBlock Text="RFID karty" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
-                    <Grid Margin="0,0,0,16">
+                    <Grid Margin="0,0,0,8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
@@ -33,6 +33,14 @@
                                 Background="#1565C0" Foreground="White" BorderThickness="0"
                                 Padding="14,0" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
                     </Grid>
+
+                    <!-- Dropdown wolnych kart RFID -->
+                    <TextBlock Text="Lub wybierz wolną kartę z listy:" FontSize="11"
+                               Foreground="#666" Margin="0,0,0,4"/>
+                    <ComboBox x:Name="FreeCardCombo" Height="34" Margin="0,0,0,16"
+                              DisplayMemberPath="DisplayName" FontSize="13"
+                              SelectionChanged="FreeCardCombo_SelectionChanged"
+                              Background="White" BorderBrush="#BBDEFB"/>
 
                     <!-- Status karty -->
                     <Border x:Name="CardInfoBorder" Background="#E3F2FD" CornerRadius="6" Padding="12,8"
@@ -49,8 +57,8 @@
                     <TextBlock Text="Data ważności" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
                     <DatePicker x:Name="ValidOnPicker" Height="36" Margin="0,0,0,16" FontSize="14"/>
 
-                    <!-- Ilość -->
-                    <TextBlock Text="Ilość (1–50)" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
+                    <!-- Liczba zjazdów -->
+                    <TextBlock Text="Liczba zjazdów (1–50)" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
                     <TextBox x:Name="QuantityBox" Height="36" Padding="10,8" Text="1"
                              FontSize="14" BorderBrush="#CCC" BorderThickness="1"
                              VerticalContentAlignment="Center" Margin="0,0,0,20"/>

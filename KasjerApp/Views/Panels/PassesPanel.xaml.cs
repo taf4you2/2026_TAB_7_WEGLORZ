@@ -9,7 +9,8 @@ namespace KasjerApp.Views.Panels;
 public partial class PassesPanel : UserControl
 {
     private readonly ApiService _api;
-    private PassDto? _selected;
+    private CardDto? _selectedCard;
+    private PassDto? _selectedPass;
 
     public PassesPanel(ApiService api)
     {
@@ -17,51 +18,95 @@ public partial class PassesPanel : UserControl
         _api = api;
     }
 
-    private void RfidBox_KeyDown(object sender, KeyEventArgs e)
+    private async void PassesPanel_Loaded(object sender, RoutedEventArgs e)
+    {
+        await LoadCardsAsync();
+    }
+
+    // ── Karty ──────────────────────────────────────────────────────────────────
+
+    private void SearchBox_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Enter) SearchBtn_Click(this, new RoutedEventArgs());
     }
 
     private async void SearchBtn_Click(object sender, RoutedEventArgs e)
     {
-        SearchErrorText.Visibility = Visibility.Collapsed;
-        ActionMsg.Text = "";
-        var rfid = RfidBox.Text.Trim();
-        if (string.IsNullOrEmpty(rfid)) { ShowSearchError("Podaj RFID karty."); return; }
+        await LoadCardsAsync(SearchBox.Text.Trim());
+    }
+
+    private async void LoadAllBtn_Click(object sender, RoutedEventArgs e)
+    {
+        SearchBox.Text = "";
+        await LoadCardsAsync();
+    }
+
+    private async void RefreshBtn_Click(object sender, RoutedEventArgs e)
+    {
+        await LoadCardsAsync(SearchBox.Text.Trim());
+    }
+
+    private async Task LoadCardsAsync(string? search = null)
+    {
+        CardsErrorText.Visibility = Visibility.Collapsed;
+        ResetPassesSection();
 
         try
         {
-            var passes = await _api.GetPassesByCardAsync(rfid);
-            PassesGrid.ItemsSource = passes;
-            if (passes.Count == 0) ShowSearchError("Brak karnetów dla tej karty.");
+            var cards = await _api.GetCardsAsync(search: search);
+            CardsGrid.ItemsSource = cards;
+            if (cards.Count == 0) ShowCardsError("Brak kart spełniających kryteria.");
         }
         catch (Exception ex)
         {
-            ShowSearchError(ex.Message);
+            ShowCardsError(ex.Message);
         }
     }
 
+    private async void CardsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        _selectedCard = CardsGrid.SelectedItem as CardDto;
+        ResetPassesSection();
+
+        if (_selectedCard == null) return;
+
+        PassesLabel.Text = $"Aktywny karnet dla karty: {_selectedCard.Id}";
+        PassesErrorText.Visibility = Visibility.Collapsed;
+
+        try
+        {
+            var passes = await _api.GetPassesByCardAsync(_selectedCard.Id);
+            var latest = passes.Count > 0 ? passes.Take(1).ToList() : passes;
+            PassesGrid.ItemsSource = latest;
+            if (latest.Count == 0) ShowPassesError("Ta karta nie ma żadnych karnetów.");
+        }
+        catch (Exception ex)
+        {
+            ShowPassesError(ex.Message);
+        }
+    }
+
+    // ── Karnety ────────────────────────────────────────────────────────────────
+
     private void PassesGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        _selected = PassesGrid.SelectedItem as PassDto;
-        bool hasSelection = _selected != null;
-        BlockBtn.IsEnabled = hasSelection;
-        ReturnBtn.IsEnabled = hasSelection;
-        ActionMsg.Text = _selected != null
-            ? $"Wybrany karnet ID: {_selected.Id}"
-            : "";
+        _selectedPass = PassesGrid.SelectedItem as PassDto;
+        bool has = _selectedPass != null;
+        BlockBtn.IsEnabled = has;
+        ReturnBtn.IsEnabled = has;
+        ActionMsg.Text = has ? $"Wybrany karnet ID: {_selectedPass!.Id}" : "";
     }
 
     private async void BlockBtn_Click(object sender, RoutedEventArgs e)
     {
-        if (_selected == null) return;
-        var reason = AskReason("Powód blokady karnetu (UC3):", "Podaj powód blokady:");
+        if (_selectedPass == null) return;
+        var reason = AskReason("Blokada karnetu (UC3)", "Podaj powód blokady:");
         if (reason == null) return;
 
         try
         {
-            await _api.BlockPassAsync(_selected.Id, reason);
-            ActionMsg.Text = $"Karnet {_selected.Id} zablokowany.";
+            await _api.BlockPassAsync(_selectedPass.Id, reason);
+            ActionMsg.Text = $"Karnet {_selectedPass.Id} zablokowany.";
             await RefreshPassesAsync();
         }
         catch (Exception ex)
@@ -72,17 +117,16 @@ public partial class PassesPanel : UserControl
 
     private async void ReturnBtn_Click(object sender, RoutedEventArgs e)
     {
-        if (_selected == null) return;
+        if (_selectedPass == null) return;
 
-        // Dialog zwrotu
-        var dlg = new ReturnDialog(_api, _selected.Id);
+        var dlg = new ReturnDialog(_api, _selectedPass.Id);
         dlg.Owner = Window.GetWindow(this);
         if (dlg.ShowDialog() != true) return;
 
         try
         {
-            await _api.ReturnPassAsync(_selected.Id, new ReturnPassRequest(dlg.Reason, dlg.ReturnCard));
-            ActionMsg.Text = $"Zwrot karnetu {_selected.Id} zatwierdzony.";
+            await _api.ReturnPassAsync(_selectedPass.Id, new ReturnPassRequest(dlg.Reason, dlg.ReturnCard));
+            ActionMsg.Text = $"Zwrot karnetu {_selectedPass.Id} zatwierdzony.";
             await RefreshPassesAsync();
         }
         catch (Exception ex)
@@ -91,14 +135,40 @@ public partial class PassesPanel : UserControl
         }
     }
 
+    // ── Helpers ────────────────────────────────────────────────────────────────
+
     private async Task RefreshPassesAsync()
     {
-        var rfid = RfidBox.Text.Trim();
-        if (!string.IsNullOrEmpty(rfid))
+        if (_selectedCard == null) return;
+        try
         {
-            try { PassesGrid.ItemsSource = await _api.GetPassesByCardAsync(rfid); }
-            catch { /* ignore */ }
+            var passes = await _api.GetPassesByCardAsync(_selectedCard.Id);
+            PassesGrid.ItemsSource = passes.Count > 0 ? passes.Take(1).ToList() : passes;
         }
+        catch { /* ignore */ }
+    }
+
+    private void ResetPassesSection()
+    {
+        _selectedPass = null;
+        PassesGrid.ItemsSource = null;
+        PassesErrorText.Visibility = Visibility.Collapsed;
+        PassesLabel.Text = "Aktywny karnet – wybierz kartę powyżej";
+        BlockBtn.IsEnabled = false;
+        ReturnBtn.IsEnabled = false;
+        ActionMsg.Text = "";
+    }
+
+    private void ShowCardsError(string msg)
+    {
+        CardsErrorText.Text = msg;
+        CardsErrorText.Visibility = Visibility.Visible;
+    }
+
+    private void ShowPassesError(string msg)
+    {
+        PassesErrorText.Text = msg;
+        PassesErrorText.Visibility = Visibility.Visible;
     }
 
     private static string? AskReason(string title, string label)
@@ -114,20 +184,17 @@ public partial class PassesPanel : UserControl
         sp.Children.Add(new TextBlock { Text = label, Margin = new Thickness(0, 0, 0, 8) });
         var tb = new TextBox { Height = 36, Padding = new Thickness(8), Margin = new Thickness(0, 0, 0, 16) };
         sp.Children.Add(tb);
-        var btn = new Button { Content = "OK", Width = 80, Height = 34,
+        var btn = new Button
+        {
+            Content = "OK", Width = 80, Height = 34,
             Background = System.Windows.Media.Brushes.DodgerBlue,
             Foreground = System.Windows.Media.Brushes.White,
-            BorderThickness = new Thickness(0) };
+            BorderThickness = new Thickness(0)
+        };
         sp.Children.Add(btn);
         win.Content = sp;
         string? result = null;
         btn.Click += (_, _) => { result = tb.Text.Trim(); win.DialogResult = true; };
         return win.ShowDialog() == true && !string.IsNullOrWhiteSpace(result) ? result : null;
-    }
-
-    private void ShowSearchError(string msg)
-    {
-        SearchErrorText.Text = msg;
-        SearchErrorText.Visibility = Visibility.Visible;
     }
 }

@@ -6,6 +6,8 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="220"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -22,6 +24,7 @@
                     <ColumnDefinition Width="140"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBox x:Name="SearchBox" Grid.Column="0" Height="36" Padding="10,8"
                          FontSize="14" BorderBrush="#CCC" BorderThickness="1"
@@ -31,27 +34,32 @@
                           FontSize="13" SelectedIndex="0">
                     <ComboBoxItem Content="(wszystkie statusy)"/>
                     <ComboBoxItem Content="wolna"/>
-                    <ComboBoxItem Content="aktywna"/>
-                    <ComboBoxItem Content="zablokowana"/>
+                    <ComboBoxItem Content="zajeta"/>
+                    <ComboBoxItem Content="zastrzezony"/>
                 </ComboBox>
                 <Button Grid.Column="2" Content="Szukaj" Click="SearchBtn_Click"
                         Background="#1565C0" Foreground="White" BorderThickness="0"
                         Padding="14,0" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
-                <Button Grid.Column="3" Content="+ Dodaj kartę" Click="AddCardBtn_Click"
+                <Button Grid.Column="3" Content="↺ Odśwież" Click="RefreshBtn_Click"
+                        Background="#00897B" Foreground="White" BorderThickness="0"
+                        Padding="12,0" Margin="6,0,0,0" Height="36" Cursor="Hand"/>
+                <Button Grid.Column="4" Content="+ Dodaj kartę" Click="AddCardBtn_Click"
                         Background="#2E7D32" Foreground="White" BorderThickness="0"
                         Padding="14,0" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
             </Grid>
         </Border>
 
-        <!-- DataGrid -->
-        <Border Grid.Row="2" Background="White" CornerRadius="8" Margin="0,0,0,16">
+        <!-- DataGrid kart -->
+        <Border Grid.Row="2" Background="White" CornerRadius="8" Margin="0,0,0,4">
             <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
             <DataGrid x:Name="CardsGrid"
                       AutoGenerateColumns="False" IsReadOnly="True"
+                      SelectionMode="Single"
                       GridLinesVisibility="Horizontal"
                       RowBackground="White" AlternatingRowBackground="#F9FAFB"
                       BorderThickness="0" CanUserResizeRows="False"
-                      HeadersVisibility="Column" ColumnHeaderHeight="40">
+                      HeadersVisibility="Column" ColumnHeaderHeight="40"
+                      SelectionChanged="CardsGrid_SelectionChanged">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="RFID"          Binding="{Binding Id}"            Width="140"/>
                     <DataGridTextColumn Header="Status"        Binding="{Binding Status}"        Width="100"/>
@@ -63,8 +71,44 @@
             </DataGrid>
         </Border>
 
+        <!-- Nagłówek historii karnetów + komunikat błędu -->
+        <Border Grid.Row="3" Background="#E3F2FD" CornerRadius="4" Padding="12,6" Margin="0,8,0,4">
+            <StackPanel>
+                <TextBlock x:Name="PassesLabel" Text="Historia karnetów – wybierz kartę powyżej"
+                           FontSize="13" FontWeight="SemiBold" Foreground="#1565C0"/>
+                <TextBlock x:Name="PassesErrorText" Foreground="#C62828" FontSize="12"
+                           Visibility="Collapsed" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- DataGrid historii karnetów -->
+        <Border Grid.Row="4" Background="White" CornerRadius="8" Margin="0,0,0,12">
+            <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+            <DataGrid x:Name="PassesGrid"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          GridLinesVisibility="Horizontal"
+                          RowBackground="White"
+                          AlternatingRowBackground="#F9FAFB"
+                          BorderThickness="0"
+                          CanUserResizeRows="False"
+                          HeadersVisibility="Column"
+                          ColumnHeaderHeight="38">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ID"            Binding="{Binding Id}"          Width="60"/>
+                        <DataGridTextColumn Header="Status"        Binding="{Binding Status}"      Width="110"/>
+                        <DataGridTextColumn Header="Taryfa"        Binding="{Binding Tariff}"      Width="160"/>
+                        <DataGridTextColumn Header="Typ"           Binding="{Binding PassType}"    Width="110"/>
+                        <DataGridTextColumn Header="Ważny od"      Binding="{Binding ValidFrom, StringFormat=dd.MM.yyyy}" Width="100"/>
+                        <DataGridTextColumn Header="Ważny do"      Binding="{Binding ValidTo,   StringFormat=dd.MM.yyyy}" Width="100"/>
+                        <DataGridTextColumn Header="Powód blokady" Binding="{Binding BlockReason}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+        </Border>
+
         <!-- Komunikat -->
-        <TextBlock x:Name="MsgText" Grid.Row="3"
+        <TextBlock x:Name="MsgText" Grid.Row="5"
                    Foreground="#C62828" FontSize="12" Visibility="Collapsed"/>
     </Grid>
 </UserControl>

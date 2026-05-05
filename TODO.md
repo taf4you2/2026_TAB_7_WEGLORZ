@@ -33,7 +33,6 @@
 
 ### Strony (wwwroot)
 - [x] `login.html` — logowanie narciarza
-- [x] `kasjer-login.html` — logowanie kasjera (przekierowanie do KasjerApp)
 - [x] `register.html` — rejestracja narciarza
 - [x] `narciarz.html` — portal narciarza (karnety, rozkład, historia, zwrot, zakup online)
 

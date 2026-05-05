@@ -3,202 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logowanie</title>
+    <title>Logowanie — Stacja Narciarska</title>
     <style>
         body {
-            min-height: 100vh;
-            margin: 0;
-            display: grid;
-            place-items: center;
+            min-height: 100vh; margin: 0;
+            display: grid; place-items: center;
             font-family: Segoe UI, system-ui, sans-serif;
-            background: #eef4fb;
-            color: #172033;
+            background: #eef4fb; color: #172033;
         }
-
         .panel {
             width: min(420px, calc(100vw - 32px));
-            background: #fff;
-            border: 1px solid #dce4ee;
-            border-radius: 8px;
-            padding: 28px;
-            box-shadow: 0 18px 42px rgba(23, 32, 51, 0.14);
+            background: #fff; border: 1px solid #dce4ee;
+            border-radius: 8px; padding: 28px;
+            box-shadow: 0 18px 42px rgba(23,32,51,0.14);
         }
-
-        h1 {
-            margin: 0 0 22px;
-            font-size: 24px;
-        }
-
-        .roles {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 18px;
-        }
-
-        .role {
-            border: 1px solid #cbd7e4;
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 12px;
-            cursor: pointer;
-            font: inherit;
-            font-weight: 600;
-        }
-
-        .role.active {
-            border-color: #1565c0;
-            background: #e3f2fd;
-            color: #0d47a1;
-        }
-
-        label {
-            display: block;
-            margin: 14px 0 6px;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
+        .logo { text-align: center; font-size: 40px; margin-bottom: 8px; }
+        h1 { margin: 0 0 4px; font-size: 24px; text-align: center; }
+        .subtitle { text-align: center; font-size: 13px; color: #666; margin-bottom: 22px; }
+        label { display: block; margin: 14px 0 6px; font-size: 13px; font-weight: 700; }
         input {
-            width: 100%;
-            box-sizing: border-box;
-            padding: 11px 12px;
-            border: 1px solid #cbd7e4;
-            border-radius: 8px;
-            font: inherit;
+            width: 100%; box-sizing: border-box;
+            padding: 11px 12px; border: 1px solid #cbd7e4;
+            border-radius: 8px; font: inherit;
         }
-
+        input:focus { outline: 2px solid #1565c0; border-color: transparent; }
         .submit {
-            width: 100%;
-            margin-top: 18px;
-            padding: 12px;
-            border: 0;
-            border-radius: 8px;
-            background: #1565c0;
-            color: #fff;
-            font: inherit;
-            font-weight: 700;
-            cursor: pointer;
+            width: 100%; margin-top: 18px; padding: 12px;
+            border: 0; border-radius: 8px; background: #1565c0;
+            color: #fff; font: inherit; font-weight: 700; cursor: pointer; font-size: 15px;
         }
-
+        .submit:hover { background: #0d47a1; }
         .error {
-            display: none;
-            margin-top: 14px;
-            padding: 10px 12px;
-            border-left: 4px solid #c62828;
-            background: #ffebee;
-            color: #9f1b1b;
-            font-size: 14px;
+            display: none; margin-top: 14px; padding: 10px 12px;
+            border-left: 4px solid #c62828; background: #ffebee;
+            color: #9f1b1b; font-size: 14px;
         }
-
         .hint {
-            margin-top: 18px;
-            padding: 10px 12px;
-            background: #fff8e1;
-            border-left: 4px solid #ff8f00;
-            font-size: 13px;
-            line-height: 1.45;
+            margin-top: 18px; padding: 10px 12px;
+            background: #fff8e1; border-left: 4px solid #ff8f00;
+            font-size: 13px; line-height: 1.45;
         }
+        .links { margin-top: 16px; display: flex; justify-content: space-between; font-size: 13px; }
+        .links a { color: #1565c0; font-weight: 600; text-decoration: none; }
+        .links a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
     <main class="panel">
-        <h1>Logowanie</h1>
-
-        <div class="roles">
-            <button class="role active" type="button" data-role="kasjer">Kasjer</button>
-            <button class="role" type="button" data-role="narciarz">Narciarz</button>
-        </div>
+        <div class="logo">⛷️</div>
+        <h1>Stacja Narciarska</h1>
+        <div class="subtitle">Panel narciarza</div>
 
         <label for="email">E-mail</label>
-        <input type="email" id="email" value="kasjer@stacja.pl" autocomplete="username">
+        <input type="email" id="email" value="narciarz@example.com" autocomplete="username">
 
-        <label for="password">Haslo</label>
+        <label for="password">Hasło</label>
         <input type="password" id="password" value="haslo123" autocomplete="current-password">
 
-        <button class="submit" type="button" id="loginButton">Zaloguj</button>
+        <button class="submit" type="button" id="loginButton">Zaloguj się</button>
         <div class="error" id="error"></div>
 
         <div class="hint">
-            Dane testowe:<br>
-            Kasjer: kasjer@stacja.pl / haslo123<br>
-            Narciarz: narciarz@example.com / haslo123
+            Dane testowe: narciarz@example.com / haslo123
         </div>
 
-        <div style="margin-top:16px; text-align:center; font-size:13px">
-            Narciarz bez konta? <a href="register.html" style="color:#1565c0;font-weight:600;text-decoration:none">Zarejestruj się</a>
-        </div>
     </main>
 
     <script>
-        let selectedRole = 'kasjer';
-        const emailInput = document.getElementById('email');
+        const emailInput  = document.getElementById('email');
         const passwordInput = document.getElementById('password');
-        const errorBox = document.getElementById('error');
-        const API = ''
-        document.querySelectorAll('.role').forEach(button => {
-            button.addEventListener('click', () => {
-                selectedRole = button.dataset.role;
-                document.querySelectorAll('.role').forEach(item => item.classList.remove('active'));
-                button.classList.add('active');
-                emailInput.value = selectedRole === 'kasjer'
-                    ? 'kasjer@stacja.pl'
-                    : 'narciarz@example.com';
-                passwordInput.value = 'haslo123';
-                hideError();
-            });
-        });
+        const errorBox    = document.getElementById('error');
 
         document.getElementById('loginButton').addEventListener('click', login);
-        passwordInput.addEventListener('keydown', event => {
-            if (event.key === 'Enter') {
-                login();
-            }
-        });
+        passwordInput.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
 
         async function login() {
             hideError();
-
-            const email = emailInput.value.trim();
+            const email    = emailInput.value.trim();
             const password = passwordInput.value;
-            if (!email || !password) {
-                showError('Podaj e-mail i haslo.');
-                return;
-            }
+            if (!email || !password) { showError('Podaj e-mail i hasło.'); return; }
 
             try {
-                const response = await fetch(API+'/api/auth/login', {
+                const res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, role: selectedRole })
+                    body: JSON.stringify({ email, password, role: 'narciarz' })
                 });
-
-                if (!response.ok) {
-                    const details = await response.json().catch(() => ({}));
-                    showError(details.message || 'Nieprawidlowy login lub haslo.');
+                if (!res.ok) {
+                    const d = await res.json().catch(() => ({}));
+                    showError(d.message || 'Nieprawidłowy e-mail lub hasło.');
                     return;
                 }
-
-                const data = await response.json();
-                localStorage.setItem('token', data.token);
+                const data = await res.json();
+                localStorage.setItem('token',  data.token);
                 localStorage.setItem('userId', data.userId);
-                localStorage.setItem('role', data.role);
-
-                window.location.href = data.role === 'narciarz' ? 'narciarz.html' : 'login.html';
-            } catch (error) {
-                showError('Brak polaczenia z API: ' + error.message);
+                localStorage.setItem('role',   data.role);
+                window.location.href = 'narciarz.html';
+            } catch (e) {
+                showError('Brak połączenia z API: ' + e.message);
             }
         }
 
-        function showError(message) {
-            errorBox.textContent = message;
-            errorBox.style.display = 'block';
-        }
-
-        function hideError() {
-            errorBox.textContent = '';
-            errorBox.style.display = 'none';
-        }
+        function showError(msg) { errorBox.textContent = msg; errorBox.style.display = 'block'; }
+        function hideError()    { errorBox.textContent = ''; errorBox.style.display = 'none'; }
     </script>
 </body>
 </html>

@@ -1,25 +1,56 @@
 # TODO — System Sprzedaży Biletów Narciarskich
 
-## Zaimplementowane endpointy (SystemAPI · port 5000)
+## Zaimplementowane — SystemAPI (port 5000)
 
-- [x] UC1: sprzedaż biletu jednorazowego — `POST /api/bilety/sprzedaj`
-- [x] UC2: sprzedaż karnetu — `POST /api/karnety/sprzedaj`
-- [x] UC3: blokada biletu/karnetu — `POST /api/bilety/{id}/blokuj`
-- [x] UC11: zwrot karnetu (klient) — `POST /api/zwroty/zglos`, `POST /api/zwroty/{id}/akceptuj` (pracownik)
-- [x] UC8: podgląd historii transakcji (kasjer) — `GET /api/transakcje/zmiana/{id}`
-- [x] UC9: raport zmianowy (kasjer) — `GET /api/raporty/zmiana/{id}`, `POST /api/raporty/zamknij-zmiane`
-- [x] UC10: podgląd statystyk (zarządca) — `GET /api/statystyki/dzienne`, `GET /api/statystyki/wyciagi`
-- [x] Słowniki i dane podstawowe:
-    - `GET /api/taryfy`
-    - `GET /api/karty/dostepne`
-    - `GET /api/wyciagi`
+### Auth
+- [x] `POST /api/auth/login` — logowanie kasjera i narciarza (JWT)
+- [x] `POST /api/auth/register` — rejestracja narciarza (email + hasło, BCrypt)
+- [x] `POST /api/auth/logout` — bezstanowy (usuwa token po stronie klienta)
 
-## Do zrobienia (Backlog)
+### Sprzedaż (KasjerApp)
+- [x] UC1: sprzedaż biletu jednorazowego — `POST /api/bilety`
+- [x] UC2: sprzedaż karnetu — `POST /api/karnety`
+- [x] UC3: blokada karnetu — `POST /api/karnety/{id}/blokuj`
+- [x] UC11: symulacja zwrotu — `GET /api/karnety/{id}/symulacja-zwrotu`
+- [x] UC11: zwrot karnetu — `POST /api/karnety/{id}/zwrot`
 
-1) trzeba dodać synchronizację bazy danych przed otwarciem wyciągów, na razie można ustawić jedną godzinę dla wszystkich bramek (w tym wypadku dla jednej)
-2) wprowadzić możliwość skalowania aplikacji konsolowej w jakiś sposób.
-3) wprowadzić sprawdzanie czasu w bramce, żeby nie było sytuacji że ktoś wchodzi na wyciąg w godzinach , kiedy jest zamknięty.
-4)
-- [ ] UC4: druk biletu — `POST /api/bilety/{id}/wydrukuj` (generowanie danych do druku/PDF).
-- [ ] UC5/UC6: rejestracja przejazdu i weryfikacja SkiPass przy bramce (`POST /api/bramka/skan`, `POST /api/bramka/weryfikuj`).
-- [ ] UC7: edycja rozkładu wyciągów przez zarządcę (`PUT /api/wyciagi/{id}/harmonogram`).
+### Portal narciarza (web)
+- [x] UC2 online: zakup karnetu online — `POST /api/zakup/online`
+- [x] Lista karnetów do zakupu — `GET /api/zakup/taryfy`
+- [x] Profil narciarza + karty RFID — `GET /api/users/me`
+- [x] Rezerwacje narciarza — `GET /api/users/me/rezerwacje`
+- [x] Wyszukiwanie narciarza po emailu — `GET /api/uzytkownicy?email=`
+
+### Dane i raporty
+- [x] Lista taryf — `GET /api/taryfy`
+- [x] Lista kart RFID — `GET /api/karty`, `GET /api/karty/{rfid}`
+- [x] Lista wyciągów z rozkładem — `GET /api/wyciagi`
+- [x] Statystyki dzisiejszego dnia (kasjer) — `GET /api/statystyki/dzisiaj`
+- [x] Historia transakcji — `GET /api/transakcje`
+- [x] Raport zmiany — `GET /api/raport-zmiany`, `POST /api/raport-zmiany/zamknij`
+- [x] Historia przejazdów (bramka) — `GET /api/raporty/przejazdy`
+- [x] Zwroty oczekujące — `GET /api/zwroty/oczekujace`
+
+### Strony (wwwroot)
+- [x] `login.html` — logowanie narciarza
+- [x] `kasjer-login.html` — logowanie kasjera (przekierowanie do KasjerApp)
+- [x] `register.html` — rejestracja narciarza
+- [x] `narciarz.html` — portal narciarza (karnety, rozkład, historia, zwrot, zakup online)
+
+## Do zrobienia
+
+### Rezerwacje online → KasjerApp
+- [ ] `GET /api/rezerwacje/oczekujace` — lista rezerwacji online do obsługi przez kasjera
+- [ ] `POST /api/rezerwacje/{id}/wydaj` — kasjer przypisuje kartę RFID i aktywuje karnet
+- [ ] Panel w KasjerApp do odbioru rezerwacji online
+
+### BramkaAPI
+- [ ] UC5/UC6: rejestracja przejazdu i weryfikacja SkiPass (`POST /api/bramka/skan`, weryfikacja ważności)
+- [ ] Sprawdzanie godzin otwarcia przy skanowaniu bramki
+- [ ] Synchronizacja bazy lokalnej bramki przed otwarciem wyciągów (aktualnie: raz na godzinę)
+- [ ] Skalowanie aplikacji konsolowej (Bramka) na wiele bramek
+
+### Inne
+- [ ] UC4: generowanie danych do druku biletu — `POST /api/bilety/{id}/wydrukuj`
+- [ ] UC7: edycja rozkładu wyciągów — `PUT /api/wyciagi/{id}/harmonogram`
+- [ ] JWT claims: CashierId i UserId pobierane z tokena (aktualnie w niektórych miejscach hardcoded)

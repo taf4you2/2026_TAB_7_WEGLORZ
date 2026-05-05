@@ -35,6 +35,21 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
         return Ok(new { userId = user.Id, email = user.Email, cardIds });
     }
 
+    // GET /api/uzytkownicy?email=  — dla KasjerApp: wyszukiwanie narciarza po emailu
+    [HttpGet("/api/uzytkownicy")]
+    public async Task<IActionResult> Search([FromQuery] string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return BadRequest(new { message = "Parametr email jest wymagany." });
+
+        var users = await db.Users
+            .Where(u => u.Email!.Contains(email))
+            .Select(u => new { u.Id, u.Email })
+            .ToListAsync();
+
+        return Ok(users);
+    }
+
     // GET /api/users/me/rezerwacje
     // Zwraca rezerwacje zalogowanego narciarza wraz z karnetami (w tym oczekujące na odbiór).
     [HttpGet("me/rezerwacje")]

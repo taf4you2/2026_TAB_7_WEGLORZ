@@ -42,6 +42,32 @@ public class AuthController(SkiResortDbContext db, IConfiguration config) : Cont
         return BadRequest(new { message = "Nieznana rola." });
     }
 
+    // POST /api/auth/register
+    // Body: { "email": "...", "password": "..." }
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest req)
+    {
+        if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
+            return BadRequest(new { message = "E-mail i hasło są wymagane." });
+
+        if (req.Password.Length < 8)
+            return BadRequest(new { message = "Hasło musi mieć co najmniej 8 znaków." });
+
+        if (await db.Users.AnyAsync(u => u.Email == req.Email))
+            return Conflict(new { message = "Podany adres e-mail jest już zarejestrowany." });
+
+        var user = new SystemStacjiNarciarskiejDLL.Models.User
+        {
+            Email = req.Email,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
+            CreatedAt = DateTime.UtcNow
+        };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        return Ok(new LoginResponse(user.Id, "narciarz", GenerateToken(user.Id, "narciarz")));
+    }
+
     // POST /api/auth/logout
     // JWT jest bezstanowy — wylogowanie po stronie klienta (usunięcie tokenu).
     [HttpPost("logout")]
@@ -69,4 +95,5 @@ public class AuthController(SkiResortDbContext db, IConfiguration config) : Cont
 }
 
 public record LoginRequest(string Email, string Password, string Role);
+public record RegisterRequest(string Email, string Password);
 public record LoginResponse(int UserId, string Role, string Token);

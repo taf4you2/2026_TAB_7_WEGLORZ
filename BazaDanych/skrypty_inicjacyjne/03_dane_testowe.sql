@@ -13,7 +13,8 @@ INSERT INTO "dict_pass_status" (id, name) VALUES
   (2, 'zablokowany'),
   (3, 'zwrocony'),
   (4, 'oczekuje_na_zwrot'),
-  (5, 'wygasly');
+  (5, 'wygasly'),
+  (6, 'oczekuje_na_odbior');
 
 INSERT INTO "dict_pass_type" (id, name) VALUES
   (1, 'bilet_jednorazowy'),
@@ -36,7 +37,8 @@ INSERT INTO "dict_trail_difficulty" (id, name) VALUES
 
 INSERT INTO "dict_reservation_status" (id, name) VALUES
   (1, 'potwierdzona'),
-  (2, 'anulowana');
+  (2, 'anulowana'),
+  (3, 'oczekujaca');
 
 INSERT INTO "dict_verification_result" (id, name) VALUES
   (1, 'ok'),
@@ -177,8 +179,34 @@ INSERT INTO "card" (id, status_id, physical_condition, added_to_pool_at) VALUES
   ('55:66:77:88', 1, 'nowy',  NOW());
 
 -- ========== REZERWACJE, KARNETY I TRANSAKCJE ==========
--- Brak danych startowych — system gotowy do testowania sprzedaży od zera.
+-- narciarz@example.com (id=4) — aktywny karnet 5-dniowy + wygasły z poprzedniego sezonu
+
+INSERT INTO "reservation" (id, reservation_number, user_id, reservation_date, status_id) VALUES
+  (1, 'RES-20260430120000000', 4, NOW() - INTERVAL '3 days', 1),
+  (2, 'RES-20250115090000000', 4, NOW() - INTERVAL '110 days', 1);
+
+INSERT INTO "ski_pass" (id, card_id, tariff_id, reservation_id, status_id, valid_from, valid_to) VALUES
+  (1, 'A3:F2:11:CC', 7, 1, 1, NOW() - INTERVAL '2 days', NOW() + INTERVAL '3 days'),
+  (2, 'B7:AA:32:0E', 6, 2, 5, NOW() - INTERVAL '107 days', NOW() - INTERVAL '104 days');
+
+UPDATE "card" SET status_id = 2 WHERE id = 'A3:F2:11:CC';
+
+INSERT INTO "transaction" (id, reservation_id, cashier_id, operation_type_id, amount, transaction_date) VALUES
+  (1, 1, 1, 2, 459.00, NOW() - INTERVAL '3 days'),
+  (2, 2, 1, 2, 299.00, NOW() - INTERVAL '110 days');
+
+-- Kilka skanów bramki dla aktywnego karnetu (historia przejazdów)
+INSERT INTO "gate_scan" (id, card_id, gate_id, scan_time, verification_result_id) VALUES
+  (1, 'A3:F2:11:CC', 1, NOW() - INTERVAL '2 days 7 hours',  1),
+  (2, 'A3:F2:11:CC', 1, NOW() - INTERVAL '2 days 5 hours',  1),
+  (3, 'A3:F2:11:CC', 3, NOW() - INTERVAL '2 days 3 hours',  1),
+  (4, 'A3:F2:11:CC', 2, NOW() - INTERVAL '1 day 8 hours',   1),
+  (5, 'A3:F2:11:CC', 3, NOW() - INTERVAL '1 day 6 hours',   1),
+  (6, 'A3:F2:11:CC', 1, NOW() - INTERVAL '1 day 4 hours',   1),
+  (7, 'A3:F2:11:CC', 4, NOW() - INTERVAL '3 hours',         1),
+  (8, 'A3:F2:11:CC', 1, NOW() - INTERVAL '1 hour 30 minutes', 1);
 
 SELECT setval(pg_get_serial_sequence('"reservation"', 'id'), 100);
 SELECT setval(pg_get_serial_sequence('"ski_pass"',    'id'), 100);
 SELECT setval(pg_get_serial_sequence('"transaction"', 'id'), 100);
+SELECT setval(pg_get_serial_sequence('"gate_scan"',   'id'), 100);

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rejestracja — Stacja Narciarska</title>
+  <style>
+    body {
+      min-height: 100vh; margin: 0;
+      display: grid; place-items: center;
+      font-family: Segoe UI, system-ui, sans-serif;
+      background: #eef4fb; color: #172033;
+    }
+    .panel {
+      width: min(420px, calc(100vw - 32px));
+      background: #fff; border: 1px solid #dce4ee;
+      border-radius: 8px; padding: 28px;
+      box-shadow: 0 18px 42px rgba(23,32,51,0.14);
+    }
+    h1 { margin: 0 0 6px; font-size: 24px; }
+    .subtitle { font-size: 13px; color: #666; margin-bottom: 22px; }
+    label { display: block; margin: 14px 0 6px; font-size: 13px; font-weight: 700; }
+    input {
+      width: 100%; box-sizing: border-box;
+      padding: 11px 12px; border: 1px solid #cbd7e4;
+      border-radius: 8px; font: inherit;
+    }
+    input:focus { outline: 2px solid #1565c0; border-color: transparent; }
+    .hint-pass { font-size: 12px; color: #888; margin-top: 4px; }
+    .submit {
+      width: 100%; margin-top: 20px; padding: 12px;
+      border: 0; border-radius: 8px; background: #1565c0;
+      color: #fff; font: inherit; font-weight: 700; cursor: pointer;
+      font-size: 15px;
+    }
+    .submit:disabled { opacity: 0.6; cursor: default; }
+    .error {
+      display: none; margin-top: 14px; padding: 10px 12px;
+      border-left: 4px solid #c62828; background: #ffebee;
+      color: #9f1b1b; font-size: 14px;
+    }
+    .success {
+      display: none; margin-top: 14px; padding: 10px 12px;
+      border-left: 4px solid #2e7d32; background: #e8f5e9;
+      color: #1b5e20; font-size: 14px;
+    }
+    .login-link { margin-top: 18px; text-align: center; font-size: 13px; }
+    .login-link a { color: #1565c0; text-decoration: none; font-weight: 600; }
+    .login-link a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <main class="panel">
+    <h1>Załóż konto</h1>
+    <div class="subtitle">Zarejestruj się, aby kupować karnety online.</div>
+
+    <label for="email">Adres e-mail</label>
+    <input type="email" id="email" placeholder="twoj@email.pl" autocomplete="email">
+
+    <label for="password">Hasło</label>
+    <input type="password" id="password" placeholder="Min. 8 znaków" autocomplete="new-password">
+    <div class="hint-pass">Minimum 8 znaków.</div>
+
+    <label for="password2">Powtórz hasło</label>
+    <input type="password" id="password2" autocomplete="new-password">
+
+    <button class="submit" id="registerBtn" type="button">Zarejestruj się</button>
+    <div class="error" id="error"></div>
+    <div class="success" id="success"></div>
+
+    <div class="login-link">Masz już konto? <a href="login.html">Zaloguj się</a></div>
+  </main>
+
+  <script>
+    const errorBox   = document.getElementById('error');
+    const successBox = document.getElementById('success');
+    const btn        = document.getElementById('registerBtn');
+
+    document.getElementById('password2').addEventListener('keydown', e => {
+      if (e.key === 'Enter') register();
+    });
+    btn.addEventListener('click', register);
+
+    async function register() {
+      errorBox.style.display = 'none';
+      successBox.style.display = 'none';
+
+      const email     = document.getElementById('email').value.trim();
+      const password  = document.getElementById('password').value;
+      const password2 = document.getElementById('password2').value;
+
+      if (!email || !password) { showError('Podaj e-mail i hasło.'); return; }
+      if (password.length < 8) { showError('Hasło musi mieć co najmniej 8 znaków.'); return; }
+      if (password !== password2) { showError('Hasła nie są zgodne.'); return; }
+
+      btn.disabled = true; btn.textContent = 'Rejestrowanie…';
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          showError(data.message || 'Błąd rejestracji.');
+          return;
+        }
+
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userId', data.userId);
+        localStorage.setItem('role', data.role);
+
+        successBox.textContent = 'Konto zostało założone! Przekierowuję…';
+        successBox.style.display = 'block';
+        setTimeout(() => { window.location.href = 'narciarz.html'; }, 1200);
+      } catch (e) {
+        showError('Brak połączenia z API: ' + e.message);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Zarejestruj się';
+      }
+    }
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.style.display = 'block';
+    }
+  </script>
+</body>
+</html>

@@ -413,12 +413,15 @@
     <button class="nav-tab" onclick="showSection('zwrot', this)">
       <span class="tab-icon">↩️</span> Zwróć karnet
     </button>
+    <button class="nav-tab" onclick="showSection('zakup', this)">
+      <span class="tab-icon">🛒</span> Kup karnet
+    </button>
   </div>
 
   <div class="nav-right">
     <div class="nav-user">
-      <div class="nav-avatar">PN</div>
-      <span>Piotr Narciarz</span>
+      <div class="nav-avatar" id="user-avatar">?</div>
+      <span id="user-label"></span>
     </div>
     <button class="btn-nav" onclick="logout()">Wyloguj</button>
   </div>
@@ -428,14 +431,14 @@
 <div class="hero">
   <div class="hero-inner">
     <div>
-      <div class="hero-greeting">Dzień dobry, Piotrze 👋</div>
+      <div class="hero-greeting" id="hero-greeting">Dzień dobry 👋</div>
       <div class="hero-name">Witaj na stoku!</div>
       <div style="color:rgba(255,255,255,0.65); font-size:14px">
         🌡️ −3°C · 🌨️ Opady śniegu · 💨 Wiatr 12 km/h · Widoczność dobra
       </div>
       <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap">
-        <span style="background:rgba(255,255,255,0.15); color:white; padding:6px 14px; border-radius:20px; font-size:13px">
-          ⛷️ 8 z 10 wyciągów czynnych
+        <span style="background:rgba(255,255,255,0.15); color:white; padding:6px 14px; border-radius:20px; font-size:13px" id="hero-lift-counter">
+          ⛷️ Ładowanie wyciągów…
         </span>
         <span style="background:rgba(255,255,255,0.15); color:white; padding:6px 14px; border-radius:20px; font-size:13px">
           ❄️ Pokrywa śnieżna: 85 cm
@@ -443,33 +446,33 @@
       </div>
     </div>
 
-    <div class="pass-card">
+    <div class="pass-card" id="hero-pass-card">
       <div class="pass-card-top">
         <div>
           <div class="pass-label">Aktywny karnet</div>
-          <div class="pass-name">Karnet 5-dniowy</div>
-          <div class="pass-type">Dorosły · Sezon Zimowy 2025/26</div>
+          <div class="pass-name" id="hero-pass-name">—</div>
+          <div class="pass-type" id="hero-pass-type">—</div>
         </div>
-        <span class="badge-active">AKTYWNY</span>
+        <span class="badge-active" id="hero-pass-badge">—</span>
       </div>
       <div class="pass-details">
         <div class="pass-detail-item">
           <div class="pass-detail-label">Od</div>
-          <div class="pass-detail-value">15.04.2026</div>
+          <div class="pass-detail-value" id="hero-pass-from">—</div>
         </div>
         <div class="pass-detail-item">
           <div class="pass-detail-label">Do</div>
-          <div class="pass-detail-value">20.04.2026</div>
+          <div class="pass-detail-value" id="hero-pass-to">—</div>
         </div>
         <div class="pass-detail-item">
           <div class="pass-detail-label">Pozostało</div>
-          <div class="pass-detail-value">5 dni</div>
+          <div class="pass-detail-value" id="hero-pass-left">—</div>
         </div>
       </div>
       <div class="progress-bar">
-        <div class="progress-fill" style="width: 0%"></div>
+        <div class="progress-fill" id="hero-pass-progress" style="width: 0%"></div>
       </div>
-      <div class="rfid-line">💳 A3:F2:11:CC · Karta fizyczna</div>
+      <div class="rfid-line" id="hero-pass-rfid">💳 —</div>
     </div>
   </div>
 </div>
@@ -495,80 +498,7 @@
     </div>
 
     <div id="karnety-passes" class="passes-grid">
-      <!-- Aktywny -->
-      <div class="pass-tile">
-        <div class="pass-tile-top">
-          <div class="pass-tile-header">
-            <div>
-              <div class="pass-tile-name">Karnet 5-dniowy</div>
-              <div class="pass-tile-type">Dorosły · Sezon Zimowy 2025/26</div>
-            </div>
-            <span class="badge-active">AKTYWNY</span>
-          </div>
-          <div class="pass-tile-dates">
-            <div><div class="ptd-label">Od</div><div class="ptd-value">15.04.2026</div></div>
-            <div><div class="ptd-label">Do</div><div class="ptd-value">20.04.2026</div></div>
-            <div><div class="ptd-label">Cena</div><div class="ptd-value">390 zł</div></div>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width:0%"></div>
-          </div>
-        </div>
-        <div class="pass-tile-bottom">
-          <span class="rfid-small">💳 A3:F2:11:CC</span>
-          <span class="days-left ok">⏰ 5 dni pozostało</span>
-        </div>
-      </div>
-
-      <!-- Przyszły -->
-      <div class="pass-tile">
-        <div class="pass-tile-top">
-          <div class="pass-tile-header">
-            <div>
-              <div class="pass-tile-name">Karnet 3-dniowy</div>
-              <div class="pass-tile-type">Dorosły · Sezon Zimowy 2025/26</div>
-            </div>
-            <span style="background:rgba(255,255,255,0.25);color:white;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700">PRZYSZŁY</span>
-          </div>
-          <div class="pass-tile-dates">
-            <div><div class="ptd-label">Od</div><div class="ptd-value">22.04.2026</div></div>
-            <div><div class="ptd-label">Do</div><div class="ptd-value">25.04.2026</div></div>
-            <div><div class="ptd-label">Cena</div><div class="ptd-value">247 zł</div></div>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width:0%"></div>
-          </div>
-        </div>
-        <div class="pass-tile-bottom">
-          <span class="rfid-small">💳 A3:F2:11:CC</span>
-          <span class="days-left ok">🗓️ Aktywuje się 22.04</span>
-        </div>
-      </div>
-
-      <!-- Wygasły -->
-      <div class="pass-tile">
-        <div class="pass-tile-top expired">
-          <div class="pass-tile-header">
-            <div>
-              <div class="pass-tile-name">Karnet 7-dniowy</div>
-              <div class="pass-tile-type">Dorosły · Sezon Zimowy 2024/25</div>
-            </div>
-            <span class="badge-expired">WYGASŁY</span>
-          </div>
-          <div class="pass-tile-dates">
-            <div><div class="ptd-label">Od</div><div class="ptd-value">10.01.2025</div></div>
-            <div><div class="ptd-label">Do</div><div class="ptd-value">17.01.2025</div></div>
-            <div><div class="ptd-label">Cena</div><div class="ptd-value">525 zł</div></div>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width:100%"></div>
-          </div>
-        </div>
-        <div class="pass-tile-bottom">
-          <span class="rfid-small">💳 B7:AA:32:0E</span>
-          <span class="days-left ended">✓ Wykorzystany w całości</span>
-        </div>
-      </div>
+      <div style="color:var(--text-muted);padding:16px">Ładowanie karnetów…</div>
     </div>
 
     <div class="card">
@@ -576,28 +506,16 @@
         <div><h3>Szczegóły aktywnego karnetu</h3></div>
       </div>
       <div class="card-body" id="karnety-detail-body">
-        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; text-align:center">
-          <div style="padding:16px; background:var(--primary-light); border-radius:8px">
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Typ</div>
-            <div style="font-size:16px;font-weight:700">5-dniowy</div>
-            <div style="font-size:12px;color:var(--text-muted)">Dorosły</div>
-          </div>
-          <div style="padding:16px; background:#E8F5E9; border-radius:8px">
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Przejazdy dziś</div>
-            <div style="font-size:28px;font-weight:700;color:var(--success)">7</div>
-            <div style="font-size:12px;color:var(--text-muted)">skanów bramki</div>
-          </div>
-          <div style="padding:16px; background:#FFF9C4; border-radius:8px">
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Dni pozostało</div>
-            <div style="font-size:28px;font-weight:700;color:var(--warning)">5</div>
-            <div style="font-size:12px;color:var(--text-muted)">do 20.04.2026</div>
-          </div>
-          <div style="padding:16px; background:#ECEFF1; border-radius:8px">
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Kaucja za kartę</div>
-            <div style="font-size:20px;font-weight:700">20 zł</div>
-            <div style="font-size:12px;color:var(--success)">✓ Opłacona</div>
-          </div>
-        </div>
+        <div style="color:var(--text-muted)">Brak aktywnego karnetu.</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <div><h3>Rezerwacje oczekujące na odbiór</h3></div>
+      </div>
+      <div class="card-body" id="rezerwacje-lista">
+        <div style="color:var(--text-muted)">Ładowanie…</div>
       </div>
     </div>
   </div>
@@ -606,7 +524,7 @@
   <div class="section" id="sec-rozklad">
     <div class="section-header">
       <h2>Rozkład wyciągów</h2>
-      <p>Aktualny status · 15 kwietnia 2026 · Aktualizacja: 09:40</p>
+      <p id="rozklad-subtitle">Aktualny status</p>
     </div>
 
     <div class="weather-bar">
@@ -621,8 +539,8 @@
       <div class="weather-item">❄️ Pokrywa <strong>85 cm</strong></div>
       <div class="weather-sep"></div>
       <div class="weather-item">
-        <span style="background:var(--success-light);color:var(--success);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600">
-          8/10 wyciągów czynnych
+        <span style="background:var(--success-light);color:var(--success);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600" id="rozklad-lift-counter">
+          — wyciągów czynnych
         </span>
       </div>
     </div>
@@ -643,73 +561,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr class="lift-row">
-            <td>Wyciąg Główny ★</td>
-            <td>Trasa A, B (główne trasy zjazdowe)</td>
-            <td>
-              <span class="diff-dot diff-blue"></span>Średnia
-              <span class="diff-dot diff-red" style="margin-left:8px"></span>Trudna
-            </td>
-            <td>08:00 – 16:30</td>
-            <td><span class="badge badge-success">~5 min</span></td>
-            <td><span class="lift-status-dot dot-open"></span><span class="badge badge-success">Czynny</span></td>
-          </tr>
-          <tr class="lift-row">
-            <td>Ekspres "Orlica"</td>
-            <td>Trasa D (trasa eksperta)</td>
-            <td><span class="diff-dot diff-black"></span>Ekstremalna</td>
-            <td>09:00 – 15:00</td>
-            <td><span class="badge badge-success">~3 min</span></td>
-            <td><span class="lift-status-dot dot-open"></span><span class="badge badge-success">Czynny</span></td>
-          </tr>
-          <tr class="lift-row">
-            <td>Wyciąg Dolny</td>
-            <td>Trasa E (dla początkujących)</td>
-            <td><span class="diff-dot diff-green"></span>Łatwa</td>
-            <td>08:00 – 17:00</td>
-            <td><span class="badge badge-warning">~18 min</span></td>
-            <td><span class="lift-status-dot dot-delay"></span><span class="badge badge-warning">Tłok</span></td>
-          </tr>
-          <tr class="lift-row">
-            <td>Orczyk "Mała Turnia"</td>
-            <td>Trasa F, G (rodzinna)</td>
-            <td><span class="diff-dot diff-green"></span>Łatwa</td>
-            <td>09:00 – 16:00</td>
-            <td><span class="badge badge-success">~2 min</span></td>
-            <td><span class="lift-status-dot dot-open"></span><span class="badge badge-success">Czynny</span></td>
-          </tr>
-          <tr class="lift-row">
-            <td>Kolej Linowa "Szczyt"</td>
-            <td>Panorama szczytowa</td>
-            <td>—</td>
-            <td>10:00 – 14:00</td>
-            <td><span class="badge badge-success">~10 min</span></td>
-            <td><span class="lift-status-dot dot-open"></span><span class="badge badge-success">Czynny</span></td>
-          </tr>
-          <tr class="lift-row">
-            <td>Wyciąg Północny</td>
-            <td>Trasa H (pod remontem)</td>
-            <td><span class="diff-dot diff-blue"></span>Średnia</td>
-            <td>—</td>
-            <td>—</td>
-            <td><span class="lift-status-dot dot-closed"></span><span class="badge badge-danger">Nieczynny</span></td>
-          </tr>
-          <tr class="lift-row">
-            <td>T-bar "Stara Turnia"</td>
-            <td>Trasa I (trening)</td>
-            <td><span class="diff-dot diff-green"></span>Łatwa</td>
-            <td>—</td>
-            <td>—</td>
-            <td><span class="lift-status-dot dot-closed"></span><span class="badge badge-danger">Awaria</span></td>
-          </tr>
-          <tr class="lift-row">
-            <td>Gondola "Wierch"</td>
-            <td>Trasa C, panorama</td>
-            <td><span class="diff-dot diff-red"></span>Trudna</td>
-            <td>08:30 – 16:00</td>
-            <td><span class="badge badge-success">~8 min</span></td>
-            <td><span class="lift-status-dot dot-open"></span><span class="badge badge-success">Czynny</span></td>
-          </tr>
+          <tr><td colspan="6" style="color:var(--text-muted);padding:16px">Ładowanie…</td></tr>
         </tbody>
       </table>
     </div>
@@ -764,27 +616,7 @@
       </div>
     </div>
 
-    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px" id="historia-stats">
-      <div class="card" style="margin-bottom:0">
-        <div class="card-body" style="text-align:center">
-          <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Przejazdy dziś</div>
-          <div style="font-size:32px;font-weight:700;color:var(--primary)">7</div>
-        </div>
-      </div>
-      <div class="card" style="margin-bottom:0">
-        <div class="card-body" style="text-align:center">
-          <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Wszystkich przejazdów (karnet)</div>
-          <div style="font-size:32px;font-weight:700;color:var(--primary)">7</div>
-        </div>
-      </div>
-      <div class="card" style="margin-bottom:0">
-        <div class="card-body" style="text-align:center">
-          <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Ulubiony wyciąg</div>
-          <div style="font-size:20px;font-weight:700">Ekspres "Orlica"</div>
-          <div style="font-size:12px;color:var(--text-muted)">4 przejazdy</div>
-        </div>
-      </div>
-    </div>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px" id="historia-stats"></div>
 
     <div class="card">
       <div class="card-header">
@@ -796,62 +628,7 @@
       </div>
       <div class="card-body">
         <div class="timeline" id="historia-timeline">
-          <div class="timeline-item">
-            <span class="scan-icon scan-ok">✅</span>
-            <div class="tl-right">
-              <div class="tl-event">Wjazd · Ekspres "Orlica"</div>
-              <div class="tl-detail">Bramka #04 · Trasa D (czarna) · Weryfikacja: OK</div>
-            </div>
-            <span class="tl-time">09:38</span>
-          </div>
-          <div class="timeline-item">
-            <span class="scan-icon scan-ok">✅</span>
-            <div class="tl-right">
-              <div class="tl-event">Wjazd · Ekspres "Orlica"</div>
-              <div class="tl-detail">Bramka #04 · Trasa D (czarna) · Weryfikacja: OK</div>
-            </div>
-            <span class="tl-time">09:08</span>
-          </div>
-          <div class="timeline-item">
-            <span class="scan-icon scan-ok">✅</span>
-            <div class="tl-right">
-              <div class="tl-event">Wjazd · Wyciąg Główny</div>
-              <div class="tl-detail">Bramka #01 · Trasa B (niebieska) · Weryfikacja: OK</div>
-            </div>
-            <span class="tl-time">08:49</span>
-          </div>
-          <div class="timeline-item">
-            <span class="scan-icon scan-ok">✅</span>
-            <div class="tl-right">
-              <div class="tl-event">Wjazd · Wyciąg Główny</div>
-              <div class="tl-detail">Bramka #01 · Trasa A (niebieska) · Weryfikacja: OK</div>
-            </div>
-            <span class="tl-time">08:27</span>
-          </div>
-          <div class="timeline-item">
-            <span class="scan-icon scan-ok">✅</span>
-            <div class="tl-right">
-              <div class="tl-event">Wjazd · Gondola "Wierch"</div>
-              <div class="tl-detail">Bramka #07 · Trasa C (czerwona) · Weryfikacja: OK</div>
-            </div>
-            <span class="tl-time">08:12</span>
-          </div>
-          <div class="timeline-item">
-            <span class="scan-icon scan-ok">✅</span>
-            <div class="tl-right">
-              <div class="tl-event">Wjazd · Ekspres "Orlica"</div>
-              <div class="tl-detail">Bramka #04 · Trasa D (czarna) · Weryfikacja: OK</div>
-            </div>
-            <span class="tl-time">08:01</span>
-          </div>
-          <div class="timeline-item">
-            <span class="scan-icon scan-ok">✅</span>
-            <div class="tl-right">
-              <div class="tl-event">Wjazd · Ekspres "Orlica"</div>
-              <div class="tl-detail">Bramka #04 · Trasa D (czarna) · Weryfikacja: OK</div>
-            </div>
-            <span class="tl-time">07:42</span>
-          </div>
+          <div style="color:var(--text-muted);padding:8px">Podaj kartę RFID i kliknij Załaduj.</div>
         </div>
       </div>
     </div>
@@ -902,12 +679,12 @@
         <div class="card-body">
           <div class="form-group">
             <label class="form-label">Powód zwrotu</label>
-            <select class="form-select">
-              <option>-- Wybierz powód --</option>
-              <option>Kontuzja / choroba</option>
-              <option>Zmiana planów</option>
-              <option>Warunki pogodowe</option>
-              <option>Inny powód</option>
+            <select class="form-select" id="zwrot-reason-select" onchange="syncZwrotReason()">
+              <option value="">-- Wybierz powód --</option>
+              <option value="Kontuzja / choroba">Kontuzja / choroba</option>
+              <option value="Zmiana planów">Zmiana planów</option>
+              <option value="Warunki pogodowe">Warunki pogodowe</option>
+              <option value="Inny powód">Inny powód</option>
             </select>
           </div>
           <div class="form-group">
@@ -929,6 +706,57 @@
     </div>
   </div>
 
+  <!-- ======== KUP KARNET (UC2) ======== -->
+  <div class="section" id="sec-zakup">
+    <div class="section-header">
+      <h2>Kup karnet online</h2>
+      <p>UC2 · Rezerwacja i zakup online — karnet do odbioru przy kasie</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px">
+
+      <!-- KROK 1: wybór taryfy -->
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header"><h3>1. Wybierz typ karnetu</h3></div>
+        <div class="card-body">
+          <div id="zakup-taryfy-lista" style="display:grid;gap:10px">
+            <div style="color:var(--text-muted)">Ładowanie…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KROK 2: daty + podsumowanie + płatność -->
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-header"><h3>2. Wybierz daty</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Data rozpoczęcia</label>
+              <input class="form-input" type="date" id="zakup-from">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Data zakończenia</label>
+              <input class="form-input" type="date" id="zakup-to">
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:0">
+          <div class="card-header"><h3>3. Podsumowanie i płatność</h3></div>
+          <div class="card-body">
+            <div id="zakup-summary" style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
+              Wybierz karnet i daty, aby zobaczyć podsumowanie.
+            </div>
+            <button class="btn btn-primary" id="zakup-btn" onclick="zlozZamowienie()" style="width:100%" disabled>
+              💳 Zapłać i zarezerwuj
+            </button>
+            <div id="zakup-result" style="display:none;margin-top:14px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /content-wrapper -->
 
 <script>
@@ -938,9 +766,10 @@
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     if (tabEl) tabEl.classList.add('active');
     if (id === 'rozklad') loadWyciagi();
-    if (id === 'karnety' && myRfid) zaladujKarnety();
+    if (id === 'karnety') { if (myRfid) zaladujKarnety(); zaladujRezerwacje(); }
     if (id === 'historia' && myRfid) zaladujHistorie();
     if (id === 'zwrot'   && myRfid) zaladujZwrot();
+    if (id === 'zakup') zaladujTaryfy();
   }
 
   // ========== AUTH GUARD ==========
@@ -957,7 +786,7 @@
   }
 
   // ========== API ==========
-  const API = 'http://localhost:5000';
+  const API = '';
 
   async function apiFetch(path) {
     try {
@@ -1301,14 +1130,256 @@
       </tr>`;
     }).join('');
 
-    // Aktualizuj licznik czynnych
-    const active = data.filter(l => l.status === 'czynny').length;
-    const counter = document.querySelector('.weather-bar .badge-success:last-child, .weather-bar span[style]');
-    if (counter) counter.textContent = `${active}/${data.length} wyciągów czynnych`;
+    const activeCount = data.filter(l => l.status === 'czynny').length;
+    const counterText = `${activeCount}/${data.length} wyciągów czynnych`;
+
+    const heroCounter = document.getElementById('hero-lift-counter');
+    if (heroCounter) heroCounter.textContent = `⛷️ ${counterText}`;
+
+    const rozkladCounter = document.getElementById('rozklad-lift-counter');
+    if (rozkladCounter) rozkladCounter.textContent = counterText;
+
+    const now = new Date();
+    const subtitle = document.getElementById('rozklad-subtitle');
+    if (subtitle) subtitle.textContent = `Aktualny status · ${now.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })} · Aktualizacja: ${now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}`;
   }
 
-  // Ładuj przy starcie (domyślna sekcja to karnety, ale wyciągi ładuj od razu w tle)
-  loadWyciagi();
+  // ========== REZERWACJE ==========
+  async function zaladujRezerwacje() {
+    const el = document.getElementById('rezerwacje-lista');
+    if (!el) return;
+
+    const data = await apiFetch('/api/users/me/rezerwacje');
+    if (!data) { el.innerHTML = '<div style="color:var(--text-muted)">Błąd ładowania rezerwacji.</div>'; return; }
+
+    const oczekujace = data.filter(r =>
+      r.passes.some(p => p.status === 'oczekuje_na_odbior')
+    );
+
+    if (oczekujace.length === 0) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Brak rezerwacji oczekujących na odbiór.</div>';
+      return;
+    }
+
+    el.innerHTML = oczekujace.map(r => {
+      const passesHtml = r.passes
+        .filter(p => p.status === 'oczekuje_na_odbior')
+        .map(p => {
+          const from = p.validFrom ? new Date(p.validFrom).toLocaleDateString('pl-PL') : '—';
+          const to   = p.validTo   ? new Date(p.validTo).toLocaleDateString('pl-PL')   : '—';
+          return `<div style="font-size:13px;color:var(--text-muted);margin-top:4px">
+            📋 ${p.tariff ?? '—'} · ${from} – ${to} · <strong>${p.price?.toFixed(2) ?? '—'} zł</strong>
+          </div>`;
+        }).join('');
+
+      const date = r.reservationDate ? new Date(r.reservationDate).toLocaleDateString('pl-PL') : '—';
+
+      return `<div style="padding:14px 16px;border:2px solid #FFA000;border-radius:8px;background:#FFFDE7;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:700">📦 ${r.reservationNumber}</div>
+            <div style="font-size:12px;color:var(--text-muted)">Złożona: ${date}</div>
+            ${passesHtml}
+          </div>
+          <span style="background:#FFA000;color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap">DO ODBIORU</span>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:#795548">
+          ℹ️ Odbierz karnet przy kasie, podając numer rezerwacji. Kasjer przypisze kartę RFID.
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ========== ZAKUP ONLINE (UC2) ==========
+  let selectedTariffId = null;
+  let selectedTariffName = '';
+  let selectedTariffPrice = 0;
+
+  async function zaladujTaryfy() {
+    const data = await apiFetch('/api/zakup/taryfy');
+    const lista = document.getElementById('zakup-taryfy-lista');
+    if (!lista) return;
+    if (!data || data.length === 0) {
+      lista.innerHTML = '<div style="color:var(--text-muted)">Brak dostępnych karnetów.</div>';
+      return;
+    }
+    lista.innerHTML = data.map(t => `
+      <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px solid var(--border);border-radius:8px;cursor:pointer" id="taryfa-label-${t.id}">
+        <input type="radio" name="taryfa-zakup" style="accent-color:var(--primary)" value="${t.id}" onchange="wybierzTaryfe(${t.id},'${t.name}',${t.price})">
+        <div style="flex:1">
+          <div style="font-weight:600">${t.name}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${t.season ?? ''}</div>
+        </div>
+        <div style="font-weight:700;color:var(--primary)">${t.price?.toFixed(2)} zł</div>
+      </label>`).join('');
+
+    // Ustaw domyślne daty
+    const today = new Date();
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+    const fmtDate = d => d.toISOString().split('T')[0];
+    document.getElementById('zakup-from').value = fmtDate(today);
+    document.getElementById('zakup-to').value   = fmtDate(tomorrow);
+    document.getElementById('zakup-from').addEventListener('change', aktualizujPodsumowanie);
+    document.getElementById('zakup-to').addEventListener('change', aktualizujPodsumowanie);
+  }
+
+  function wybierzTaryfe(id, name, price) {
+    selectedTariffId    = id;
+    selectedTariffName  = name;
+    selectedTariffPrice = price;
+    document.querySelectorAll('#zakup-taryfy-lista label').forEach(l => l.style.borderColor = 'var(--border)');
+    const lbl = document.getElementById(`taryfa-label-${id}`);
+    if (lbl) lbl.style.borderColor = 'var(--primary)';
+    aktualizujPodsumowanie();
+  }
+
+  function aktualizujPodsumowanie() {
+    const fromVal = document.getElementById('zakup-from')?.value;
+    const toVal   = document.getElementById('zakup-to')?.value;
+    const summary = document.getElementById('zakup-summary');
+    const btn     = document.getElementById('zakup-btn');
+    if (!summary) return;
+
+    if (!selectedTariffId || !fromVal || !toVal) {
+      summary.innerHTML = '<span style="color:var(--text-muted)">Wybierz karnet i daty.</span>';
+      if (btn) btn.disabled = true;
+      return;
+    }
+
+    const from = new Date(fromVal);
+    const to   = new Date(toVal);
+    if (from >= to) {
+      summary.innerHTML = '<span style="color:var(--danger)">Data końca musi być późniejsza niż data początku.</span>';
+      if (btn) btn.disabled = true;
+      return;
+    }
+
+    const days = Math.round((to - from) / 86400000);
+    summary.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Karnet</span><span style="font-weight:600">${selectedTariffName}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Od</span><span>${from.toLocaleDateString('pl-PL')}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Do</span><span>${to.toLocaleDateString('pl-PL')}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Liczba dni</span><span>${days}</span></div>
+        <hr style="border:none;border-top:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700"><span>Do zapłaty</span><span style="color:var(--primary)">${selectedTariffPrice?.toFixed(2)} zł</span></div>
+      </div>`;
+    if (btn) btn.disabled = false;
+  }
+
+  async function zlozZamowienie() {
+    const fromVal = document.getElementById('zakup-from')?.value;
+    const toVal   = document.getElementById('zakup-to')?.value;
+    const result  = document.getElementById('zakup-result');
+    const btn     = document.getElementById('zakup-btn');
+    if (!selectedTariffId || !fromVal || !toVal) return;
+
+    btn.disabled = true; btn.textContent = '⏳ Przetwarzanie płatności…';
+    try {
+      const res = await fetch('/api/zakup/online', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ tariffId: selectedTariffId, validFrom: fromVal, validTo: toVal })
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        result.innerHTML = `<div style="padding:16px;background:var(--success-light);border-left:4px solid var(--success);border-radius:4px">
+          <div style="font-weight:700;font-size:16px;color:var(--success);margin-bottom:8px">✅ Rezerwacja przyjęta!</div>
+          <div style="display:flex;flex-direction:column;gap:4px;font-size:13px">
+            <div><strong>Nr rezerwacji:</strong> <code style="background:#fff;padding:2px 6px;border-radius:4px">${data.reservationNumber}</code></div>
+            <div><strong>Karnet:</strong> ${data.tariff}</div>
+            <div><strong>Ważny:</strong> ${new Date(data.validFrom).toLocaleDateString('pl-PL')} – ${new Date(data.validTo).toLocaleDateString('pl-PL')}</div>
+            <div><strong>Kwota:</strong> ${data.price?.toFixed(2)} zł</div>
+          </div>
+          <div style="margin-top:10px;font-size:12px;color:#555">${data.message}</div>
+        </div>`;
+        result.style.display = 'block';
+        selectedTariffId = null;
+        selectedTariffName = '';
+        document.querySelectorAll('input[name="taryfa-zakup"]').forEach(r => r.checked = false);
+        document.querySelectorAll('#zakup-taryfy-lista label').forEach(l => l.style.borderColor = 'var(--border)');
+        document.getElementById('zakup-summary').innerHTML = '<span style="color:var(--text-muted)">Wybierz karnet i daty.</span>';
+      } else {
+        result.innerHTML = `<div style="padding:12px;background:var(--danger-light);border-left:4px solid var(--danger);border-radius:4px;color:var(--danger)">❌ ${data.message ?? 'Błąd podczas składania zamówienia.'}</div>`;
+        result.style.display = 'block';
+      }
+    } catch (e) {
+      result.innerHTML = `<div style="padding:12px;background:var(--danger-light);border-left:4px solid var(--danger);border-radius:4px;color:var(--danger)">❌ Brak połączenia z API.</div>`;
+      result.style.display = 'block';
+    } finally {
+      btn.disabled = false; btn.textContent = '💳 Zapłać i zarezerwuj';
+    }
+  }
+
+  function syncZwrotReason() {
+    const sel = document.getElementById('zwrot-reason-select');
+    const txt = document.getElementById('zwrot-reason');
+    if (sel && txt && sel.value) txt.value = sel.value;
+  }
+
+  async function init() {
+    loadWyciagi();
+
+    const me = await apiFetch('/api/users/me');
+    if (!me) return;
+
+    // Navbar
+    const email = me.email ?? '';
+    const label = document.getElementById('user-label');
+    if (label) label.textContent = email;
+    const avatar = document.getElementById('user-avatar');
+    if (avatar) avatar.textContent = email.slice(0, 2).toUpperCase();
+
+    // Hero powitanie
+    const greeting = document.getElementById('hero-greeting');
+    if (greeting) greeting.textContent = `Dzień dobry, ${email.split('@')[0]} 👋`;
+
+    if (!me.cardIds || me.cardIds.length === 0) return;
+
+    myRfid = me.cardIds[0];
+    ['narciarz-rfid', 'historia-rfid', 'zwrot-rfid'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = myRfid;
+    });
+
+    const passes = await apiFetch(`/api/karnety?cardId=${encodeURIComponent(myRfid)}`);
+    if (passes) renderHeroPass(passes);
+    zaladujKarnety();
+    zaladujRezerwacje();
+  }
+
+  function renderHeroPass(passes) {
+    const today = new Date();
+    const active = passes.find(p => {
+      if (p.status !== 'aktywny') return false;
+      const from = p.validFrom ? new Date(p.validFrom) : null;
+      const to   = p.validTo   ? new Date(p.validTo)   : null;
+      return from && to && from <= today && today <= to;
+    }) || passes.find(p => p.status === 'aktywny') || passes[0];
+
+    if (!active) return;
+
+    const from = active.validFrom ? new Date(active.validFrom) : null;
+    const to   = active.validTo   ? new Date(active.validTo)   : null;
+    const totalDays = (from && to) ? Math.max(1, Math.round((to - from) / 86400000)) : 0;
+    const usedDays  = from ? Math.max(0, Math.round((today - from) / 86400000)) : 0;
+    const leftDays  = Math.max(0, totalDays - usedDays);
+    const pct = totalDays > 0 ? Math.min(100, Math.round((usedDays / totalDays) * 100)) : 0;
+
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setText('hero-pass-name', active.tariff ?? '—');
+    setText('hero-pass-type', active.passType ?? '—');
+    setText('hero-pass-badge', active.status?.toUpperCase() ?? '—');
+    setText('hero-pass-from', from ? from.toLocaleDateString('pl-PL') : '—');
+    setText('hero-pass-to',   to   ? to.toLocaleDateString('pl-PL')   : '—');
+    setText('hero-pass-left', `${leftDays} dni`);
+    setText('hero-pass-rfid', `💳 ${active.cardId}`);
+    const prog = document.getElementById('hero-pass-progress');
+    if (prog) prog.style.width = `${pct}%`;
+  }
+
+  init();
 </script>
 </body>
 </html>

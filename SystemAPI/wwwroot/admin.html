@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administratora - System Stacji Narciarskiej</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+    <div class="app-container" id="app-container" style="display: none;">
+        <!-- Panel boczny (Sidebar) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>SkiAdmin</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul id="nav-menu">
+                    <li><a href="#" data-target="dashboard" class="nav-link active">Pulpit</a></li>
+                    <li><a href="#" data-target="lifts" class="nav-link">Wyciągi</a></li>
+                    <li><a href="#" data-target="tariffs" class="nav-link">Taryfy</a></li>
+                    <li><a href="#" data-target="users" class="nav-link">Użytkownicy</a></li>
+                    <li><a href="#" data-target="reports" class="nav-link">Raporty</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Główna część aplikacji -->
+        <div class="main-wrapper">
+            <!-- Górny pasek (Navbar) -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button id="menu-toggle" class="menu-toggle" aria-label="Przełącz menu">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 12h18M3 6h18M3 18h18" />
+                        </svg>
+                    </button>
+                    <h1 id="page-title">Pulpit</h1>
+                </div>
+                <div class="topbar-right">
+                    <div class="user-info">
+                        <span class="user-name">Jan Kowalski</span>
+                        <div class="avatar">JK</div>
+                    </div>
+                    <button class="btn-logout" id="logout-btn">
+                        <span>Wyloguj</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Główny kontener danych -->
+            <main class="content-container" id="main-content">
+                <!-- Javascript będzie tu dynamicznie wstrzykiwać zawartość -->
+            </main>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+
+</html>

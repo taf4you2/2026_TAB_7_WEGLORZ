@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logowanie — Panel Administratora</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+        }
+
+        .panel {
+            width: min(420px, calc(100vw - 32px));
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            margin: 0 0 4px;
+            font-size: 24px;
+            text-align: center;
+            color: #3b82f6;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin: 16px 0 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #cbd5e1;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            font: inherit;
+            background: #0f172a;
+            color: #f8fafc;
+        }
+
+        input:focus {
+            outline: 2px solid #3b82f6;
+            border-color: transparent;
+        }
+
+        .submit {
+            width: 100%;
+            margin-top: 24px;
+            padding: 12px;
+            border: 0;
+            border-radius: 8px;
+            background: #3b82f6;
+            color: #fff;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .submit:hover {
+            background: #2563eb;
+        }
+
+        .error {
+            display: none;
+            margin-top: 16px;
+            padding: 12px;
+            border-left: 4px solid #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+
+        .hint {
+            margin-top: 18px;
+            padding: 10px 12px;
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid #f59e0b;
+            font-size: 13px;
+            line-height: 1.45;
+            color: #cbd5e1;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="panel">
+        <div class="logo">⚙️</div>
+        <h1>SkiAdmin</h1>
+        <div class="subtitle">Logowanie do panelu zarządzania</div>
+
+        <label for="email">E-mail kasjera / administratora</label>
+        <input type="email" id="email" value="kasjer@stacja.pl" autocomplete="username">
+
+        <label for="password">Hasło</label>
+        <input type="password" id="password" value="haslo123" autocomplete="current-password">
+
+        <button class="submit" type="button" id="loginButton">Zaloguj się</button>
+        <div class="error" id="error"></div>
+
+        <div class="hint">
+            Dane testowe (rola: kasjer):<br>
+            <strong>kasjer@stacja.pl</strong> / <strong>haslo123</strong>
+        </div>
+    </main>
+
+    <script>
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const errorBox = document.getElementById('error');
+
+        document.getElementById('loginButton').addEventListener('click', login);
+        passwordInput.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
+        async function login() {
+            hideError();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            if (!email || !password) { showError('Podaj e-mail i hasło.'); return; }
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, role: 'kasjer' })
+                });
+
+                if (!res.ok) {
+                    const d = await res.json().catch(() => ({}));
+                    showError(d.message || 'Nieprawidłowy e-mail lub hasło.');
+                    return;
+                }
+
+                const data = await res.json();
+                // Ważne: zapisujemy pod kluczem 'jwt_token', którego oczekuje admin.js
+                localStorage.setItem('jwt_token', data.token);
+                window.location.href = 'admin.html';
+            } catch (e) {
+                showError('Brak połączenia z API: ' + e.message);
+            }
+        }
+
+        function showError(msg) { errorBox.textContent = msg; errorBox.style.display = 'block'; }
+        function hideError() { errorBox.textContent = ''; errorBox.style.display = 'none'; }
+    </script>
+</body>
+
+</html>

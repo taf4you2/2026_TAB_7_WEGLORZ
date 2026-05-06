@@ -87,4 +87,31 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
 
         return Ok(result);
     }
+
+    // GET /api/users/all
+    // Zwraca listę wszystkich użytkowników systemu (administratorzy, kasjerzy, narciarze).
+    // Tylko dla admina i kasjera (dostęp do panelu).
+    [Authorize(Roles = "admin,kasjer")]
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAllUsers()
+    {
+        var admins = await db.Administrators
+            .Select(a => new { a.Id, Login = a.Login, Role = "admin", IsActive = a.IsActive ?? true })
+            .ToListAsync();
+
+        var cashiers = await db.Cashiers
+            .Select(c => new { c.Id, Login = c.Login, Role = "kasjer", IsActive = c.IsActive ?? true })
+            .ToListAsync();
+
+        var users = await db.Users
+            .Select(u => new { u.Id, Login = u.Email, Role = "narciarz", IsActive = true })
+            .ToListAsync();
+
+        var allUsers = admins.Cast<object>()
+            .Concat(cashiers.Cast<object>())
+            .Concat(users.Cast<object>())
+            .ToList();
+
+        return Ok(allUsers);
+    }
 }

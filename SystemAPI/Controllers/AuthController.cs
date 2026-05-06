@@ -28,6 +28,16 @@ public class AuthController(SkiResortDbContext db, IConfiguration config) : Cont
 
             return Ok(new LoginResponse(cashier.Id, "kasjer", GenerateToken(cashier.Id, "kasjer")));
         }
+        else if (req.Role == "admin")
+        {
+            var admin = await db.Administrators
+                .FirstOrDefaultAsync(a => a.Login == req.Email && a.IsActive == true);
+
+            if (admin == null || !BCrypt.Net.BCrypt.Verify(req.Password, admin.PasswordHash))
+                return Unauthorized(new { message = "Nieprawidłowy login lub hasło." });
+
+            return Ok(new LoginResponse(admin.Id, "admin", GenerateToken(admin.Id, "admin")));
+        }
         else if (req.Role == "narciarz")
         {
             var user = await db.Users

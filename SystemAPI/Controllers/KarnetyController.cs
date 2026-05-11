@@ -19,6 +19,8 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         if (string.IsNullOrEmpty(cardId))
             return BadRequest(new { message = "Parametr cardId jest wymagany." });
 
+        await ExpireOutdatedPasses(cardId);
+
         var passes = await db.SkiPasses
             .Include(sp => sp.Status)
             .Include(sp => sp.Tariff)
@@ -86,8 +88,12 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
             return BadRequest(new { message = $"Uzytkownik {req.UserId} nie istnieje." });
 
         var activeStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "aktywny");
+        var expiredStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "wygasly");
         var reservationStatus = await db.DictReservationStatuses.FirstOrDefaultAsync(s => s.Name == "potwierdzona");
         var opType = await db.DictOperationTypes.FirstOrDefaultAsync(o => o.Name == "sprzedaz_karnetu");
+        var passStatusId = req.ValidTo <= now && expiredStatus != null
+            ? expiredStatus.Id
+            : activeStatus?.Id;
 
         var reservation = new Reservation
         {
@@ -104,7 +110,7 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
             CardId = req.CardId,
             TariffId = req.TariffId,
             ReservationId = reservation.Id,
-            StatusId = activeStatus?.Id,
+            StatusId = passStatusId,
             ValidFrom = DateTime.SpecifyKind(req.ValidFrom, DateTimeKind.Utc),
             ValidTo = DateTime.SpecifyKind(req.ValidTo, DateTimeKind.Utc),
             InitialRides = tariff.RideCount,
@@ -215,6 +221,7 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         var refundTransaction = new Transaction
         {
             ReservationId = pass.ReservationId,
+            CashierId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
             OperationTypeId = opType?.Id,
             Amount = -preview.TotalRefund,
             TransactionDate = DateTime.UtcNow
@@ -257,6 +264,25 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         var total = Math.Max(0, refund - ManipulationFee);
 
         return new ReturnPreviewDto(totalPrice, totalDays, usedDays, refund, ManipulationFee, deposit, total);
+    }
+
+    private async Task ExpireOutdatedPasses(string cardId)
+    {
+        var expiredStatusId = await db.DictPassStatuses
+            .Where(s => s.Name == "wygasly")
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync();
+        var activeStatusId = await db.DictPassStatuses
+            .Where(s => s.Name == "aktywny")
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync();
+
+        if (!expiredStatusId.HasValue || !activeStatusId.HasValue)
+            return;
+
+        await db.SkiPasses
+            .Where(sp => sp.CardId == cardId && sp.StatusId == activeStatusId.Value && sp.ValidTo < DateTime.UtcNow)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.StatusId, expiredStatusId.Value));
     }
 
     private static PassDto ToDto(SkiPass sp) => new(

@@ -13,6 +13,7 @@ public partial class SellPassPanel : UserControl
     private readonly ApiService _api;
     private List<TariffItem> _tariffs = [];
     private int? _foundUserId;
+    private string? _foundUserEmail;
     private DateTime _validFrom;
     private DateTime _validTo;
 
@@ -141,6 +142,7 @@ public partial class SellPassPanel : UserControl
         UserInfoBorder.Visibility = Visibility.Collapsed;
         UserResultCombo.Visibility = Visibility.Collapsed;
         _foundUserId = null;
+        _foundUserEmail = null;
 
         var email = UserEmailBox.Text.Trim();
         if (string.IsNullOrEmpty(email)) return;
@@ -150,11 +152,21 @@ public partial class SellPassPanel : UserControl
             var users = await _api.SearchUsersAsync(email);
             if (users.Count == 0)
             {
-                ShowUserInfo("Nie znaleziono narciarza o podanym emailu.", Brushes.MistyRose, Brushes.DarkRed);
+                var created = await _api.CreateUserAsync(email);
+                if (created == null)
+                {
+                    ShowUserInfo("Nie udalo sie utworzyc narciarza.", Brushes.MistyRose, Brushes.DarkRed);
+                    return;
+                }
+
+                _foundUserId = created.Id;
+                _foundUserEmail = created.Email;
+                ShowUserInfo($"Utworzono narciarza: {created.Email} (ID: {created.Id})", Brushes.Honeydew, Brushes.DarkGreen);
             }
             else if (users.Count == 1)
             {
                 _foundUserId = users[0].Id;
+                _foundUserEmail = users[0].Email;
                 ShowUserInfo($"Znaleziono: {users[0].Email} (ID: {users[0].Id})", Brushes.Honeydew, Brushes.DarkGreen);
             }
             else
@@ -175,6 +187,7 @@ public partial class SellPassPanel : UserControl
         if (UserResultCombo.SelectedItem is UserResultItem item)
         {
             _foundUserId = item.Id;
+            _foundUserEmail = item.Email;
             ShowUserInfo($"Wybrany: {item.Email} (ID: {item.Id})", Brushes.Honeydew, Brushes.DarkGreen);
         }
     }
@@ -196,6 +209,7 @@ public partial class SellPassPanel : UserControl
         var rfid = RfidBox.Text.Trim();
         if (string.IsNullOrEmpty(rfid)) { ShowError("Podaj RFID karty."); return; }
         if (TariffCombo.SelectedItem is not TariffItem tariff) { ShowError("Wybierz taryfe."); return; }
+        if (!await ResolveUserBeforeIssueAsync()) return;
         if (!await VerifyCardAsync(false)) { ShowError("Karta nie jest gotowa do wydania."); return; }
 
         try
@@ -218,6 +232,64 @@ public partial class SellPassPanel : UserControl
     {
         ErrorText.Text = msg;
         ErrorText.Visibility = Visibility.Visible;
+    }
+
+    private async Task<bool> ResolveUserBeforeIssueAsync()
+    {
+        var email = UserEmailBox.Text.Trim();
+        if (string.IsNullOrEmpty(email))
+        {
+            _foundUserId = null;
+            _foundUserEmail = null;
+            return true;
+        }
+
+        if (_foundUserId.HasValue && string.Equals(_foundUserEmail, email, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        try
+        {
+            var users = await _api.SearchUsersAsync(email);
+            var exact = users
+                .Where(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            var candidates = exact.Count > 0 ? exact : users;
+
+            if (candidates.Count == 1)
+            {
+                _foundUserId = candidates[0].Id;
+                _foundUserEmail = candidates[0].Email;
+                ShowUserInfo($"Znaleziono: {candidates[0].Email} (ID: {candidates[0].Id})", Brushes.Honeydew, Brushes.DarkGreen);
+                return true;
+            }
+
+            if (candidates.Count > 1)
+            {
+                UserResultCombo.ItemsSource = candidates.Select(u => new UserResultItem(u.Id, u.Email)).ToList();
+                UserResultCombo.Visibility = Visibility.Visible;
+                ShowUserInfo("Znaleziono kilku narciarzy - wybierz wlasciciela z listy.", Brushes.LemonChiffon, Brushes.SaddleBrown);
+                ShowError("Wybierz wlasciciela z listy przed wydaniem karnetu.");
+                return false;
+            }
+
+            var created = await _api.CreateUserAsync(email);
+            if (created == null)
+            {
+                ShowUserInfo("Nie udalo sie utworzyc narciarza.", Brushes.MistyRose, Brushes.DarkRed);
+                ShowError("Nie udalo sie utworzyc narciarza.");
+                return false;
+            }
+
+            _foundUserId = created.Id;
+            _foundUserEmail = created.Email;
+            ShowUserInfo($"Utworzono narciarza: {created.Email} (ID: {created.Id})", Brushes.Honeydew, Brushes.DarkGreen);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Blad wyszukiwania narciarza: {ex.Message}");
+            return false;
+        }
     }
 
     private record TariffItem(TariffDto Dto)

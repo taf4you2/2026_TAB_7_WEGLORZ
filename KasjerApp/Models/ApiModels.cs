@@ -35,6 +35,7 @@ public record PendingReturnDto(int PassId, string CardRfid, string? OwnerEmail, 
 
 // ── Użytkownicy ───────────────────────────────────────────────────────────────
 public record UserDto(int Id, string Email);
+public record CreateUserRequest(string Email);
 
 // ── Żądania ───────────────────────────────────────────────────────────────────
 public record SellTicketRequest(string CardId, int TariffId, DateTime ValidOn, int Quantity);

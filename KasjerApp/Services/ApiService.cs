@@ -139,6 +139,13 @@ public class ApiService
         return await r.Content.ReadFromJsonAsync<List<UserDto>>() ?? [];
     }
 
+    public async Task<UserDto?> CreateUserAsync(string email)
+    {
+        var r = await _http.PostAsJsonAsync("/api/uzytkownicy", new CreateUserRequest(email));
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<UserDto>();
+    }
+
     // â”€â”€ Bilety (UC1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public async Task<SellTicketResponse?> SellTicketAsync(SellTicketRequest req)
     {

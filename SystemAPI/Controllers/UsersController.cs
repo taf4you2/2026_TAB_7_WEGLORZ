@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SystemStacjiNarciarskiejDLL;
+using SystemStacjiNarciarskiejDLL.Models;
 
 namespace SystemAPI.Controllers;
 
@@ -48,6 +49,29 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
             .ToListAsync();
 
         return Ok(users);
+    }
+
+    [HttpPost("/api/uzytkownicy")]
+    public async Task<IActionResult> CreateSkier([FromBody] CreateUserRequest req)
+    {
+        var email = req.Email?.Trim();
+        if (string.IsNullOrWhiteSpace(email))
+            return BadRequest(new { message = "Email jest wymagany." });
+
+        var existing = await db.Users
+            .FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == email.ToLower());
+        if (existing != null)
+            return Ok(new UserDto(existing.Id, existing.Email ?? email));
+
+        var user = new User
+        {
+            Email = email,
+            CreatedAt = DateTime.UtcNow
+        };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        return Created(string.Empty, new UserDto(user.Id, user.Email ?? email));
     }
 
     // GET /api/users/me/rezerwacje
@@ -115,3 +139,6 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
         return Ok(allUsers);
     }
 }
+
+public record CreateUserRequest(string Email);
+public record UserDto(int Id, string Email);

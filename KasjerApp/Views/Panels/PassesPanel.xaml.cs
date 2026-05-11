@@ -40,21 +40,22 @@ public partial class PassesPanel : UserControl
             foreach (var card in cards)
             {
                 var passes = await _api.GetPassesByCardAsync(card.Id);
-                var latest = passes.FirstOrDefault();
-                if (latest == null) continue;
-                rows.Add(new PassListItem(
-                    latest.Id,
-                    card.Id,
-                    latest.Status,
-                    latest.Tariff,
-                    latest.PassType,
-                    latest.ValidFrom,
-                    latest.ValidTo,
-                    latest.RemainingRides));
+                foreach (var pass in passes)
+                {
+                    rows.Add(new PassListItem(
+                        pass.Id,
+                        card.Id,
+                        pass.Status,
+                        pass.Tariff,
+                        pass.PassType,
+                        pass.ValidFrom,
+                        pass.ValidTo,
+                        pass.RemainingRides));
+                }
             }
 
             PassesGrid.ItemsSource = rows;
-            if (rows.Count == 0) ActionMsg.Text = "Brak kart z karnetem.";
+            if (rows.Count == 0) ActionMsg.Text = "Brak karnetow.";
         }
         catch (Exception ex)
         {

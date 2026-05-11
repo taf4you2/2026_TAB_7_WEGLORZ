@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -161,7 +162,10 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
         var card = await LoadCard(rfid).FirstOrDefaultAsync();
         if (card == null) return NotFound(new { message = $"Karta {rfid} nie istnieje." });
 
-        var hasActiveOrBlockedPass = card.SkiPasses.Any(sp => sp.Status?.Name is "aktywny" or "zablokowany");
+        var now = DateTime.UtcNow;
+        var hasActiveOrBlockedPass = card.SkiPasses.Any(sp =>
+            sp.Status?.Name == "zablokowany" ||
+            (sp.Status?.Name == "aktywny" && sp.ValidFrom <= now && sp.ValidTo >= now));
         if (hasActiveOrBlockedPass)
             return Conflict(new { message = "Nie mozna zwrocic karty z aktywnym lub zablokowanym karnetem." });
 
@@ -171,6 +175,19 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
         card.UserId = null;
         card.DepositPaid = false;
         card.BlockReason = null;
+
+        if (depositReturn > 0)
+        {
+            var opType = await db.DictOperationTypes.FirstOrDefaultAsync(o => o.Name == "kaucja");
+            db.Transactions.Add(new Transaction
+            {
+                CashierId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
+                OperationTypeId = opType?.Id,
+                Amount = -depositReturn,
+                TransactionDate = DateTime.UtcNow
+            });
+        }
+
         await db.SaveChangesAsync();
         return Ok(new { depositReturn });
     }

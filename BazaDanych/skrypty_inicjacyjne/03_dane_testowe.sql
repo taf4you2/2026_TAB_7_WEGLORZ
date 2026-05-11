@@ -150,15 +150,15 @@ SELECT setval(pg_get_serial_sequence('"gate"',          'id'), 20);
 
 INSERT INTO "tariff" (id, name, season_id, pass_type_id, price, ride_count, pool_limit) VALUES
   -- Karnety punktowe
-  (1, 'Karnet 10 zjazdow Dorosly',  1, 1, 299.00, 10, NULL),
-  (2, 'Karnet 10 zjazdow Dziecko',  1, 1, 199.00, 10, NULL),
-  (3, 'Karnet 10 zjazdow Senior',   1, 1, 239.00, 10, NULL),
-  (4, 'Karnet 20 zjazdow Dorosly',  1, 1, 549.00, 20, NULL),
-  (5, 'Karnet 20 zjazdow Dziecko',  1, 1, 369.00, 20, NULL),
-  (6, 'Karnet 20 zjazdow Senior',   1, 1, 449.00, 20, NULL),
-  (7, 'Karnet 40 zjazdow Dorosly',  1, 1, 999.00, 40, NULL),
-  (8, 'Karnet 40 zjazdow Dziecko',  1, 1, 699.00, 40, NULL),
-  (9, 'Karnet 40 zjazdow Senior',   1, 1, 799.00, 40, NULL),
+  (1, 'Karnet 10 zjazdow Dorosly',  1, 1,  89.00, 10, NULL),
+  (2, 'Karnet 10 zjazdow Dziecko',  1, 1,  59.00, 10, NULL),
+  (3, 'Karnet 10 zjazdow Senior',   1, 1,  69.00, 10, NULL),
+  (4, 'Karnet 20 zjazdow Dorosly',  1, 1, 159.00, 20, NULL),
+  (5, 'Karnet 20 zjazdow Dziecko',  1, 1, 109.00, 20, NULL),
+  (6, 'Karnet 20 zjazdow Senior',   1, 1, 129.00, 20, NULL),
+  (7, 'Karnet 40 zjazdow Dorosly',  1, 1, 289.00, 40, NULL),
+  (8, 'Karnet 40 zjazdow Dziecko',  1, 1, 199.00, 40, NULL),
+  (9, 'Karnet 40 zjazdow Senior',   1, 1, 239.00, 40, NULL),
   -- Karnety czasowe
   (10, 'Karnet 1-dniowy Dorosly',   1, 2, 119.00, NULL, NULL),
   (11, 'Karnet 1-dniowy Dziecko',   1, 2,  79.00, NULL, NULL),

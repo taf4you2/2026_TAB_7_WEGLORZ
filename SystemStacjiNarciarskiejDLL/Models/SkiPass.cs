@@ -33,6 +33,12 @@ public class SkiPass
     [Column("valid_to")]
     public DateTime? ValidTo { get; set; }
 
+    [Column("initial_rides")]
+    public int? InitialRides { get; set; }
+
+    [Column("remaining_rides")]
+    public int? RemainingRides { get; set; }
+
     [Column("block_reason")]
     public string? BlockReason { get; set; }
 }

@@ -114,6 +114,9 @@ CREATE TABLE "trail_schedule" (
 CREATE TABLE "card" (
   "id" varchar PRIMARY KEY,
   "status_id" integer,
+  "user_id" integer,
+  "deposit_paid" boolean,
+  "block_reason" text,
   "physical_condition" varchar,
   "added_to_pool_at" timestamp
 );
@@ -124,6 +127,7 @@ CREATE TABLE "tariff" (
   "season_id" integer,
   "pass_type_id" integer,
   "price" decimal,
+  "ride_count" integer,
   "pool_limit" integer
 );
 
@@ -135,6 +139,8 @@ CREATE TABLE "ski_pass" (
   "status_id" integer,
   "valid_from" timestamp,
   "valid_to" timestamp,
+  "initial_rides" integer,
+  "remaining_rides" integer,
   "block_reason" text
 );
 
@@ -190,6 +196,8 @@ CREATE TABLE "admin_report" (
 );
 
 ALTER TABLE "card" ADD FOREIGN KEY ("status_id") REFERENCES "dict_card_status" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE "card" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "tariff" ADD FOREIGN KEY ("season_id") REFERENCES "dict_season" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 

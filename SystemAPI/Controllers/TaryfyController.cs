@@ -28,6 +28,7 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
             t.Season?.Name,
             t.PassType?.Name,
             t.Price,
+            t.RideCount,
             t.PoolLimit
         ));
 
@@ -41,5 +42,6 @@ public record TariffDto(
     string? Season,
     string? PassType,
     decimal? Price,
+    int? RideCount,
     int? PoolLimit
 );

@@ -1,4 +1,4 @@
-<UserControl x:Class="KasjerApp.Views.Panels.ShiftReportPanel"
+﻿<UserControl x:Class="KasjerApp.Views.Panels.ShiftReportPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="#F0F2F5">

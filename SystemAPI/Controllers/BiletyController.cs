@@ -56,7 +56,9 @@ public class BiletyController(SkiResortDbContext db) : ControllerBase
                 ReservationId = reservation.Id,
                 StatusId = activeStatus?.Id,
                 ValidFrom = validFrom,
-                ValidTo = validTo
+                ValidTo = validTo,
+                InitialRides = tariff.RideCount,
+                RemainingRides = tariff.RideCount
             });
         }
 

@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using KasjerApp.Models;
@@ -16,15 +16,8 @@ public class ApiService
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
     }
 
-    // ── Statystyki ────────────────────────────────────────────────────────────
-    public async Task<DashboardDto?> GetStatsAsync()
-    {
-        var r = await _http.GetAsync("/api/statystyki/dzisiaj");
-        r.EnsureSuccessStatusCode();
-        return await r.Content.ReadFromJsonAsync<DashboardDto>();
-    }
-
-    // ── Taryfy ────────────────────────────────────────────────────────────────
+    // â”€â”€ Statystyki â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â”€â”€ Taryfy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public async Task<List<TariffDto>> GetTariffsAsync()
     {
         var r = await _http.GetAsync("/api/taryfy");
@@ -32,13 +25,20 @@ public class ApiService
         return await r.Content.ReadFromJsonAsync<List<TariffDto>>() ?? [];
     }
 
-    // ── Karty RFID ────────────────────────────────────────────────────────────
+    // â”€â”€ Karty RFID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public async Task<CardDto?> GetCardAsync(string rfid)
     {
         var r = await _http.GetAsync($"/api/karty/{Uri.EscapeDataString(rfid)}");
         if (r.StatusCode == HttpStatusCode.NotFound) return null;
         r.EnsureSuccessStatusCode();
         return await r.Content.ReadFromJsonAsync<CardDto>();
+    }
+
+    public async Task<CardIssueVerificationDto?> VerifyCardForIssueAsync(string rfid)
+    {
+        var r = await _http.GetAsync($"/api/karty/{Uri.EscapeDataString(rfid)}/weryfikacja-wydania");
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<CardIssueVerificationDto>();
     }
 
     public async Task<List<CardDto>> GetCardsAsync(string? status = null, string? search = null)
@@ -58,7 +58,32 @@ public class ApiService
         r.EnsureSuccessStatusCode();
     }
 
-    // ── Karnety ───────────────────────────────────────────────────────────────
+    public async Task DeleteCardAsync(string rfid)
+    {
+        var r = await _http.DeleteAsync($"/api/karty/{Uri.EscapeDataString(rfid)}");
+        r.EnsureSuccessStatusCode();
+    }
+
+    public async Task BlockCardAsync(string rfid, string reason)
+    {
+        var r = await _http.PostAsJsonAsync($"/api/karty/{Uri.EscapeDataString(rfid)}/blokuj", new BlockCardRequest(reason));
+        r.EnsureSuccessStatusCode();
+    }
+
+    public async Task UnblockCardAsync(string rfid)
+    {
+        var r = await _http.PostAsync($"/api/karty/{Uri.EscapeDataString(rfid)}/odblokuj", null);
+        r.EnsureSuccessStatusCode();
+    }
+
+    public async Task<CardReturnDto?> ReturnCardAsync(string rfid)
+    {
+        var r = await _http.PostAsync($"/api/karty/{Uri.EscapeDataString(rfid)}/zwrot", null);
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<CardReturnDto>();
+    }
+
+    // â”€â”€ Karnety â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public async Task<List<PassDto>> GetPassesByCardAsync(string rfid)
     {
         var r = await _http.GetAsync($"/api/karnety?cardId={Uri.EscapeDataString(rfid)}");
@@ -87,6 +112,12 @@ public class ApiService
         r.EnsureSuccessStatusCode();
     }
 
+    public async Task UnblockPassAsync(int id)
+    {
+        var r = await _http.PostAsync($"/api/karnety/{id}/odblokuj", null);
+        r.EnsureSuccessStatusCode();
+    }
+
     public async Task<ReturnPreviewDto?> GetReturnPreviewAsync(int id, bool returnCard)
     {
         var r = await _http.GetAsync($"/api/karnety/{id}/symulacja-zwrotu?returnCard={returnCard}");
@@ -100,7 +131,7 @@ public class ApiService
         r.EnsureSuccessStatusCode();
     }
 
-    // ── Użytkownicy ───────────────────────────────────────────────────────────
+    // â”€â”€ UĹĽytkownicy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public async Task<List<UserDto>> SearchUsersAsync(string email)
     {
         var r = await _http.GetAsync($"/api/uzytkownicy?email={Uri.EscapeDataString(email)}");
@@ -108,7 +139,7 @@ public class ApiService
         return await r.Content.ReadFromJsonAsync<List<UserDto>>() ?? [];
     }
 
-    // ── Bilety (UC1) ──────────────────────────────────────────────────────────
+    // â”€â”€ Bilety (UC1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public async Task<SellTicketResponse?> SellTicketAsync(SellTicketRequest req)
     {
         var r = await _http.PostAsJsonAsync("/api/bilety", req);
@@ -116,7 +147,7 @@ public class ApiService
         return await r.Content.ReadFromJsonAsync<SellTicketResponse>();
     }
 
-    // ── Transakcje ────────────────────────────────────────────────────────────
+    // â”€â”€ Transakcje â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public async Task<List<TransactionDto>> GetTransactionsAsync(DateOnly? date = null, int? cashierId = null)
     {
         var qs = new List<string>();
@@ -128,7 +159,8 @@ public class ApiService
         return await r.Content.ReadFromJsonAsync<List<TransactionDto>>() ?? [];
     }
 
-    // ── Raport zmiany ─────────────────────────────────────────────────────────
+    // â”€â”€ Raport zmiany â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â”€â”€ OczekujÄ…ce zwroty â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public async Task<ShiftReportDto?> GetShiftReportAsync()
     {
         var r = await _http.GetAsync("/api/raport-zmiany");
@@ -142,8 +174,6 @@ public class ApiService
         var r = await _http.PostAsync("/api/raport-zmiany/zamknij", null);
         r.EnsureSuccessStatusCode();
     }
-
-    // ── Oczekujące zwroty ─────────────────────────────────────────────────────
     public async Task<List<PendingReturnDto>> GetPendingReturnsAsync()
     {
         var r = await _http.GetAsync("/api/zwroty/oczekujace");
@@ -151,3 +181,5 @@ public class ApiService
         return await r.Content.ReadFromJsonAsync<List<PendingReturnDto>>() ?? [];
     }
 }
+
+

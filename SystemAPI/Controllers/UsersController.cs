@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SystemStacjiNarciarskiejDLL;
+using SystemStacjiNarciarskiejDLL.Models;
 
 namespace SystemAPI.Controllers;
 
@@ -48,6 +49,29 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
             .ToListAsync();
 
         return Ok(users);
+    }
+
+    [HttpPost("/api/uzytkownicy")]
+    public async Task<IActionResult> CreateSkier([FromBody] CreateUserRequest req)
+    {
+        var email = req.Email?.Trim();
+        if (string.IsNullOrWhiteSpace(email))
+            return BadRequest(new { message = "Email jest wymagany." });
+
+        var existing = await db.Users
+            .FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == email.ToLower());
+        if (existing != null)
+            return Ok(new UserDto(existing.Id, existing.Email ?? email));
+
+        var user = new User
+        {
+            Email = email,
+            CreatedAt = DateTime.UtcNow
+        };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        return Created(string.Empty, new UserDto(user.Id, user.Email ?? email));
     }
 
     // GET /api/users/me/rezerwacje
@@ -114,4 +138,122 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
 
         return Ok(allUsers);
     }
+
+    // POST /api/users
+    [HttpPost]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> CreateUser([FromBody] UserModifyRequest req)
+    {
+        if (req.Role == "admin")
+        {
+            var admin = new Administrator
+            {
+                Login = req.Login,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
+                IsActive = req.IsActive
+            };
+            db.Administrators.Add(admin);
+        }
+        else if (req.Role == "kasjer")
+        {
+            var cashier = new Cashier
+            {
+                Login = req.Login,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
+                IsActive = req.IsActive
+            };
+            db.Cashiers.Add(cashier);
+        }
+        else
+        {
+            return BadRequest("Nieprawidłowa rola. Dozwolone: admin, kasjer.");
+        }
+
+        await db.SaveChangesAsync();
+        return Ok();
+    }
+
+    // PUT /api/users/{id}
+    [HttpPut("{id}")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> UpdateUser(int id, [FromBody] UserModifyRequest req)
+    {
+        if (req.Role == "admin")
+        {
+            var admin = await db.Administrators.FindAsync(id);
+            if (admin == null) return NotFound();
+
+            admin.Login = req.Login;
+            admin.IsActive = req.IsActive;
+            if (!string.IsNullOrEmpty(req.Password))
+            {
+                admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password);
+            }
+        }
+        else if (req.Role == "kasjer")
+        {
+            var cashier = await db.Cashiers.FindAsync(id);
+            if (cashier == null) return NotFound();
+
+            cashier.Login = req.Login;
+            cashier.IsActive = req.IsActive;
+            if (!string.IsNullOrEmpty(req.Password))
+            {
+                cashier.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password);
+            }
+        }
+        else
+        {
+            return BadRequest("Nieprawidłowa rola.");
+        }
+
+        await db.SaveChangesAsync();
+        return Ok();
+    }
+
+    // DELETE /api/users/{id}?role={role}
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> DeleteUser(int id, [FromQuery] string role)
+    {
+        if (role == "admin")
+        {
+            var admin = await db.Administrators.FindAsync(id);
+            if (admin == null) return NotFound();
+            db.Administrators.Remove(admin);
+        }
+        else if (role == "kasjer")
+        {
+            var cashier = await db.Cashiers.Include(c => c.Transactions).Include(c => c.ShiftReports).FirstOrDefaultAsync(c => c.Id == id);
+            if (cashier == null) return NotFound();
+            
+            if (cashier.Transactions.Any() || cashier.ShiftReports.Any())
+            {
+                // Zamiast usuwania, po prostu deaktywujemy, jeśli ma transakcje
+                cashier.IsActive = false;
+            }
+            else
+            {
+                db.Cashiers.Remove(cashier);
+            }
+        }
+        else
+        {
+            return BadRequest("Nieprawidłowa rola.");
+        }
+
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
 }
+
+public record UserModifyRequest(
+    string Login,
+    string? Password,
+    string Role,
+    bool IsActive
+);
+
+
+public record CreateUserRequest(string Email);
+public record UserDto(int Id, string Email);

@@ -16,6 +16,16 @@ public class Card
     public int? StatusId { get; set; }
     public virtual DictCardStatus? Status { get; set; }
 
+    [Column("user_id")]
+    public int? UserId { get; set; }
+    public virtual User? User { get; set; }
+
+    [Column("deposit_paid")]
+    public bool? DepositPaid { get; set; }
+
+    [Column("block_reason")]
+    public string? BlockReason { get; set; }
+
     [Column("physical_condition")]
     public string? PhysicalCondition { get; set; }
 

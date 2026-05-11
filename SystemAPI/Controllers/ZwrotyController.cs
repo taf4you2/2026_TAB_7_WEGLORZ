@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SystemStacjiNarciarskiejDLL;
+using SystemStacjiNarciarskiejDLL.Models;
 
 namespace SystemAPI.Controllers;
 
@@ -54,7 +56,61 @@ public class ZwrotyController(SkiResortDbContext db) : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpPost("{id}/zatwierdz")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> ApproveReturn(int id, [FromBody] ApproveReturnRequest req)
+    {
+        var pass = await db.SkiPasses.Include(sp => sp.Tariff).FirstOrDefaultAsync(sp => sp.Id == id);
+        if (pass == null) return NotFound();
+
+        var returnedStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "zwrocony");
+        pass.StatusId = returnedStatus?.Id;
+
+        if (pass.CardId != null && req.ReturnCard)
+        {
+            var wolnaId = await db.DictCardStatuses
+                .Where(s => s.Name == "wolna")
+                .Select(s => (int?)s.Id)
+                .FirstOrDefaultAsync();
+            if (wolnaId.HasValue)
+                await db.Cards.Where(c => c.Id == pass.CardId)
+                    .ExecuteUpdateAsync(s => s.SetProperty(p => p.StatusId, wolnaId.Value));
+        }
+
+        var opType = await db.DictOperationTypes.FirstOrDefaultAsync(o => o.Name == "zwrot_karnetu");
+        var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var transaction = new Transaction
+        {
+            ReservationId = pass.ReservationId,
+            CashierId = adminId,
+            OperationTypeId = opType?.Id,
+            Amount = -req.RefundAmount,
+            TransactionDate = DateTime.UtcNow
+        };
+        db.Transactions.Add(transaction);
+        await db.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    [HttpPost("{id}/odrzuc")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> RejectReturn(int id)
+    {
+        var pass = await db.SkiPasses.FindAsync(id);
+        if (pass == null) return NotFound();
+
+        var rejectedStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "aktywny"); // Lub odrzucony_zwrot
+        pass.StatusId = rejectedStatus?.Id;
+
+        await db.SaveChangesAsync();
+        return Ok();
+    }
 }
+
+public record ApproveReturnRequest(decimal RefundAmount, bool ReturnCard);
 
 public record PendingReturnDto(
     int PassId,

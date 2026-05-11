@@ -26,6 +26,9 @@ public class Tariff
     [Column("price")]
     public decimal? Price { get; set; }
 
+    [Column("ride_count")]
+    public int? RideCount { get; set; }
+
     [Column("pool_limit")]
     public int? PoolLimit { get; set; }
 

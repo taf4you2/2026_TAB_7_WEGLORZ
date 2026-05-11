@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,12 +12,14 @@ namespace SystemAPI.Controllers;
 [Route("api/karnety")]
 public class KarnetyController(SkiResortDbContext db) : ControllerBase
 {
-    // GET /api/karnety?cardId={rfid}  — lista karnetów dla danej karty
+    // GET /api/karnety?cardId={rfid} - lista karnetow dla danej karty
     [HttpGet]
     public async Task<IActionResult> GetByCard([FromQuery] string cardId)
     {
         if (string.IsNullOrEmpty(cardId))
             return BadRequest(new { message = "Parametr cardId jest wymagany." });
+
+        await ExpireOutdatedPasses(cardId);
 
         var passes = await db.SkiPasses
             .Include(sp => sp.Status)
@@ -51,31 +53,47 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         return Ok(ToDto(pass));
     }
 
-    // POST /api/karnety  — UC2: Sprzedaj karnet
+    // POST /api/karnety - UC2: Sprzedaj karnet
     [HttpPost]
     public async Task<IActionResult> CreatePass([FromBody] CreatePassRequest req)
     {
-        var card = await db.Cards.Include(c => c.Status).AsNoTracking()
+        var now = DateTime.UtcNow;
+        var card = await db.Cards
+            .Include(c => c.Status)
+            .Include(c => c.SkiPasses)
+                .ThenInclude(sp => sp.Status)
+            .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == req.CardId);
         if (card == null)
             return BadRequest(new { message = $"Karta {req.CardId} nie istnieje." });
 
         if (card.Status?.Name == "zajeta")
-            return Conflict(new { message = "Karta jest już zajęta – ma aktywny karnet." });
+            return Conflict(new { message = "Karta jest juz zajeta." });
+
+        if (!string.Equals(card.Status?.Name, "wolna", StringComparison.OrdinalIgnoreCase))
+            return Conflict(new { message = $"Karta ma status '{card.Status?.Name ?? "nieznany"}'." });
+
+        var hasActivePass = card.SkiPasses.Any(sp =>
+            sp.ValidFrom <= now &&
+            sp.ValidTo >= now &&
+            string.Equals(sp.Status?.Name, "aktywny", StringComparison.OrdinalIgnoreCase));
+        if (hasActivePass)
+            return Conflict(new { message = "Karta ma aktywny karnet." });
 
         var tariff = await db.Tariffs.FindAsync(req.TariffId);
         if (tariff == null)
             return BadRequest(new { message = "Taryfa nie istnieje." });
 
         if (req.UserId.HasValue && !await db.Users.AnyAsync(u => u.Id == req.UserId))
-            return BadRequest(new { message = $"Użytkownik {req.UserId} nie istnieje." });
+            return BadRequest(new { message = $"Uzytkownik {req.UserId} nie istnieje." });
 
-        // TODO: pobrać właściwy status "aktywny" z DictPassStatus
         var activeStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "aktywny");
-        // TODO: pobrać właściwy status rezerwacji z DictReservationStatus
+        var expiredStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "wygasly");
         var reservationStatus = await db.DictReservationStatuses.FirstOrDefaultAsync(s => s.Name == "potwierdzona");
-        // TODO: pobrać typ operacji "sprzedaż karnetu" z DictOperationType
         var opType = await db.DictOperationTypes.FirstOrDefaultAsync(o => o.Name == "sprzedaz_karnetu");
+        var passStatusId = req.ValidTo <= now && expiredStatus != null
+            ? expiredStatus.Id
+            : activeStatus?.Id;
 
         var reservation = new Reservation
         {
@@ -92,11 +110,26 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
             CardId = req.CardId,
             TariffId = req.TariffId,
             ReservationId = reservation.Id,
-            StatusId = activeStatus?.Id,
+            StatusId = passStatusId,
             ValidFrom = DateTime.SpecifyKind(req.ValidFrom, DateTimeKind.Utc),
-            ValidTo = DateTime.SpecifyKind(req.ValidTo, DateTimeKind.Utc)
+            ValidTo = DateTime.SpecifyKind(req.ValidTo, DateTimeKind.Utc),
+            InitialRides = tariff.RideCount,
+            RemainingRides = tariff.RideCount
         };
         db.SkiPasses.Add(pass);
+
+        if (req.UserId.HasValue)
+        {
+            await db.Cards.Where(c => c.Id == req.CardId)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(p => p.UserId, req.UserId.Value)
+                    .SetProperty(p => p.DepositPaid, true));
+        }
+        else
+        {
+            await db.Cards.Where(c => c.Id == req.CardId)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.DepositPaid, true));
+        }
 
         var cashierId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var transaction = new Transaction
@@ -110,7 +143,6 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         db.Transactions.Add(transaction);
         await db.SaveChangesAsync();
 
-        // Bezpośredni UPDATE statusu karty — ExecuteUpdateAsync omija change tracker
         var zajetaId = await db.DictCardStatuses
             .Where(s => s.Name == "zajeta")
             .Select(s => (int?)s.Id)
@@ -122,14 +154,13 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = pass.Id }, ToDto(pass));
     }
 
-    // POST /api/karnety/{id}/blokuj  — UC3
+    // POST /api/karnety/{id}/blokuj - zostawione dla zgodnosci API
     [HttpPost("{id:int}/blokuj")]
     public async Task<IActionResult> BlockPass(int id, [FromBody] BlockPassRequest req)
     {
         var pass = await db.SkiPasses.FindAsync(id);
         if (pass == null) return NotFound();
 
-        // TODO: pobrać id statusu "zablokowany"
         var blockedStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "zablokowany");
 
         pass.StatusId = blockedStatus?.Id;
@@ -147,7 +178,28 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         return NoContent();
     }
 
-    // POST /api/karnety/{id}/zwrot  — UC11
+    // POST /api/karnety/{id}/zwrot - UC11
+    [HttpPost("{id:int}/odblokuj")]
+    public async Task<IActionResult> UnblockPass(int id)
+    {
+        var pass = await db.SkiPasses.FindAsync(id);
+        if (pass == null) return NotFound();
+
+        var activeStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "aktywny");
+        pass.StatusId = activeStatus?.Id;
+        pass.BlockReason = null;
+
+        var zajetaId = await db.DictCardStatuses
+            .Where(s => s.Name == "zajeta")
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync();
+        if (zajetaId.HasValue && pass.CardId != null)
+            await db.Cards.Where(c => c.Id == pass.CardId)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.StatusId, zajetaId.Value));
+
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
     [HttpPost("{id:int}/zwrot")]
     public async Task<IActionResult> ReturnPass(int id, [FromBody] ReturnPassRequest req)
     {
@@ -157,9 +209,8 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
 
         if (pass == null) return NotFound();
 
-        var preview = CalculateRefund(pass.ValidFrom, pass.ValidTo, pass.Tariff?.Price ?? 0, req.ReturnCard);
+        var preview = CalculateRefund(pass.ValidFrom, pass.ValidTo, pass.Tariff?.Price ?? 0);
 
-        // TODO: pobrać id statusu "zwrócony"
         var returnedStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "zwrocony");
         // TODO: typ operacji "zwrot_karnetu"
         var opType = await db.DictOperationTypes.FirstOrDefaultAsync(o => o.Name == "zwrot_karnetu");
@@ -170,20 +221,13 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         var refundTransaction = new Transaction
         {
             ReservationId = pass.ReservationId,
+            CashierId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
             OperationTypeId = opType?.Id,
-            Amount = -preview.TotalRefund,   // kwota ujemna = wypłata
+            Amount = -preview.TotalRefund,
             TransactionDate = DateTime.UtcNow
         };
         db.Transactions.Add(refundTransaction);
         await db.SaveChangesAsync();
-
-        var wolnaId = await db.DictCardStatuses
-            .Where(s => s.Name == "wolna")
-            .Select(s => (int?)s.Id)
-            .FirstOrDefaultAsync();
-        if (wolnaId.HasValue && pass.CardId != null)
-            await db.Cards.Where(c => c.Id == pass.CardId)
-                .ExecuteUpdateAsync(s => s.SetProperty(p => p.StatusId, wolnaId.Value));
 
         return Ok(preview);
     }
@@ -198,15 +242,14 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
 
         if (pass == null) return NotFound();
 
-        var preview = CalculateRefund(pass.ValidFrom, pass.ValidTo, pass.Tariff?.Price ?? 0, returnCard);
+        var preview = CalculateRefund(pass.ValidFrom, pass.ValidTo, pass.Tariff?.Price ?? 0);
         return Ok(preview);
     }
 
     private static ReturnPreviewDto CalculateRefund(
-        DateTime? validFrom, DateTime? validTo, decimal totalPrice, bool returnCard)
+        DateTime? validFrom, DateTime? validTo, decimal totalPrice)
     {
         const decimal ManipulationFee = 10m;
-        const decimal CardDeposit = 20m;
 
         if (validFrom == null || validTo == null)
             return new ReturnPreviewDto(totalPrice, 0, 0, 0, ManipulationFee, 0, 0);
@@ -217,10 +260,29 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
 
         var pricePerDay = totalDays > 0 ? totalPrice / totalDays : 0;
         var refund = pricePerDay * remainingDays;
-        var deposit = returnCard ? CardDeposit : 0;
-        var total = Math.Max(0, refund - ManipulationFee + deposit);
+        var deposit = 0m;
+        var total = Math.Max(0, refund - ManipulationFee);
 
         return new ReturnPreviewDto(totalPrice, totalDays, usedDays, refund, ManipulationFee, deposit, total);
+    }
+
+    private async Task ExpireOutdatedPasses(string cardId)
+    {
+        var expiredStatusId = await db.DictPassStatuses
+            .Where(s => s.Name == "wygasly")
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync();
+        var activeStatusId = await db.DictPassStatuses
+            .Where(s => s.Name == "aktywny")
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync();
+
+        if (!expiredStatusId.HasValue || !activeStatusId.HasValue)
+            return;
+
+        await db.SkiPasses
+            .Where(sp => sp.CardId == cardId && sp.StatusId == activeStatusId.Value && sp.ValidTo < DateTime.UtcNow)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.StatusId, expiredStatusId.Value));
     }
 
     private static PassDto ToDto(SkiPass sp) => new(
@@ -231,6 +293,8 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         sp.Tariff?.PassType?.Name,
         sp.ValidFrom,
         sp.ValidTo,
+        sp.InitialRides,
+        sp.RemainingRides,
         sp.BlockReason
     );
 }
@@ -247,6 +311,8 @@ public record PassDto(
     string? PassType,
     DateTime? ValidFrom,
     DateTime? ValidTo,
+    int? InitialRides,
+    int? RemainingRides,
     string? BlockReason
 );
 
@@ -259,3 +325,5 @@ public record ReturnPreviewDto(
     decimal DepositReturn,
     decimal TotalRefund
 );
+
+

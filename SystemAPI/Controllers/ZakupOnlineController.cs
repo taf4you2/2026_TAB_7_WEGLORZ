@@ -18,7 +18,7 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
         var taryfy = await db.Tariffs
             .Include(t => t.Season)
             .Include(t => t.PassType)
-            .Where(t => t.PassType!.Name == "karnet")
+            .Where(t => t.PassType != null && t.PassType.Name.StartsWith("karnet"))
             .OrderBy(t => t.Price)
             .ToListAsync();
 
@@ -27,7 +27,8 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
             t.Id,
             t.Name,
             season = t.Season?.Name,
-            t.Price
+            t.Price,
+            t.RideCount
         }));
     }
 
@@ -43,7 +44,7 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
         if (tariff == null)
             return BadRequest(new { message = "Wybrana taryfa nie istnieje." });
 
-        if (tariff.PassType?.Name != "karnet")
+        if (tariff.PassType?.Name?.StartsWith("karnet") != true)
             return BadRequest(new { message = "Zakup online dotyczy wyłącznie karnetów." });
 
         if (req.ValidFrom >= req.ValidTo)
@@ -70,7 +71,9 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
             ReservationId = reservation.Id,
             StatusId = oczekujeNaOdbiórStatus?.Id,
             ValidFrom = DateTime.SpecifyKind(req.ValidFrom, DateTimeKind.Utc),
-            ValidTo = DateTime.SpecifyKind(req.ValidTo, DateTimeKind.Utc)
+            ValidTo = DateTime.SpecifyKind(req.ValidTo, DateTimeKind.Utc),
+            InitialRides = tariff.RideCount,
+            RemainingRides = tariff.RideCount
         };
         db.SkiPasses.Add(pass);
         await db.SaveChangesAsync();
@@ -81,6 +84,7 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
             passId = pass.Id,
             tariff = tariff.Name,
             price = tariff.Price,
+            rideCount = tariff.RideCount,
             validFrom = pass.ValidFrom,
             validTo = pass.ValidTo,
             message = "Rezerwacja przyjęta. Odbierz karnet przy kasie, podając numer rezerwacji."

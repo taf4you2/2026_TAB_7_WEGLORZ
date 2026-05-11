@@ -39,6 +39,27 @@ public class StatystykiController(SkiResortDbContext db) : ControllerBase
 
         return Ok(new DashboardDto(ticketsSoldToday, activePasses, shiftRevenue, pendingReturns));
     }
+
+    [HttpGet("wyciagi")]
+    public async Task<IActionResult> GetLiftsTraffic()
+    {
+        var todayUtc = DateTime.UtcNow.Date;
+        var tomorrowUtc = todayUtc.AddDays(1);
+
+        var scansPerLift = await db.GateScans
+            .Include(gs => gs.Gate)
+                .ThenInclude(g => g!.Lift)
+            .Where(gs => gs.ScanTime >= todayUtc && gs.ScanTime < tomorrowUtc)
+            .GroupBy(gs => gs.Gate!.Lift!.Name)
+            .Select(g => new
+            {
+                LiftName = g.Key ?? "Nieznany",
+                Count = g.Count()
+            })
+            .ToListAsync();
+
+        return Ok(scansPerLift);
+    }
 }
 
 public record DashboardDto(

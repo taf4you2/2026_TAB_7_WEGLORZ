@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SystemStacjiNarciarskiejDLL;
+using SystemStacjiNarciarskiejDLL.Models;
 
 namespace SystemAPI.Controllers;
 
@@ -61,6 +63,83 @@ public class WyciagController(SkiResortDbContext db) : ControllerBase
 
         return Ok(result);
     }
+
+    // POST /api/wyciagi
+    [HttpPost]
+    [Authorize(Roles = "admin,kasjer")]
+    public async Task<IActionResult> Create([FromBody] LiftModifyRequest req)
+    {
+        var lift = new Lift { Name = req.Name };
+        db.Lifts.Add(lift);
+        await db.SaveChangesAsync();
+
+        // Ustaw domyślny rozkład dla wszystkich dni tygodnia
+        for (int i = 0; i <= 6; i++)
+        {
+            db.LiftSchedules.Add(new LiftSchedule
+            {
+                LiftId = lift.Id,
+                DayOfWeek = i,
+                OpeningTime = req.OpensAt,
+                ClosingTime = req.ClosesAt
+            });
+        }
+        await db.SaveChangesAsync();
+
+        return Ok(new { id = lift.Id });
+    }
+
+    // PUT /api/wyciagi/{id}
+    [HttpPut("{id}")]
+    [Authorize(Roles = "admin,kasjer")]
+    public async Task<IActionResult> Update(int id, [FromBody] LiftModifyRequest req)
+    {
+        var lift = await db.Lifts.Include(l => l.Schedules).FirstOrDefaultAsync(l => l.Id == id);
+        if (lift == null) return NotFound();
+
+        lift.Name = req.Name;
+
+        // Aktualizuj lub dodaj rozkład dla wszystkich dni
+        for (int i = 0; i <= 6; i++)
+        {
+            var sched = lift.Schedules.FirstOrDefault(s => s.DayOfWeek == i);
+            if (sched != null)
+            {
+                sched.OpeningTime = req.OpensAt;
+                sched.ClosingTime = req.ClosesAt;
+            }
+            else
+            {
+                db.LiftSchedules.Add(new LiftSchedule
+                {
+                    LiftId = lift.Id,
+                    DayOfWeek = i,
+                    OpeningTime = req.OpensAt,
+                    ClosingTime = req.ClosesAt
+                });
+            }
+        }
+        await db.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    // DELETE /api/wyciagi/{id}
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "admin,kasjer")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var lift = await db.Lifts.Include(l => l.Schedules).Include(l => l.Gates).Include(l => l.LiftTrails).FirstOrDefaultAsync(l => l.Id == id);
+        if (lift == null) return NotFound();
+
+        db.LiftSchedules.RemoveRange(lift.Schedules);
+        db.Gates.RemoveRange(lift.Gates);
+        db.LiftTrails.RemoveRange(lift.LiftTrails);
+        db.Lifts.Remove(lift);
+        await db.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
 
 public record LiftDto(
@@ -73,3 +152,10 @@ public record LiftDto(
 );
 
 public record TrailSummaryDto(int Id, string Name, string? Difficulty);
+
+public record LiftModifyRequest(
+    string Name,
+    string Status,
+    TimeSpan? OpensAt,
+    TimeSpan? ClosesAt
+);

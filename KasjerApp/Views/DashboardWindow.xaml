@@ -61,7 +61,6 @@
                 <Button x:Name="BtnPasses" Content="Karnety i zwroty" Click="Nav_Click" Tag="passes" Style="{StaticResource NavBtn}"/>
                 <Button x:Name="BtnCards" Content="Karty RFID" Click="Nav_Click" Tag="cards" Style="{StaticResource NavBtn}"/>
                 <Button x:Name="BtnTransactions" Content="Transakcje" Click="Nav_Click" Tag="transactions" Style="{StaticResource NavBtn}"/>
-                <Button x:Name="BtnShiftReport" Content="Raport zmiany" Click="Nav_Click" Tag="shift" Style="{StaticResource NavBtn}"/>
             </StackPanel>
 
             <StackPanel Grid.Row="2" Margin="12,0,12,16">

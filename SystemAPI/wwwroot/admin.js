@@ -25,17 +25,54 @@ document.addEventListener('DOMContentLoaded', () => {
     // Odczytanie roli (w C# domyślnie używany jest pełen adres schematu lub pole 'role')
     const userRole = payload && (payload.role || payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']);
 
+    // Inicjalizacja kontenera Toast
+    const toastContainer = document.createElement('div');
+    toastContainer.className = 'toast-container';
+    document.body.appendChild(toastContainer);
+
+    window.showToast = (message, type = 'info') => {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+
+        let icon = '';
+        if (type === 'success') icon = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+        else if (type === 'error') icon = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+        else icon = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+
+        toast.innerHTML = `
+            ${icon}
+            <div class="toast-message">${message}</div>
+            <div class="toast-close" onclick="this.parentElement.remove()">&times;</div>
+        `;
+
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 10);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    };
+
     // Zakładamy, że rolą uprawnioną jest "kasjer" (lub potencjalnie "admin")
     if (!payload || (userRole !== 'kasjer' && userRole !== 'admin')) {
         localStorage.removeItem('jwt_token');
         sessionStorage.removeItem('jwt_token');
-        alert('Brak uprawnień. Zaloguj się jako administrator.');
-        window.location.href = 'admin-login.html';
+        showToast('Brak uprawnień. Zaloguj się jako administrator.', 'error');
+        setTimeout(() => {
+            window.location.href = 'admin-login.html';
+        }, 1500);
         return;
     }
 
     // Pokaż aplikację, gdy autoryzacja się powiedzie
     document.getElementById('app-container').style.display = 'flex';
+    // Ukryj moduł Użytkownicy dla kasjerów
+    if (userRole !== 'admin') {
+        const usersNavLink = document.querySelector('.nav-link[data-target="users"]');
+        if (usersNavLink && usersNavLink.parentElement) {
+            usersNavLink.parentElement.style.display = 'none';
+        }
+    }
 
     const navLinks = document.querySelectorAll('.nav-link');
     const mainContent = document.getElementById('main-content');
@@ -131,11 +168,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'gates':
                     loadGatesModule(mainContent, token);
                     break;
+                case 'trails':
+                    loadTrailsModule(mainContent, token);
+                    break;
+                case 'cards':
+                    loadCardsModule(mainContent, token);
+                    break;
                 case 'tariffs':
                     loadTariffsModule(mainContent, token);
                     break;
                 case 'users':
-                    loadUsersModule(mainContent, token);
+                    if (userRole === 'admin') {
+                        loadUsersModule(mainContent, token);
+                    } else {
+                        showToast('Brak uprawnień do tego modułu.', 'error');
+                        loadDashboardModule(mainContent, token);
+                    }
                     break;
                 case 'reports':
                     loadReportsModule(mainContent, token);
@@ -242,12 +290,12 @@ async function loadDashboardModule(container, token) {
         });
         if (response.ok) {
             const data = await response.json();
-            
+
             const labels = data.map(d => d.liftName);
             const values = data.map(d => d.count);
 
             const ctx = document.getElementById('trafficChart').getContext('2d');
-            
+
             // Destroy existing chart if module is reloaded
             if (window.trafficChartInstance) {
                 window.trafficChartInstance.destroy();
@@ -329,25 +377,30 @@ async function loadTariffsModule(container, token) {
         if (response.ok) {
             const data = await response.json();
             const tbody = document.querySelector('#tariffs-table tbody');
-            tbody.innerHTML = data.map(t => {
-                const tJson = JSON.stringify(t).replace(/"/g, '&quot;');
-                return `
-                <tr style="border-bottom: 1px solid var(--border-color);">
-                    <td style="padding: 12px; font-weight: 500;">${t.name}</td>
-                    <td style="padding: 12px;">${t.passType || '-'}</td>
-                    <td style="padding: 12px;">${t.season || '-'}</td>
-                    <td style="padding: 12px; font-weight: 600;">${t.price ? t.price.toFixed(2) + ' zł' : '-'}</td>
-                    <td style="padding: 12px;">${t.poolLimit || '-'}</td>
-                    <td style="padding: 12px; text-align: right;">
-                        <button class="action-btn edit" onclick="showTariffForm(${tJson})" title="Edytuj">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        </button>
-                        <button class="action-btn delete" onclick="deleteTariff(${t.id})" title="Usuń">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
-                    </td>
-                </tr>
-            `}).join('');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="padding: 12px; text-align: center; color: var(--text-muted);">Brak taryf w bazie danych.</td></tr>';
+            } else {
+                tbody.innerHTML = data.map(t => {
+                    const tJson = JSON.stringify(t).replace(/"/g, '&quot;');
+                    return `
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 12px; font-weight: 500;">${t.name}</td>
+                        <td style="padding: 12px;">${t.passType || '-'}</td>
+                        <td style="padding: 12px;">${t.season || '-'}</td>
+                        <td style="padding: 12px; font-weight: 600;">${t.price ? t.price.toFixed(2) + ' zł' : '-'}</td>
+                        <td style="padding: 12px;">${t.poolLimit || '-'}</td>
+                        <td style="padding: 12px; text-align: right;">
+                            <button class="action-btn edit" onclick="showTariffForm(${tJson})" title="Edytuj">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                            <button class="action-btn delete" onclick="deleteTariff(${t.id})" title="Usuń">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </td>
+                    </tr>
+                `}).join('');
+            }
             document.getElementById('tariffs-loading').style.display = 'none';
             document.getElementById('tariffs-table').style.display = 'table';
         }
@@ -359,7 +412,7 @@ async function loadTariffsModule(container, token) {
 function showTariffForm(tariff = null) {
     const isEdit = !!tariff;
     const title = isEdit ? 'Edytuj Taryfę' : 'Dodaj Taryfę';
-    
+
     const content = `
         <form id="tariff-form" onsubmit="handleTariffSubmit(event, ${isEdit ? tariff.id : 'null'})">
             <div class="form-group">
@@ -398,17 +451,29 @@ function showTariffForm(tariff = null) {
 async function handleTariffSubmit(event, tariffId) {
     event.preventDefault();
     const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
-    
+
+    const name = document.getElementById('tariff-name').value;
+    const price = parseFloat(document.getElementById('tariff-price').value);
+
+    if (name.length < 3) {
+        showToast('Nazwa taryfy musi mieć co najmniej 3 znaki.', 'error');
+        return;
+    }
+    if (isNaN(price) || price < 0) {
+        showToast('Cena nie może być ujemna.', 'error');
+        return;
+    }
+
     const payload = {
-        name: document.getElementById('tariff-name').value,
+        name: name,
         passType: document.getElementById('tariff-passType').value || null,
         season: document.getElementById('tariff-season').value || null,
-        price: parseFloat(document.getElementById('tariff-price').value),
+        price: price,
         poolLimit: document.getElementById('tariff-poolLimit').value ? parseInt(document.getElementById('tariff-poolLimit').value) : null
     };
 
     const method = tariffId ? 'PUT' : 'POST';
-    const url = tariffId ? \`/api/taryfy/\${tariffId}\` : '/api/taryfy';
+    const url = tariffId ? `/api/taryfy/${tariffId}` : '/api/taryfy';
 
     try {
         const response = await fetch(url, {
@@ -423,13 +488,13 @@ async function handleTariffSubmit(event, tariffId) {
         if (response.ok) {
             closeModal();
             loadTariffsModule(document.getElementById('main-content'), token);
+            showToast(tariffId ? 'Taryfa zaktualizowana.' : 'Nowa taryfa dodana.', 'success');
         } else {
             const errorMsg = await response.text();
-            alert('Błąd podczas zapisywania: ' + errorMsg);
+            showToast('Błąd: ' + errorMsg, 'error');
         }
     } catch (error) {
-        console.error('Error saving tariff:', error);
-        alert('Błąd połączenia z serwerem.');
+        showToast('Błąd połączenia z serwerem.', 'error');
     }
 }
 
@@ -441,7 +506,7 @@ async function deleteTariff(tariffId) {
     const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
     
     try {
-        const response = await fetch(\`/api/taryfy/\${tariffId}\`, {
+        const response = await fetch(`/api/taryfy/${tariffId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': 'Bearer ' + token
@@ -449,14 +514,14 @@ async function deleteTariff(tariffId) {
         });
 
         if (response.ok) {
+            showToast('Usunięto pomyślnie.', 'success');
             loadTariffsModule(document.getElementById('main-content'), token);
         } else {
             const errorMsg = await response.text();
-            alert('Błąd podczas usuwania: ' + errorMsg);
+            showToast('Błąd: ' + errorMsg, 'error');
         }
     } catch (error) {
-        console.error('Error deleting tariff:', error);
-        alert('Błąd połączenia z serwerem.');
+        showToast('Błąd połączenia z serwerem.', 'error');
     }
 }
 
@@ -512,7 +577,7 @@ async function loadReportsModule(container, token) {
                 </div>
             </div>
         </div>
-    `;
+        `;
 
     // Wywołaj domyślnie na starcie
     fetchTransactions(token);
@@ -522,9 +587,7 @@ async function fetchTransactions(token) {
     const dateVal = document.getElementById('filter-date').value;
     const cashierVal = document.getElementById('filter-cashier').value;
     
-    let url = '/api/transakcje?';
-    if (dateVal) url += `date=${dateVal}&`;
-    if (cashierVal) url += `cashierId=${cashierVal}`;
+    const url = `/api/transakcje?date=${dateVal}&cashierId=${cashierVal}`;
 
     document.getElementById('reports-loading').style.display = 'block';
     document.getElementById('reports-loading').textContent = 'Pobieranie danych...';
@@ -564,7 +627,7 @@ async function fetchTransactions(token) {
 // Moduł Użytkowników
 async function loadUsersModule(container, token) {
     container.innerHTML = `
-        <div class="module-content">
+        <div class="module-content" >
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                     <div>
@@ -589,7 +652,7 @@ async function loadUsersModule(container, token) {
                 </div>
             </div>
         </div>
-    `;
+        `;
 
     try {
         const response = await fetch('/api/users/all', {
@@ -603,7 +666,7 @@ async function loadUsersModule(container, token) {
                 const canEdit = u.role === 'admin' || u.role === 'kasjer';
                 
                 return `
-                <tr style="border-bottom: 1px solid var(--border-color);">
+        <tr style = "border-bottom: 1px solid var(--border-color);" >
                     <td style="padding: 12px; font-weight: 500;">${u.login || u.email}</td>
                     <td style="padding: 12px;">${u.role}</td>
                     <td style="padding: 12px;">${u.isActive ? '<span style="color: #10b981">Aktywny</span>' : '<span style="color: #ef4444">Nieaktywny</span>'}</td>
@@ -621,7 +684,7 @@ async function loadUsersModule(container, token) {
                         ` : ''}
                     </td>
                 </tr>
-            `}).join('');
+        `}).join('');
             document.getElementById('users-loading').style.display = 'none';
             document.getElementById('users-table').style.display = 'table';
         } else {
@@ -667,7 +730,7 @@ function showUserForm(user = null) {
                 <button type="submit" class="btn-primary">Zapisz</button>
             </div>
         </form>
-    `;
+        `;
     openModal(title, content);
 }
 
@@ -675,18 +738,30 @@ async function handleUserSubmit(event, userId, existingRole) {
     event.preventDefault();
     const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
     
+    const login = document.getElementById('user-login').value;
+    const password = document.getElementById('user-password').value;
+
+    if (login.length < 3) {
+        showToast('Login musi mieć co najmniej 3 znaki.', 'error');
+        return;
+    }
+    if (!userId && password.length < 4) {
+        showToast('Nowe hasło musi mieć co najmniej 4 znaki.', 'error');
+        return;
+    }
+
     const role = userId ? existingRole : document.getElementById('user-role').value;
     const isActive = document.getElementById('user-active').value === 'true';
     
     const payload = {
-        login: document.getElementById('user-login').value,
-        password: document.getElementById('user-password').value || null,
+        login: login,
+        password: password || null,
         role: role,
         isActive: isActive
     };
 
     const method = userId ? 'PUT' : 'POST';
-    const url = userId ? \`/api/users/\${userId}\` : '/api/users';
+    const url = userId ? `/api/users/${userId}` : '/api/users';
 
     try {
         const response = await fetch(url, {
@@ -701,13 +776,13 @@ async function handleUserSubmit(event, userId, existingRole) {
         if (response.ok) {
             closeModal();
             loadUsersModule(document.getElementById('main-content'), token);
+            showToast('Użytkownik zapisany pomyślnie.', 'success');
         } else {
             const errorMsg = await response.text();
-            alert('Błąd podczas zapisywania: ' + errorMsg);
+            showToast('Błąd: ' + errorMsg, 'error');
         }
     } catch (error) {
-        console.error('Error saving user:', error);
-        alert('Błąd połączenia z serwerem.');
+        showToast('Błąd połączenia z serwerem.', 'error');
     }
 }
 
@@ -715,7 +790,7 @@ function resetUserPassword(userId, role, login, isActive) {
     const title = 'Wymuś zmianę hasła';
     
     const content = `
-        <form id="reset-password-form" onsubmit="handlePasswordResetSubmit(event, ${userId}, '${role}', '${login}', ${isActive})">
+        <form id = "reset-password-form" onsubmit = "handlePasswordResetSubmit(event, ${userId}, '${role}', '${login}', ${isActive})" >
             <p>Zmieniasz hasło dla użytkownika: <strong>${login}</strong></p>
             <div class="form-group">
                 <label for="new-password">Nowe hasło</label>
@@ -726,7 +801,7 @@ function resetUserPassword(userId, role, login, isActive) {
                 <button type="submit" class="btn-primary">Zmień hasło</button>
             </div>
         </form>
-    `;
+        `;
     openModal(title, content);
 }
 
@@ -742,7 +817,7 @@ async function handlePasswordResetSubmit(event, userId, role, login, isActive) {
     };
 
     try {
-        const response = await fetch(\`/api/users/\${userId}\`, {
+        const response = await fetch(`/api/users/${userId}`, {
             method: 'PUT',
             headers: {
                 'Authorization': 'Bearer ' + token,
@@ -753,14 +828,13 @@ async function handlePasswordResetSubmit(event, userId, role, login, isActive) {
 
         if (response.ok) {
             closeModal();
-            alert('Hasło zostało pomyślnie zmienione.');
+            showToast('Hasło zostało pomyślnie zmienione.', 'success');
         } else {
             const errorMsg = await response.text();
-            alert('Błąd podczas zmiany hasła: ' + errorMsg);
+            showToast('Błąd: ' + errorMsg, 'error');
         }
     } catch (error) {
-        console.error('Error resetting password:', error);
-        alert('Błąd połączenia z serwerem.');
+        showToast('Błąd połączenia z serwerem.', 'error');
     }
 }
 
@@ -772,7 +846,7 @@ async function deleteUser(userId, role) {
     const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
     
     try {
-        const response = await fetch(\`/api/users/\${userId}?role=\${role}\`, {
+        const response = await fetch(`/api/users/${userId}?role=${role}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': 'Bearer ' + token
@@ -781,13 +855,13 @@ async function deleteUser(userId, role) {
 
         if (response.ok) {
             loadUsersModule(document.getElementById('main-content'), token);
+            showToast('Użytkownik usunięty.', 'success');
         } else {
             const errorMsg = await response.text();
-            alert('Błąd podczas usuwania: ' + errorMsg);
+            showToast('Błąd: ' + errorMsg, 'error');
         }
     } catch (error) {
-        console.error('Error deleting user:', error);
-        alert('Błąd połączenia z serwerem.');
+        showToast('Błąd połączenia z serwerem.', 'error');
     }
 }
 
@@ -795,7 +869,7 @@ async function deleteUser(userId, role) {
 async function loadLiftsModule(container, token) {
     // 1. Wstrzyknięcie szkieletu tabeli HTML z komunikatem ładowania
     container.innerHTML = `
-        <div class="module-content">
+        <div class="module-content" >
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                     <div>
@@ -804,7 +878,7 @@ async function loadLiftsModule(container, token) {
                     </div>
                     <button class="btn-primary" onclick="showLiftForm()">Dodaj Wyciąg</button>
                 </div>
-                
+
                 <div id="lifts-container">
                     <p id="lifts-loading">Pobieranie danych z bazy...</p>
                     <table class="data-table" id="lifts-table" style="display: none; width: 100%; border-collapse: collapse; text-align: left;">
@@ -825,7 +899,7 @@ async function loadLiftsModule(container, token) {
                 </div>
             </div>
         </div>
-    `;
+        `;
 
     try {
         // 2. Fetch danych (żądanie GET do kontrolera WyciagController)
@@ -839,7 +913,7 @@ async function loadLiftsModule(container, token) {
         });
 
         if (!response.ok) {
-            throw new Error(`Błąd HTTP: ${response.status}`);
+            throw new Error(`Błąd HTTP: ${ response.status } `);
         }
 
         const data = await response.json();
@@ -871,7 +945,7 @@ async function loadLiftsModule(container, token) {
                 const liftJson = JSON.stringify(lift).replace(/"/g, '&quot;');
 
                 tr.innerHTML = `
-                    <td style="padding: 12px;">${lift.id}</td>
+        <td style = "padding: 12px;" > ${ lift.id }</td>
                     <td style="padding: 12px; font-weight: 500;">${lift.name}</td>
                     <td style="padding: 12px; color: ${statusColor}; font-weight: 600;">${statusText}</td>
                     <td style="padding: 12px;">${opens}</td>
@@ -884,7 +958,7 @@ async function loadLiftsModule(container, token) {
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                     </td>
-                `;
+    `;
                 tbody.appendChild(tr);
             });
         }
@@ -895,7 +969,7 @@ async function loadLiftsModule(container, token) {
 
     } catch (error) {
         document.getElementById('lifts-loading').innerHTML =
-            `<span style="color: var(--danger);">Nie udało się pobrać wyciągów: ${error.message}</span>`;
+            `<span style = "color: var(--danger);" > Nie udało się pobrać wyciągów: ${ error.message }</span> `;
         console.error("Fetch error:", error);
     }
 }
@@ -936,7 +1010,7 @@ function showLiftForm(lift = null) {
     if (closes.includes('PT')) closes = '';
 
     const content = `
-        <form id="lift-form" onsubmit="handleLiftSubmit(event, ${isEdit ? lift.id : 'null'})">
+        <form id = "lift-form" onsubmit = "handleLiftSubmit(event, ${isEdit ? lift.id : 'null'})" >
             <div class="form-group">
                 <label for="lift-name">Nazwa wyciągu</label>
                 <input type="text" id="lift-name" class="form-control" required value="${isEdit ? lift.name : ''}">
@@ -965,7 +1039,7 @@ function showLiftForm(lift = null) {
                 <button type="submit" class="btn-primary">Zapisz</button>
             </div>
         </form>
-    `;
+        `;
     openModal(title, content);
 }
 
@@ -973,11 +1047,17 @@ async function handleLiftSubmit(event, liftId) {
     event.preventDefault();
     const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
     
+    const name = document.getElementById('lift-name').value;
+    if (name.length < 3) {
+        showToast('Nazwa wyciągu jest za krótka.', 'error');
+        return;
+    }
+
     const opensInput = document.getElementById('lift-opens').value;
     const closesInput = document.getElementById('lift-closes').value;
     
     const payload = {
-        name: document.getElementById('lift-name').value,
+        name: name,
         status: document.getElementById('lift-status').value,
         opensAt: opensInput.length === 5 ? opensInput + ':00' : opensInput,
         closesAt: closesInput.length === 5 ? closesInput + ':00' : closesInput
@@ -1002,15 +1082,14 @@ async function handleLiftSubmit(event, liftId) {
 
         if (response.ok) {
             closeModal();
-            // Odświeżenie danych
             loadLiftsModule(document.getElementById('main-content'), token);
+            showToast('Wyciąg zapisany.', 'success');
         } else {
             const errorMsg = await response.text();
-            alert('Błąd podczas zapisywania: ' + errorMsg);
+            showToast('Błąd: ' + errorMsg, 'error');
         }
     } catch (error) {
-        console.error('Error saving lift:', error);
-        alert('Błąd połączenia z serwerem.');
+        showToast('Błąd połączenia z serwerem.', 'error');
     }
 }
 
@@ -1030,22 +1109,20 @@ async function deleteLift(liftId) {
         });
 
         if (response.ok) {
-            // Odświeżenie danych
+            showToast('Wyciąg usunięty.', 'success');
             loadLiftsModule(document.getElementById('main-content'), token);
         } else {
             const errorMsg = await response.text();
-            alert('Błąd podczas usuwania: ' + errorMsg);
+            showToast('Błąd: ' + errorMsg, 'error');
         }
     } catch (error) {
-        console.error('Error deleting lift:', error);
-        alert('Błąd połączenia z serwerem.');
+        showToast('Błąd połączenia z serwerem.', 'error');
     }
 }
-
 // Moduł Bramek
 async function loadGatesModule(container, token) {
     container.innerHTML = `
-        <div class="module-content">
+        <div class="module-content" >
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                     <div>
@@ -1054,7 +1131,7 @@ async function loadGatesModule(container, token) {
                     </div>
                     <button class="btn-primary" onclick="showGateForm()">Dodaj Bramkę</button>
                 </div>
-                
+
                 <div id="gates-container">
                     <p id="gates-loading">Pobieranie danych z bazy...</p>
                     <table class="data-table" id="gates-table" style="display: none; width: 100%; border-collapse: collapse; text-align: left;">
@@ -1072,7 +1149,7 @@ async function loadGatesModule(container, token) {
                 </div>
             </div>
         </div>
-    `;
+        `;
 
     try {
         const response = await fetch('/api/bramki', {
@@ -1084,7 +1161,7 @@ async function loadGatesModule(container, token) {
         });
 
         if (!response.ok) {
-            throw new Error(`Błąd HTTP: ${response.status}`);
+            throw new Error(`Błąd HTTP: ${ response.status } `);
         }
 
         const data = await response.json();
@@ -1104,7 +1181,7 @@ async function loadGatesModule(container, token) {
                 const gateJson = JSON.stringify(gate).replace(/"/g, '&quot;');
 
                 tr.innerHTML = `
-                    <td style="padding: 12px;">${gate.id}</td>
+        <td style = "padding: 12px;" > ${ gate.id }</td>
                     <td style="padding: 12px; font-weight: 500;">${gate.name || '-'}</td>
                     <td style="padding: 12px;">${gate.liftName || '(Brak)'}</td>
                     <td style="padding: 12px; color: ${statusColor}; font-weight: 600;">${statusText}</td>
@@ -1116,7 +1193,7 @@ async function loadGatesModule(container, token) {
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                     </td>
-                `;
+    `;
                 tbody.appendChild(tr);
             });
         }
@@ -1126,7 +1203,7 @@ async function loadGatesModule(container, token) {
 
     } catch (error) {
         document.getElementById('gates-loading').innerHTML =
-            `<span style="color: var(--danger);">Nie udało się pobrać bramek: ${error.message}</span>`;
+            `<span style = "color: var(--danger);" > Nie udało się pobrać bramek: ${ error.message }</span> `;
         console.error("Fetch gates error:", error);
     }
 }
@@ -1144,7 +1221,7 @@ async function showGateForm(gate = null) {
             const lifts = await res.json();
             lifts.forEach(l => {
                 const selected = isEdit && gate.liftId === l.id ? 'selected' : '';
-                liftsOptions += `<option value="${l.id}" ${selected}>${l.name}</option>`;
+                liftsOptions += `<option value = "${l.id}" ${ selected }> ${ l.name }</option> `;
             });
         }
     } catch (e) {
@@ -1152,7 +1229,7 @@ async function showGateForm(gate = null) {
     }
 
     const content = `
-        <form id="gate-form" onsubmit="handleGateSubmit(event, ${isEdit ? gate.id : 'null'})">
+        <form id = "gate-form" onsubmit = "handleGateSubmit(event, ${isEdit ? gate.id : 'null'})" >
             <div class="form-group">
                 <label for="gate-name">Nazwa bramki</label>
                 <input type="text" id="gate-name" class="form-control" required value="${isEdit ? gate.name : ''}">
@@ -1175,7 +1252,7 @@ async function showGateForm(gate = null) {
                 <button type="submit" class="btn-primary">Zapisz</button>
             </div>
         </form>
-    `;
+        `;
     openModal(title, content);
 }
 
@@ -1183,14 +1260,20 @@ async function handleGateSubmit(event, gateId) {
     event.preventDefault();
     const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
     
+    const name = document.getElementById('gate-name').value;
+    if (name.length < 2) {
+        showToast('Nazwa bramki jest za krótka.', 'error');
+        return;
+    }
+
     const payload = {
-        name: document.getElementById('gate-name').value,
+        name: name,
         liftId: parseInt(document.getElementById('gate-lift').value),
         isActive: document.getElementById('gate-active').value === 'true'
     };
 
     const method = gateId ? 'PUT' : 'POST';
-    const url = gateId ? \`/api/bramki/\${gateId}\` : '/api/bramki';
+    const url = gateId ? `/api/bramki/${gateId}` : '/api/bramki';
 
     try {
         const response = await fetch(url, {
@@ -1205,13 +1288,13 @@ async function handleGateSubmit(event, gateId) {
         if (response.ok) {
             closeModal();
             loadGatesModule(document.getElementById('main-content'), token);
+            showToast('Bramka zapisana.', 'success');
         } else {
             const errorMsg = await response.text();
-            alert('Błąd podczas zapisywania: ' + errorMsg);
+            showToast('Błąd: ' + errorMsg, 'error');
         }
     } catch (error) {
-        console.error('Error saving gate:', error);
-        alert('Błąd połączenia z serwerem.');
+        showToast('Błąd połączenia z serwerem.', 'error');
     }
 }
 
@@ -1223,7 +1306,7 @@ async function deleteGate(gateId) {
     const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
     
     try {
-        const response = await fetch(\`/api/bramki/\${gateId}\`, {
+        const response = await fetch(`/api/bramki/${gateId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': 'Bearer ' + token
@@ -1231,14 +1314,14 @@ async function deleteGate(gateId) {
         });
 
         if (response.ok) {
+            showToast('Bramka usunięta.', 'success');
             loadGatesModule(document.getElementById('main-content'), token);
         } else {
             const errorMsg = await response.text();
-            alert('Błąd podczas usuwania: ' + errorMsg);
+            showToast('Błąd: ' + errorMsg, 'error');
         }
     } catch (error) {
-        console.error('Error deleting gate:', error);
-        alert('Błąd połączenia z serwerem.');
+        showToast('Błąd połączenia z serwerem.', 'error');
     }
 }
 
@@ -1253,7 +1336,7 @@ async function loadReturnsModule(container, token) {
                         <p style="color: var(--text-muted); margin-top: 8px;">Zarządzaj oczekującymi wnioskami o zwrot karnetów zgłoszonymi przez użytkowników.</p>
                     </div>
                 </div>
-                
+
                 <div id="returns-container">
                     <p id="returns-loading">Pobieranie oczekujących zwrotów...</p>
                     <table class="data-table" id="returns-table" style="display: none; width: 100%; border-collapse: collapse; text-align: left;">
@@ -1273,7 +1356,7 @@ async function loadReturnsModule(container, token) {
                 </div>
             </div>
         </div>
-    `;
+        `;
 
     try {
         const response = await fetch('/api/zwroty/oczekujace', {
@@ -1347,13 +1430,12 @@ async function approveReturn(passId, amount) {
 
         if (response.ok) {
             loadReturnsModule(document.getElementById('main-content'), token);
-            alert('Zwrot zatwierdzony pomyślnie.');
+            showToast('Zwrot zatwierdzony pomyślnie.', 'success');
         } else {
-            alert('Wystąpił błąd podczas zatwierdzania zwrotu.');
+            showToast('Wystąpił błąd podczas zatwierdzania.', 'error');
         }
     } catch (error) {
-        console.error('Error approving return:', error);
-        alert('Błąd połączenia z serwerem.');
+        showToast('Błąd połączenia z serwerem.', 'error');
     }
 }
 
@@ -1374,12 +1456,455 @@ async function rejectReturn(passId) {
 
         if (response.ok) {
             loadReturnsModule(document.getElementById('main-content'), token);
-            alert('Zwrot odrzucony pomyślnie.');
+            showToast('Zwrot odrzucony.', 'success');
         } else {
-            alert('Wystąpił błąd podczas odrzucania zwrotu.');
+            showToast('Wystąpił błąd podczas odrzucania.', 'error');
         }
     } catch (error) {
-        console.error('Error rejecting return:', error);
-        alert('Błąd połączenia z serwerem.');
+        showToast('Błąd połączenia z serwerem.', 'error');
     }
+}
+
+// Moduł Tras
+async function loadTrailsModule(container, token) {
+    container.innerHTML = `
+        <div class="module-content">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div>
+                        <h3>Zarządzanie trasami</h3>
+                        <p style="color: var(--text-muted); margin-top: 8px;">Lista tras narciarskich wraz z poziomami trudności i długością.</p>
+                    </div>
+                    <button class="btn-primary" onclick="showTrailForm()">Dodaj Trasę</button>
+                </div>
+
+                <div id="trails-container">
+                    <p id="trails-loading">Pobieranie danych z bazy...</p>
+                    <table class="data-table" id="trails-table" style="display: none; width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 12px; color: var(--text-muted);">ID</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Nazwa Trasy</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Poziom Trudności</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Długość (m)</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Lokalizacja</th>
+                                <th style="padding: 12px; color: var(--text-muted); text-align: right;">Akcje</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+
+    try {
+        const response = await fetch('/api/trasy', {
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Błąd HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const tbody = document.querySelector('#trails-table tbody');
+        tbody.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="padding: 12px; text-align: center; color: var(--text-muted);">Brak tras w bazie danych.</td></tr>';
+        } else {
+            data.forEach(trail => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid var(--border-color)';
+
+                const trailJson = JSON.stringify(trail).replace(/"/g, '&quot;');
+
+                tr.innerHTML = `
+                    <td style="padding: 12px;">${trail.id}</td>
+                    <td style="padding: 12px; font-weight: 500;">${trail.name}</td>
+                    <td style="padding: 12px;">${trail.difficulty || '-'}</td>
+                    <td style="padding: 12px;">${trail.length ? trail.length + ' m' : '-'}</td>
+                    <td style="padding: 12px;">${trail.location || '-'}</td>
+                    <td style="padding: 12px; text-align: right;">
+                        <button class="action-btn edit" onclick="showTrailForm(${trailJson})" title="Edytuj">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                        <button class="action-btn delete" onclick="deleteTrail(${trail.id})" title="Usuń">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('trails-loading').style.display = 'none';
+        document.getElementById('trails-table').style.display = 'table';
+
+    } catch (error) {
+        document.getElementById('trails-loading').innerHTML =
+            `<span style="color: var(--danger);">Nie udało się pobrać tras: ${error.message}</span>`;
+        console.error("Fetch trails error:", error);
+    }
+}
+
+async function showTrailForm(trail = null) {
+    const isEdit = !!trail;
+    const title = isEdit ? 'Edytuj Trasę' : 'Dodaj Trasę';
+    const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+    
+    // Pobierz trudności do selecta
+    let diffOptions = '<option value="">Wybierz trudność</option>';
+    try {
+        const res = await fetch('/api/trasy/trudnosci', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (res.ok) {
+            const difficulties = await res.json();
+            difficulties.forEach(d => {
+                const selected = isEdit && trail.difficulty === d.name ? 'selected' : '';
+                diffOptions += `<option value="${d.name}" ${selected}>${d.name}</option>`;
+            });
+        }
+    } catch (e) {
+        console.error("Could not load difficulties", e);
+    }
+
+    const content = `
+        <form id="trail-form" onsubmit="handleTrailSubmit(event, ${isEdit ? trail.id : 'null'})">
+            <div class="form-group">
+                <label for="trail-name">Nazwa trasy</label>
+                <input type="text" id="trail-name" class="form-control" required value="${isEdit ? trail.name : ''}">
+            </div>
+            <div class="form-group">
+                <label for="trail-difficulty">Poziom trudności</label>
+                <select id="trail-difficulty" class="form-control">
+                    ${diffOptions}
+                </select>
+            </div>
+            <div style="display: flex; gap: 16px;">
+                <div class="form-group" style="flex: 1;">
+                    <label for="trail-length">Długość (m)</label>
+                    <input type="number" id="trail-length" class="form-control" value="${isEdit && trail.length ? trail.length : ''}">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="trail-location">Lokalizacja</label>
+                    <input type="text" id="trail-location" class="form-control" value="${isEdit && trail.location ? trail.location : ''}">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Anuluj</button>
+                <button type="submit" class="btn-primary">Zapisz</button>
+            </div>
+        </form>
+    `;
+    openModal(title, content);
+}
+
+async function handleTrailSubmit(event, trailId) {
+    event.preventDefault();
+    const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+    
+    const name = document.getElementById('trail-name').value;
+    if (name.length < 3) {
+        showToast('Nazwa trasy musi mieć co najmniej 3 znaki.', 'error');
+        return;
+    }
+
+    const payload = {
+        name: name,
+        difficulty: document.getElementById('trail-difficulty').value || null,
+        length: document.getElementById('trail-length').value ? parseFloat(document.getElementById('trail-length').value) : null,
+        location: document.getElementById('trail-location').value || null
+    };
+
+    const method = trailId ? 'PUT' : 'POST';
+    const url = trailId ? `/api/trasy/${trailId}` : '/api/trasy';
+
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            closeModal();
+            loadTrailsModule(document.getElementById('main-content'), token);
+            showToast(trailId ? 'Trasa zaktualizowana.' : 'Nowa trasa dodana.', 'success');
+        } else {
+            const errorMsg = await response.text();
+            showToast('Błąd: ' + errorMsg, 'error');
+        }
+    } catch (error) {
+        showToast('Błąd połączenia z serwerem.', 'error');
+    }
+}
+
+async function deleteTrail(trailId) {
+    if (!confirm('Czy na pewno chcesz usunąć tę trasę? Operacji nie można cofnąć.')) {
+        return;
+    }
+
+    const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+    
+    try {
+        const response = await fetch(`/api/trasy/${trailId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        });
+
+        if (response.ok) {
+            showToast('Usunięto pomyślnie.', 'success');
+            loadTrailsModule(document.getElementById('main-content'), token);
+        } else {
+            const errorMsg = await response.text();
+            showToast('Błąd: ' + errorMsg, 'error');
+        }
+    } catch (error) {
+        showToast('Błąd połączenia z serwerem.', 'error');
+    }
+}
+
+// Moduł Kart RFID i Karnetów
+async function loadCardsModule(container, token) {
+    container.innerHTML = `
+        <div class="module-content">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div>
+                        <h3>Zarządzanie kartami RFID</h3>
+                        <p style="color: var(--text-muted); margin-top: 8px;">Wyszukiwanie kart, podgląd przypisanych karnetów oraz blokowanie.</p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 24px; display: flex; gap: 16px; align-items: flex-end;">
+                    <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                        <label for="search-card">RFID lub email właściciela</label>
+                        <input type="text" id="search-card" class="form-control" placeholder="np. A3:F2:..." onkeyup="if(event.key==='Enter') fetchCards()">
+                    </div>
+                    <button class="btn-primary" onclick="fetchCards()">Szukaj</button>
+                </div>
+
+                <div id="cards-container">
+                    <p id="cards-loading">Wpisz RFID i kliknij Szukaj...</p>
+                    <table class="data-table" id="cards-table" style="display: none; width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 12px; color: var(--text-muted);">RFID</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Status</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Właściciel</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Aktywny karnet</th>
+                                <th style="padding: 12px; color: var(--text-muted); text-align: right;">Akcje</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Globalne udostępnienie funkcji dla przycisków HTML
+    window.fetchCards = async () => {
+        const searchVal = document.getElementById('search-card').value;
+        const loading = document.getElementById('cards-loading');
+        const table = document.getElementById('cards-table');
+        const tbody = table.querySelector('tbody');
+
+        loading.style.display = 'block';
+        loading.textContent = 'Pobieranie danych...';
+        table.style.display = 'none';
+
+        try {
+            const response = await fetch(`/api/karty?search=${encodeURIComponent(searchVal)}`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                tbody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="padding: 12px; text-align: center;">Nie znaleziono kart pasujących do kryteriów.</td></tr>';
+                } else {
+                    data.forEach(card => {
+                        const tr = document.createElement('tr');
+                        tr.style.borderBottom = '1px solid var(--border-color)';
+
+                        let statusColor = 'var(--text-main)';
+                        if (card.status === 'wolna') statusColor = '#10b981';
+                        else if (card.status === 'zastrzezony') statusColor = '#ef4444';
+                        else if (card.status === 'zajeta') statusColor = '#3b82f6';
+
+                        tr.innerHTML = `
+                            <td style="padding: 12px; font-family: monospace; font-weight: 500;">${card.id}</td>
+                            <td style="padding: 12px;"><span style="color: ${statusColor}; font-weight: 600;">${card.status}</span></td>
+                            <td style="padding: 12px;">${card.owner || '-'}</td>
+                            <td style="padding: 12px;">${card.activePassType || '-'}</td>
+                            <td style="padding: 12px; text-align: right;">
+                                <button class="btn-secondary" style="padding: 6px 12px; font-size: 13px;" onclick="showCardDetails('${card.id}')">Szczegóły</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+                loading.style.display = 'none';
+                table.style.display = 'table';
+            }
+        } catch (error) {
+            loading.textContent = 'Błąd połączenia z serwerem.';
+        }
+    };
+
+    // Jeśli jest coś w szukajce, to od razu odpal
+    if (document.getElementById('search-card').value) fetchCards();
+}
+
+async function showCardDetails(rfid) {
+    const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+    
+    try {
+        const cardRes = await fetch(`/api/karty/${rfid}`, { headers: { 'Authorization': 'Bearer ' + token } });
+        const passesRes = await fetch(`/api/karnety?cardId=${rfid}`, { headers: { 'Authorization': 'Bearer ' + token } });
+
+        if (cardRes.ok && passesRes.ok) {
+            const card = await cardRes.json();
+            const passes = await passesRes.json();
+
+            let statusAction = '';
+            if (card.status === 'zastrzezony') {
+                statusAction = `<button class="btn-primary" onclick="unblockCard('${card.id}')">Odblokuj kartę</button>`;
+            } else {
+                statusAction = `<button class="btn-secondary" style="color: var(--danger); border-color: var(--danger);" onclick="blockCard('${card.id}')">Zablokuj (zastrzeż) kartę</button>`;
+            }
+
+            const content = `
+                <div style="margin-bottom: 24px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                        <div>
+                            <p style="color: var(--text-muted); font-size: 13px;">RFID</p>
+                            <p style="font-weight: 600; font-family: monospace;">${card.id}</p>
+                        </div>
+                        <div>
+                            <p style="color: var(--text-muted); font-size: 13px;">Status</p>
+                            <p style="font-weight: 600;">${card.status}</p>
+                        </div>
+                        <div>
+                            <p style="color: var(--text-muted); font-size: 13px;">Właściciel</p>
+                            <p>${card.owner || '-'}</p>
+                        </div>
+                        <div>
+                            <p style="color: var(--text-muted); font-size: 13px;">Kaucja opłacona</p>
+                            <p>${card.depositPaid ? 'Tak' : 'Nie'}</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        ${statusAction}
+                    </div>
+                    ${card.blockReason ? `<p style="margin-top: 12px; padding: 12px; background: #fee2e2; border-radius: 8px; color: #991b1b;"><strong>Powód blokady:</strong> ${card.blockReason}</p>` : ''}
+                </div>
+
+                <h4>Historia karnetów</h4>
+                <div style="max-height: 300px; overflow-y: auto; margin-top: 12px; border: 1px solid var(--border-color); border-radius: 8px;">
+                    <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <thead style="position: sticky; top: 0; background: var(--bg-card);">
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 10px;">ID</th>
+                                <th style="padding: 10px;">Taryfa</th>
+                                <th style="padding: 10px;">Status</th>
+                                <th style="padding: 10px;">Ważny do</th>
+                                <th style="padding: 10px; text-align: right;">Akcje</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${passes.length === 0 ? '<tr><td colspan="5" style="padding: 12px; text-align: center;">Brak karnetów przypisanych do tej karty.</td></tr>' : 
+                                passes.map(p => `
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 10px;">${p.id}</td>
+                                    <td style="padding: 10px; font-weight: 500;">${p.tariff || '-'}</td>
+                                    <td style="padding: 10px;">${p.status}</td>
+                                    <td style="padding: 10px;">${p.validTo ? new Date(p.validTo).toLocaleDateString('pl-PL') : '-'}</td>
+                                    <td style="padding: 10px; text-align: right;">
+                                        ${p.status === 'aktywny' ? `<button class="btn-secondary" style="font-size: 11px; padding: 4px 8px; color: var(--danger); border-color: var(--danger);" onclick="blockPass(${p.id}, '${rfid}')">Zablokuj</button>` : ''}
+                                    </td>
+                                </tr>
+                                `).join('')
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            openModal('Szczegóły karty RFID', content);
+        }
+    } catch (error) {
+        showToast('Błąd podczas pobierania szczegółów.', 'error');
+    }
+}
+
+async function blockCard(rfid) {
+    const reason = prompt('Podaj powód zablokowania karty:');
+    if (reason === null) return;
+
+    const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+    try {
+        const res = await fetch(`/api/karty/${rfid}/blokuj`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason })
+        });
+        if (res.ok) {
+            closeModal();
+            fetchCards();
+            showToast('Karta została zablokowana.', 'success');
+        } else {
+            showToast('Błąd podczas blokowania.', 'error');
+        }
+    } catch (e) { showToast('Błąd połączenia.', 'error'); }
+}
+
+async function unblockCard(rfid) {
+    if (!confirm('Czy na pewno chcesz odblokować tę kartę?')) return;
+    const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+    try {
+        const res = await fetch(`/api/karty/${rfid}/odblokuj`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (res.ok) {
+            closeModal();
+            fetchCards();
+            showToast('Karta została odblokowana.', 'success');
+        } else {
+            showToast('Błąd podczas odblokowywania.', 'error');
+        }
+    } catch (e) { showToast('Błąd połączenia.', 'error'); }
+}
+
+async function blockPass(passId, rfid) {
+    const reason = prompt('Podaj powód zablokowania karnetu:');
+    if (reason === null) return;
+
+    const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+    try {
+        const res = await fetch(`/api/karnety/${passId}/blokuj`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason })
+        });
+        if (res.ok) {
+            showToast('Karnet został zablokowany.', 'success');
+            showCardDetails(rfid); // Odśwież widok szczegółów
+        } else {
+            showToast('Błąd podczas blokowania karnetu.', 'error');
+        }
+    } catch (e) { showToast('Błąd połączenia.', 'error'); }
 }

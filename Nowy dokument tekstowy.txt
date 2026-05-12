@@ -1,0 +1,31 @@
+Krok 1: Przygotowanie fundamentów i szkieletu interfejsu
+•	Utworzenie plików: Wewnątrz folderu SystemAPI/wwwroot utwórz nowe pliki na potrzeby panelu, np.: admin.html, admin.css oraz admin.js.
+•	Zbudowanie makiety HTML: W pliku admin.html zakoduj bazowy układ strony:
+o	Górny pasek (Navbar): Powinien zawierać nazwę zalogowanego użytkownika oraz przycisk "Wyloguj".
+o	Panel boczny (Sidebar): Menu z odnośnikami nawigującymi do poszczególnych modułów (Pulpit, Wyciągi, Taryfy, Użytkownicy, Raporty).
+o	Główny kontener danych: Pusty obszar (<div>), w którym JavaScript będzie dynamicznie podmieniał treści w zależności od wybranej zakładki z menu, bez przeładowywania całej strony.
+Krok 2: Autoryzacja i ochrona panelu
+•	Weryfikacja dostępu: W pliku admin.js stwórz mechanizm uruchamiający się natychmiast przy wejściu na stronę. Skrypt musi sprawdzić, czy w localStorage (lub sessionStorage) przeglądarki znajduje się poprawny token JWT (uzyskany po logowaniu przez kontroler AuthController).
+•	Wymuszanie logowania: Jeżeli tokenu nie ma lub użytkownik nie posiada uprawnień administratora, skrypt powinien natychmiast przekierować użytkownika z powrotem na stronę login.html.
+•	Obsługa wylogowania: Skonfiguruj przycisk wylogowania, aby jego kliknięcie czyściło token z pamięci przeglądarki i przenosiło na ekran logowania.
+Krok 3: Podłączenie pierwszego modułu (Tylko odczyt)
+•	Zacznij od najprostszych danych, wybierając np. listę z WyciagController lub TaryfyController.
+•	Pobieranie danych (Fetch): Napisz funkcję pobierającą dane za pomocą interfejsu fetch(). Pamiętaj o ustawieniu nagłówka Authorization: Bearer <token_użytkownika>.
+•	Renderowanie danych: Stwórz w HTML szkielet tabeli, a w JavaScript napisz pętlę generującą wiersze (<tr> i <td>) z otrzymanego JSON-a, które następnie zostaną wstawione do HTML-a.
+Krok 4: Implementacja operacji modyfikujących (CRUD)
+•	Gdy wyświetlanie danych z wybranego modułu zacznie działać, rozbuduj go o interakcje. Dodaj główny przycisk "Dodaj" oraz ikony akcji "Edytuj/Usuń" przy każdym wierszu tabeli.
+•	Formularze wprowadzania danych: Zbuduj okna dialogowe (modale HTML ukrywane i pokazywane przez CSS/JS) zawierające pola formularzy do dodawania i edycji zasobów.
+•	Zapisywanie na serwerze: Podepnij przechwytywanie zdarzenia submit w formularzu. Przetwórz dane i wyślij je na backend używając odpowiednich metod HTTP (POST do dodawania, PUT do edycji, DELETE do usuwania). Zadbaj, by po pomyślnej akcji tabela na ekranie sama się zaktualizowała.
+Krok 5: Skalowanie na resztę systemu
+•	Masz już sprawdzony i kompletny wzorzec (wyświetlanie + dodawanie/edycja + autoryzacja). Teraz skopiuj ten schemat i podepnij kolejne obszary:
+o	Oferta: Cenniki, taryfy, bilety i karnety (TaryfyController, KarnetyController, BiletyController).
+o	Infrastruktura: Wyciągi i powiązane z nimi bramki oraz trasy (WyciagController, BramkaController).
+o	Zarządzanie Personelem: Konta użytkowników i kasjerów (UsersController).
+Krok 6: Finanse i interwencje w systemie
+•	Dodaj widok do podglądu płatności i operacji wykorzystując TransakcjeController.
+•	Stwórz interfejs pozwalający administratorowi weryfikować żądania zwrotów (ZwrotyController), z przyciskami do ich zatwierdzania i odrzucania.
+•	Rozbuduj moduł użytkowników o opcje interwencyjne, np. ręczne resetowanie hasła dla kasjera.
+Krok 7: Zwieńczenie prac – Główny Pulpit (Dashboard)
+•	Na koniec wróć do widoku, który użytkownik widzi tuż po wejściu.
+•	Podłącz się pod StatystykiController i RaportyController.
+•	Stwórz przejrzyste "kafelki" sumujące np. dzisiejszy obrót i liczbę aktywnych narciarzy. Opcjonalnie możesz dodać prostą bibliotekę (np. Chart.js), aby atrakcyjnie wizualizować ruch na wyciągach w postaci wykresów.

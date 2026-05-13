@@ -19,7 +19,7 @@ def login(email, password, role):
     return r.json()["token"]
 
 
-def reserve_online(token, tariff_id=6):
+def reserve_online(token, tariff_id=13):
     valid_from = (datetime.utcnow() + timedelta(days=1)).strftime("%Y-%m-%dT00:00:00")
     valid_to = (datetime.utcnow() + timedelta(days=4)).strftime("%Y-%m-%dT00:00:00")
     r = requests.post(

@@ -50,17 +50,12 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
         if (req.ValidFrom >= req.ValidTo)
             return BadRequest(new { message = "Data końca musi być późniejsza niż data początku." });
 
-        var tarrifLimit = tariff.PoolLimit;
-        if (tarrifLimit == null)
+        if (tariff.PoolLimit.HasValue)
         {
-            return BadRequest(new { message = "Unexpected error, are you trying to hack us?" });
-        }
-        //TODO(Nalezy sprawdzic czy zablokowane karnety powinny sie zaliczac do puli biletów!!!)
-        var totalReservationsForTarrif = await db.SkiPasses.CountAsync(p => p.TariffId == req.TariffId );
-        
-        if (totalReservationsForTarrif + 1 > tarrifLimit)
-        {
-            return BadRequest(new { message = "Wszystkie miejsca zostaly wyczerpane" });
+            //TODO(Nalezy sprawdzic czy zablokowane karnety powinny sie zaliczac do puli biletów!!!)
+            var totalReservationsForTarrif = await db.SkiPasses.CountAsync(p => p.TariffId == req.TariffId);
+            if (totalReservationsForTarrif + 1 > tariff.PoolLimit.Value)
+                return BadRequest(new { message = "Wszystkie miejsca zostaly wyczerpane" });
         }
         var oczekujacaStatus = await db.DictReservationStatuses
             .FirstOrDefaultAsync(s => s.Name == "oczekujaca");

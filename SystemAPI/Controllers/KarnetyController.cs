@@ -211,7 +211,8 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
                 return BadRequest(new { message = "Nie znaleziono karty o takim RFID" });
             }
             managedPass.CardId = activatedCard.Id;
-           
+            activatedCard.DepositPaid = true;
+
             activatedCard.StatusId = await db.DictCardStatuses
                 .Where(s => s.Name == "zajeta")
                 .Select(s => s.Id)

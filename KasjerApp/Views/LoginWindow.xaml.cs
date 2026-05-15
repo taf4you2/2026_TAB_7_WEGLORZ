@@ -10,6 +10,8 @@ public partial class LoginWindow : Window
     public LoginWindow()
     {
         InitializeComponent();
+        LoadSavedCredentials();
+
         // Enter zatwierdza formularz
         PasswordBox.KeyDown += (_, e) =>
         {
@@ -36,6 +38,8 @@ public partial class LoginWindow : Window
                 return;
             }
 
+            LoginCredentialsStore.Save(EmailBox.Text.Trim(), PasswordBox.Password);
+
             Session.Token = result.Token;
             Session.UserId = result.UserId;
             Session.Role = result.Role;
@@ -53,5 +57,15 @@ public partial class LoginWindow : Window
             LoginBtn.IsEnabled = true;
             LoginBtn.Content = "Zaloguj się";
         }
+    }
+
+    private void LoadSavedCredentials()
+    {
+        var credentials = LoginCredentialsStore.Load();
+        if (credentials == null) return;
+
+        EmailBox.Text = credentials.Email;
+        PasswordBox.Password = credentials.Password;
+        LoginBtn.Focus();
     }
 }

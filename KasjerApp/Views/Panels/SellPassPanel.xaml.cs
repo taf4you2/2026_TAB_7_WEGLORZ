@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using KasjerApp.Models;
 using KasjerApp.Services;
@@ -63,10 +64,13 @@ public partial class SellPassPanel : UserControl
         catch { }
     }
 
-    private void FreeCardCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void FreeCardCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (FreeCardCombo.SelectedItem is CardItem card)
+        {
             RfidBox.Text = card.Id;
+            await VerifyCardAsync(true);
+        }
     }
 
     private async void VerifyCard_Click(object sender, RoutedEventArgs e) => await VerifyCardAsync(true);
@@ -137,12 +141,29 @@ public partial class SellPassPanel : UserControl
         return m.Success ? int.Parse(m.Groups[1].Value) : 1;
     }
 
-    private async void UserSearch_Click(object sender, RoutedEventArgs e)
+    private async void UserSearch_Click(object sender, RoutedEventArgs e) => await SearchUserAsync();
+
+    private async void UserEmailBox_KeyDown(object sender, KeyEventArgs e)
     {
-        UserInfoBorder.Visibility = Visibility.Collapsed;
-        UserResultCombo.Visibility = Visibility.Collapsed;
+        if (e.Key != Key.Enter) return;
+        e.Handled = true;
+        await SearchUserAsync();
+    }
+
+    private void UserEmailBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_foundUserEmail == null) return;
+        if (string.Equals(_foundUserEmail, UserEmailBox.Text.Trim(), StringComparison.OrdinalIgnoreCase)) return;
+
         _foundUserId = null;
         _foundUserEmail = null;
+        UserResultsList.Visibility = Visibility.Collapsed;
+        UserInfoBorder.Visibility = Visibility.Collapsed;
+    }
+
+    private async Task SearchUserAsync()
+    {
+        ClearUserSearchState();
 
         var email = UserEmailBox.Text.Trim();
         if (string.IsNullOrEmpty(email)) return;
@@ -152,28 +173,30 @@ public partial class SellPassPanel : UserControl
             var users = await _api.SearchUsersAsync(email);
             if (users.Count == 0)
             {
-                var created = await _api.CreateUserAsync(email);
-                if (created == null)
+                if (!LooksLikeEmail(email))
                 {
-                    ShowUserInfo("Nie udalo sie utworzyc narciarza.", Brushes.MistyRose, Brushes.DarkRed);
+                    ShowUserInfo("Brak wynikow. Wpisz pelny adres email, aby utworzyc nowego klienta.", Brushes.LemonChiffon, Brushes.SaddleBrown);
                     return;
                 }
 
-                _foundUserId = created.Id;
-                _foundUserEmail = created.Email;
-                ShowUserInfo($"Utworzono narciarza: {created.Email} (ID: {created.Id})", Brushes.Honeydew, Brushes.DarkGreen);
+                var created = await _api.CreateUserAsync(email);
+                if (created == null)
+                {
+                    ShowUserInfo("Nie udalo sie utworzyc klienta.", Brushes.MistyRose, Brushes.DarkRed);
+                    return;
+                }
+
+                SelectUser(created, $"Utworzono klienta: {created.Email} (ID: {created.Id})");
             }
             else if (users.Count == 1)
             {
-                _foundUserId = users[0].Id;
-                _foundUserEmail = users[0].Email;
-                ShowUserInfo($"Znaleziono: {users[0].Email} (ID: {users[0].Id})", Brushes.Honeydew, Brushes.DarkGreen);
+                SelectUser(users[0], $"Znaleziono: {users[0].Email} (ID: {users[0].Id})");
             }
             else
             {
-                ShowUserInfo($"Znaleziono {users.Count} narciarzy - wybierz z listy:", Brushes.LemonChiffon, Brushes.SaddleBrown);
-                UserResultCombo.ItemsSource = users.Select(u => new UserResultItem(u.Id, u.Email)).ToList();
-                UserResultCombo.Visibility = Visibility.Visible;
+                ShowUserInfo($"Znaleziono {users.Count} klientow - kliknij wlasciwy email:", Brushes.LemonChiffon, Brushes.SaddleBrown);
+                UserResultsList.ItemsSource = users.Select(u => new UserResultItem(u.Id, u.Email)).ToList();
+                UserResultsList.Visibility = Visibility.Visible;
             }
         }
         catch (Exception ex)
@@ -182,14 +205,31 @@ public partial class SellPassPanel : UserControl
         }
     }
 
-    private void UserResultCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void UserResultsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (UserResultCombo.SelectedItem is UserResultItem item)
+        if (UserResultsList.SelectedItem is UserResultItem item)
         {
-            _foundUserId = item.Id;
-            _foundUserEmail = item.Email;
-            ShowUserInfo($"Wybrany: {item.Email} (ID: {item.Id})", Brushes.Honeydew, Brushes.DarkGreen);
+            SelectUser(new UserDto(item.Id, item.Email), $"Wybrany: {item.Email} (ID: {item.Id})");
         }
+    }
+
+    private void SelectUser(UserDto user, string message)
+    {
+        _foundUserId = user.Id;
+        _foundUserEmail = user.Email;
+        UserEmailBox.Text = user.Email;
+        UserResultsList.ItemsSource = null;
+        UserResultsList.Visibility = Visibility.Collapsed;
+        ShowUserInfo(message, Brushes.Honeydew, Brushes.DarkGreen);
+    }
+
+    private void ClearUserSearchState()
+    {
+        UserInfoBorder.Visibility = Visibility.Collapsed;
+        UserResultsList.ItemsSource = null;
+        UserResultsList.Visibility = Visibility.Collapsed;
+        _foundUserId = null;
+        _foundUserEmail = null;
     }
 
     private void ShowUserInfo(string text, Brush background, Brush foreground)
@@ -257,32 +297,35 @@ public partial class SellPassPanel : UserControl
 
             if (candidates.Count == 1)
             {
-                _foundUserId = candidates[0].Id;
-                _foundUserEmail = candidates[0].Email;
-                ShowUserInfo($"Znaleziono: {candidates[0].Email} (ID: {candidates[0].Id})", Brushes.Honeydew, Brushes.DarkGreen);
+                SelectUser(candidates[0], $"Znaleziono: {candidates[0].Email} (ID: {candidates[0].Id})");
                 return true;
             }
 
             if (candidates.Count > 1)
             {
-                UserResultCombo.ItemsSource = candidates.Select(u => new UserResultItem(u.Id, u.Email)).ToList();
-                UserResultCombo.Visibility = Visibility.Visible;
-                ShowUserInfo("Znaleziono kilku narciarzy - wybierz wlasciciela z listy.", Brushes.LemonChiffon, Brushes.SaddleBrown);
-                ShowError("Wybierz wlasciciela z listy przed wydaniem karnetu.");
+                UserResultsList.ItemsSource = candidates.Select(u => new UserResultItem(u.Id, u.Email)).ToList();
+                UserResultsList.Visibility = Visibility.Visible;
+                ShowUserInfo("Znaleziono kilku klientow - kliknij wlasciwy email.", Brushes.LemonChiffon, Brushes.SaddleBrown);
+                ShowError("Kliknij email wlasciciela przed wydaniem karnetu.");
+                return false;
+            }
+
+            if (!LooksLikeEmail(email))
+            {
+                ShowUserInfo("Nie znaleziono klienta. Wpisz pelny adres email, aby utworzyc nowego klienta.", Brushes.LemonChiffon, Brushes.SaddleBrown);
+                ShowError("Wpisz pelny adres email klienta albo wybierz go z wynikow wyszukiwania.");
                 return false;
             }
 
             var created = await _api.CreateUserAsync(email);
             if (created == null)
             {
-                ShowUserInfo("Nie udalo sie utworzyc narciarza.", Brushes.MistyRose, Brushes.DarkRed);
-                ShowError("Nie udalo sie utworzyc narciarza.");
+                ShowUserInfo("Nie udalo sie utworzyc klienta.", Brushes.MistyRose, Brushes.DarkRed);
+                ShowError("Nie udalo sie utworzyc klienta.");
                 return false;
             }
 
-            _foundUserId = created.Id;
-            _foundUserEmail = created.Email;
-            ShowUserInfo($"Utworzono narciarza: {created.Email} (ID: {created.Id})", Brushes.Honeydew, Brushes.DarkGreen);
+            SelectUser(created, $"Utworzono klienta: {created.Email} (ID: {created.Id})");
             return true;
         }
         catch (Exception ex)
@@ -291,6 +334,9 @@ public partial class SellPassPanel : UserControl
             return false;
         }
     }
+
+    private static bool LooksLikeEmail(string value) =>
+        Regex.IsMatch(value.Trim(), @"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase);
 
     private record TariffItem(TariffDto Dto)
     {
@@ -308,7 +354,7 @@ public partial class SellPassPanel : UserControl
 
     private record UserResultItem(int Id, string Email)
     {
-        public string DisplayName => $"#{Id} {Email}";
+        public string DisplayName => Email;
     }
 }
 

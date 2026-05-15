@@ -63,13 +63,18 @@ public partial class SellTicketPanel : UserControl
         catch { /* ignoruj — pole ręczne nadal działa */ }
     }
 
-    private void FreeCardCombo_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    private async void FreeCardCombo_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         if (FreeCardCombo.SelectedItem is CardItem card)
+        {
             RfidBox.Text = card.Id;
+            await VerifyCardAsync();
+        }
     }
 
-    private async void VerifyCard_Click(object sender, RoutedEventArgs e)
+    private async void VerifyCard_Click(object sender, RoutedEventArgs e) => await VerifyCardAsync();
+
+    private async Task VerifyCardAsync()
     {
         CardInfoBorder.Visibility = Visibility.Collapsed;
         var rfid = RfidBox.Text.Trim();

@@ -1,33 +1,48 @@
-﻿<Window x:Class="KasjerApp.Views.DashboardWindow"
+<Window x:Class="KasjerApp.Views.DashboardWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="System Kasjerski - Panel Kasjera"
-        Width="1100" Height="720"
-        MinWidth="900" MinHeight="600"
+        Width="1180" Height="720"
+        MinWidth="860" MinHeight="560"
         WindowStartupLocation="CenterScreen"
-        Background="#F0F2F5">
+        ResizeMode="CanResizeWithGrip"
+        Background="{StaticResource AppBackgroundBrush}">
     <Window.Resources>
         <Style x:Key="NavBtn" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#BBDEFB"/>
+            <Setter Property="Foreground" Value="#DCE8F5"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="16,10"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="6" Margin="6,2">
-                            <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
+                        <Border x:Name="Bg"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                Margin="8,2">
+                            <TextBlock Text="{TemplateBinding Content}"
+                                       Foreground="{TemplateBinding Foreground}"
+                                       FontSize="{TemplateBinding FontSize}"
+                                       FontWeight="{TemplateBinding FontWeight}"
+                                       Margin="{TemplateBinding Padding}"
+                                       TextWrapping="NoWrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                       VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#1565C0"/>
+                                <Setter TargetName="Bg" Property="Background" Value="#1D334F"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bg" Property="Background" Value="#1565C0"/>
+                                <Setter TargetName="Bg" Property="Background" Value="{StaticResource PrimaryBrush}"/>
                                 <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="Opacity" Value="1"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -38,40 +53,60 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="210"/>
+            <ColumnDefinition Width="224" MinWidth="204"/>
             <ColumnDefinition Width="1"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Grid Grid.Column="0" Background="#0D47A1">
+        <Grid Grid.Column="0" Background="{StaticResource SidebarBrush}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Margin="0,0,0,8">
-                <TextBlock Text="Stacja Narciarska" Foreground="White" FontSize="14" FontWeight="Bold" Margin="16,20,16,4"/>
-                <TextBlock Text="Panel Kasjera" Foreground="#90CAF9" FontSize="11" Margin="16,0,16,12"/>
-                <Rectangle Height="1" Fill="#1E3A8A" Margin="0,0,0,8"/>
-            </StackPanel>
+            <Border Grid.Row="0" Padding="18,18,18,14" BorderBrush="#243B5A" BorderThickness="0,0,0,1">
+                <StackPanel>
+                    <TextBlock Text="STACJA ERP"
+                               Foreground="White"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               TextWrapping="NoWrap"/>
+                    <TextBlock Text="Moduł kasjera"
+                               Foreground="{StaticResource SidebarMutedBrush}"
+                               FontSize="12"
+                               Margin="0,3,0,0"/>
+                </StackPanel>
+            </Border>
 
-            <StackPanel Grid.Row="1" Margin="0,4,0,0">
-                <Button x:Name="BtnSellPass" Content="Wydaj karnet" Click="Nav_Click" Tag="sell_pass" Style="{StaticResource NavBtn}" IsEnabled="False"/>
-                <Button x:Name="BtnPasses" Content="Karnety i zwroty" Click="Nav_Click" Tag="passes" Style="{StaticResource NavBtn}"/>
-                <Button x:Name="BtnCards" Content="Karty RFID" Click="Nav_Click" Tag="cards" Style="{StaticResource NavBtn}"/>
-                <Button x:Name="BtnTransactions" Content="Transakcje" Click="Nav_Click" Tag="transactions" Style="{StaticResource NavBtn}"/>
-                <Button x:Name="BtnShiftReport" Content="Raport zmiany" Click="Nav_Click" Tag="shift" Style="{StaticResource NavBtn}"/>
-            </StackPanel>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="0,12,0,12">
+                    <Button x:Name="BtnSellPass" Content="Wydaj karnet" Click="Nav_Click" Tag="sell_pass" Style="{StaticResource NavBtn}" IsEnabled="False"/>
+                    <Button x:Name="BtnPasses" Content="Karnety i zwroty" Click="Nav_Click" Tag="passes" Style="{StaticResource NavBtn}"/>
+                    <Button x:Name="BtnCards" Content="Karty RFID" Click="Nav_Click" Tag="cards" Style="{StaticResource NavBtn}"/>
+                    <Button x:Name="BtnTransactions" Content="Transakcje" Click="Nav_Click" Tag="transactions" Style="{StaticResource NavBtn}"/>
+                </StackPanel>
+            </ScrollViewer>
 
-            <StackPanel Grid.Row="2" Margin="12,0,12,16">
-                <Rectangle Height="1" Fill="#1E3A8A" Margin="0,0,0,10"/>
-                <TextBlock x:Name="UserLabel" Foreground="#BBDEFB" FontSize="11" TextWrapping="Wrap" Margin="4,0,4,8"/>
-                <Button Content="Wyloguj" Click="LogoutBtn_Click" Background="#C62828" Foreground="White" BorderThickness="0" Padding="0,8" FontSize="12" Cursor="Hand"/>
-            </StackPanel>
+            <Border Grid.Row="2" Padding="16" BorderBrush="#243B5A" BorderThickness="0,1,0,0">
+                <StackPanel>
+                    <TextBlock x:Name="UserLabel"
+                               Foreground="{StaticResource SidebarMutedBrush}"
+                               FontSize="12"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,10"/>
+                    <Button Content="Wyloguj"
+                            Click="LogoutBtn_Click"
+                            Style="{StaticResource DangerButton}"
+                            HorizontalContentAlignment="Center"/>
+                </StackPanel>
+            </Border>
         </Grid>
 
-        <Rectangle Grid.Column="1" Fill="#CBD5E1"/>
-        <ContentControl x:Name="ContentArea" Grid.Column="2"/>
+        <Rectangle Grid.Column="1" Fill="{StaticResource BorderBrush}"/>
+
+        <Grid Grid.Column="2" Background="{StaticResource AppBackgroundBrush}">
+            <ContentControl x:Name="ContentArea"/>
+        </Grid>
     </Grid>
 </Window>

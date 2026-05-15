@@ -3,6 +3,7 @@
 
 .vs/
 .idea/claudeCodeTabState.xml
+.idea/**/claudeCodeTabState.xml
 *.user
 *.userosscache
 *.sln.docstates

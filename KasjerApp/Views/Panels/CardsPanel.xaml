@@ -1,88 +1,132 @@
-﻿<UserControl x:Class="KasjerApp.Views.Panels.CardsPanel"
+<UserControl x:Class="KasjerApp.Views.Panels.CardsPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="#F0F2F5">
-    <Grid Margin="24">
+             Background="{StaticResource AppBackgroundBrush}">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="220"/>
+            <RowDefinition Height="1.25*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Karty RFID" FontSize="22" FontWeight="Bold" Foreground="#1565C0" Margin="0,0,0,16"/>
+        <TextBlock Grid.Row="0" Text="Karty RFID" Style="{StaticResource PageTitleText}"/>
 
-        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,16">
-            <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBox x:Name="SearchBox" Grid.Column="0" Height="36" Padding="10,8" FontSize="14" BorderBrush="#CCC" BorderThickness="1" VerticalContentAlignment="Center" KeyDown="SearchBox_KeyDown"/>
-                <ComboBox x:Name="StatusCombo" Grid.Column="1" Height="36" Margin="8,0,0,0" FontSize="13" SelectedIndex="0">
-                    <ComboBoxItem Content="(wszystkie)"/>
-                    <ComboBoxItem Content="wolna"/>
-                    <ComboBoxItem Content="zajeta"/>
-                    <ComboBoxItem Content="zastrzezony"/>
-                </ComboBox>
-                <Button Grid.Column="2" Content="Szukaj" Click="SearchBtn_Click" Background="#1565C0" Foreground="White" BorderThickness="0" Padding="14,0" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
-                <Button Grid.Column="3" Content="Odswiez" Click="RefreshBtn_Click" Background="#00897B" Foreground="White" BorderThickness="0" Padding="12,0" Margin="6,0,0,0" Height="36" Cursor="Hand"/>
-                <Button Grid.Column="4" Content="Dodaj karte" Click="AddCardBtn_Click" Background="#2E7D32" Foreground="White" BorderThickness="0" Padding="14,0" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
-                <Button Grid.Column="5" Content="Usun karte" Click="DeleteCardBtn_Click" Background="#C62828" Foreground="White" BorderThickness="0" Padding="14,0" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
-            </Grid>
+        <Border Grid.Row="1" Style="{StaticResource FilterPanel}">
+            <DockPanel LastChildFill="True">
+                <WrapPanel DockPanel.Dock="Right" Margin="8,0,0,0">
+                    <ComboBox x:Name="StatusCombo"
+                              Width="140"
+                              Margin="0,0,8,8"
+                              SelectedIndex="0">
+                        <ComboBoxItem Content="(wszystkie)"/>
+                        <ComboBoxItem Content="wolna"/>
+                        <ComboBoxItem Content="zajeta"/>
+                        <ComboBoxItem Content="zastrzezony"/>
+                    </ComboBox>
+                    <Button Content="Szukaj"
+                            Click="SearchBtn_Click"
+                            Style="{StaticResource PrimaryButton}"
+                            Margin="0,0,8,8"/>
+                    <Button Content="Odśwież"
+                            Click="RefreshBtn_Click"
+                            Style="{StaticResource SecondaryButton}"
+                            Margin="0,0,8,8"/>
+                    <Button Content="Dodaj kartę"
+                            Click="AddCardBtn_Click"
+                            Style="{StaticResource SuccessButton}"
+                            Margin="0,0,8,8"/>
+                    <Button Content="Usuń kartę"
+                            Click="DeleteCardBtn_Click"
+                            Style="{StaticResource DangerButton}"
+                            Margin="0,0,8,8"/>
+                    <Button x:Name="BlockBtn"
+                            Content="Zablokuj kartę"
+                            Click="BlockBtn_Click"
+                            IsEnabled="False"
+                            Style="{StaticResource WarningButton}"
+                            Margin="0,0,8,8"/>
+                    <Button x:Name="UnblockBtn"
+                            Content="Odblokuj kartę"
+                            Click="UnblockBtn_Click"
+                            IsEnabled="False"
+                            Style="{StaticResource SuccessButton}"
+                            Margin="0,0,8,8"/>
+                    <Button x:Name="ReturnCardBtn"
+                            Content="Zwróć kartę"
+                            Click="ReturnCardBtn_Click"
+                            IsEnabled="False"
+                            Style="{StaticResource SecondaryButton}"
+                            Margin="0,0,12,8"/>
+                    <TextBlock x:Name="MsgText"
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               Foreground="{StaticResource DangerBrush}"
+                               Margin="0,0,0,8"/>
+                </WrapPanel>
+                <TextBox x:Name="SearchBox"
+                         MinWidth="180"
+                         Margin="0,0,0,8"
+                         KeyDown="SearchBox_KeyDown"/>
+            </DockPanel>
         </Border>
 
-        <Border Grid.Row="2" Background="White" CornerRadius="8" Margin="0,0,0,4">
-            <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
-            <DataGrid x:Name="CardsGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" GridLinesVisibility="Horizontal" RowBackground="White" AlternatingRowBackground="#F9FAFB" BorderThickness="0" CanUserResizeRows="False" HeadersVisibility="Column" ColumnHeaderHeight="40" SelectionChanged="CardsGrid_SelectionChanged">
+        <Border Grid.Row="2" Style="{StaticResource PanelCard}" Padding="0" Margin="0,0,0,10">
+            <DataGrid x:Name="CardsGrid"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      BorderThickness="0"
+                      SelectionChanged="CardsGrid_SelectionChanged">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="RFID" Binding="{Binding Id}" Width="150"/>
-                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
-                    <DataGridTextColumn Header="Wlasciciel" Binding="{Binding Owner}" Width="170"/>
-                    <DataGridTextColumn Header="ID karnetu" Binding="{Binding ActivePassId}" Width="90"/>
-                    <DataGridTextColumn Header="Aktywny karnet" Binding="{Binding ActivePassType}" Width="170"/>
-                    <DataGridTextColumn Header="Wazny do" Binding="{Binding ValidTo, StringFormat=dd.MM.yyyy HH:mm}" Width="130"/>
+                    <DataGridTextColumn Header="RFID" Binding="{Binding Id}" Width="150" MinWidth="120"/>
+                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110" MinWidth="95"/>
+                    <DataGridTextColumn Header="Właściciel" Binding="{Binding Owner}" Width="2*" MinWidth="160"/>
+                    <DataGridTextColumn Header="ID karnetu" Binding="{Binding ActivePassId}" Width="100" MinWidth="90"/>
+                    <DataGridTextColumn Header="Aktywny karnet" Binding="{Binding ActivePassType}" Width="2*" MinWidth="160"/>
+                    <DataGridTextColumn Header="Ważny do" Binding="{Binding ValidTo, StringFormat=dd.MM.yyyy HH:mm}" Width="140" MinWidth="130"/>
                 </DataGrid.Columns>
             </DataGrid>
         </Border>
 
-        <Border Grid.Row="3" Background="#E3F2FD" CornerRadius="4" Padding="12,6" Margin="0,8,0,4">
+        <Border Grid.Row="3"
+                Background="#E8F2FC"
+                BorderBrush="#B8D5F2"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="12,8"
+                Margin="0,0,0,10">
             <StackPanel>
-                <TextBlock x:Name="PassesLabel" Text="Historia karnetow - wybierz karte powyzej" FontSize="13" FontWeight="SemiBold" Foreground="#1565C0"/>
-                <TextBlock x:Name="PassesErrorText" Foreground="#C62828" FontSize="12" Visibility="Collapsed" Margin="0,4,0,0"/>
+                <TextBlock x:Name="PassesLabel"
+                           Text="Historia karnetów - wybierz kartę powyżej"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource PrimaryBrush}"/>
+                <TextBlock x:Name="PassesErrorText"
+                           Foreground="{StaticResource DangerBrush}"
+                           FontSize="12"
+                           Visibility="Collapsed"
+                           Margin="0,4,0,0"/>
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="4" Background="White" CornerRadius="8" Margin="0,0,0,12">
-            <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
-            <DataGrid x:Name="PassesGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" GridLinesVisibility="Horizontal" RowBackground="White" AlternatingRowBackground="#F9FAFB" BorderThickness="0" CanUserResizeRows="False" HeadersVisibility="Column" ColumnHeaderHeight="38" SelectionChanged="PassesGrid_SelectionChanged">
+        <Border Grid.Row="4" Style="{StaticResource PanelCard}" Padding="0" Margin="0,0,0,12">
+            <DataGrid x:Name="PassesGrid"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      BorderThickness="0"
+                      SelectionChanged="PassesGrid_SelectionChanged">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
-                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110"/>
-                    <DataGridTextColumn Header="Taryfa" Binding="{Binding Tariff}" Width="190"/>
-                    <DataGridTextColumn Header="Typ" Binding="{Binding PassType}" Width="120"/>
-                    <DataGridTextColumn Header="Wazny od" Binding="{Binding ValidFrom, StringFormat=dd.MM.yyyy HH:mm}" Width="130"/>
-                    <DataGridTextColumn Header="Wazny do" Binding="{Binding ValidTo, StringFormat=dd.MM.yyyy HH:mm}" Width="130"/>
-                    <DataGridTextColumn Header="Zjazdy" Binding="{Binding RemainingRides}" Width="80"/>
-                    <DataGridTextColumn Header="Powod blokady" Binding="{Binding BlockReason}" Width="*"/>
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="70" MinWidth="60"/>
+                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110" MinWidth="95"/>
+                    <DataGridTextColumn Header="Taryfa" Binding="{Binding Tariff}" Width="2*" MinWidth="170"/>
+                    <DataGridTextColumn Header="Typ" Binding="{Binding PassType}" Width="130" MinWidth="110"/>
+                    <DataGridTextColumn Header="Ważny od" Binding="{Binding ValidFrom, StringFormat=dd.MM.yyyy HH:mm}" Width="140" MinWidth="130"/>
+                    <DataGridTextColumn Header="Ważny do" Binding="{Binding ValidTo, StringFormat=dd.MM.yyyy HH:mm}" Width="140" MinWidth="130"/>
+                    <DataGridTextColumn Header="Zjazdy" Binding="{Binding RemainingRides}" Width="90" MinWidth="80"/>
+                    <DataGridTextColumn Header="Powód blokady" Binding="{Binding BlockReason}" Width="2*" MinWidth="160"/>
                 </DataGrid.Columns>
             </DataGrid>
-        </Border>
-
-        <Border Grid.Row="5" Background="White" CornerRadius="8" Padding="16">
-            <StackPanel Orientation="Horizontal">
-                <Button x:Name="BlockBtn" Content="Zablokuj karte" Click="BlockBtn_Click" IsEnabled="False" Background="#F57F17" Foreground="White" BorderThickness="0" Padding="16,10" Margin="0,0,12,0"/>
-                <Button x:Name="UnblockBtn" Content="Odblokuj karte" Click="UnblockBtn_Click" IsEnabled="False" Background="#2E7D32" Foreground="White" BorderThickness="0" Padding="16,10" Margin="0,0,12,0"/>
-                <Button x:Name="ReturnCardBtn" Content="Zwroc karte" Click="ReturnCardBtn_Click" IsEnabled="False" Background="#455A64" Foreground="White" BorderThickness="0" Padding="16,10" Margin="0,0,12,0"/>
-                <TextBlock x:Name="MsgText" VerticalAlignment="Center" Foreground="#C62828" FontSize="12"/>
-            </StackPanel>
         </Border>
     </Grid>
 </UserControl>

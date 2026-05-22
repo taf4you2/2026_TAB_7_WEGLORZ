@@ -148,11 +148,20 @@
             if (!email || !password) { showError('Podaj e-mail i hasło.'); return; }
 
             try {
-                const res = await fetch('/api/auth/login', {
+                // Najpierw próbujemy zalogować jako admin, potem jako kasjer
+                let res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, role: 'kasjer' })
+                    body: JSON.stringify({ email, password, role: 'admin' })
                 });
+
+                if (!res.ok) {
+                    res = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password, role: 'kasjer' })
+                    });
+                }
 
                 if (!res.ok) {
                     const d = await res.json().catch(() => ({}));
@@ -161,9 +170,13 @@
                 }
 
                 const data = await res.json();
-                // Ważne: zapisujemy pod kluczem 'jwt_token', którego oczekuje admin.js
                 localStorage.setItem('jwt_token', data.token);
-                window.location.href = 'admin.html';
+                
+                if (data.role === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'kasjer.html';
+                }
             } catch (e) {
                 showError('Brak połączenia z API: ' + e.message);
             }

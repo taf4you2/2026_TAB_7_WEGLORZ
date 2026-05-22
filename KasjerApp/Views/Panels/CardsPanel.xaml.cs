@@ -190,14 +190,36 @@ public partial class CardsPanel : UserControl
 
     private static string? AskText(string title, string label)
     {
-        var win = new Window { Title = title, Width = 390, Height = 180, WindowStartupLocation = WindowStartupLocation.CenterOwner, ResizeMode = ResizeMode.NoResize, Background = System.Windows.Media.Brushes.White };
-        var sp = new StackPanel { Margin = new Thickness(20) };
-        sp.Children.Add(new TextBlock { Text = label, Margin = new Thickness(0, 0, 0, 6) });
-        var tb = new TextBox { Height = 36, Padding = new Thickness(8), Margin = new Thickness(0, 0, 0, 14) };
+        var win = new Window
+        {
+            Title = title,
+            Width = 420,
+            Height = 210,
+            MinWidth = 340,
+            MinHeight = 190,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            ResizeMode = ResizeMode.CanResizeWithGrip,
+            Background = (System.Windows.Media.Brush)Application.Current.FindResource("AppBackgroundBrush")
+        };
+        var sp = new StackPanel();
+        sp.Children.Add(new TextBlock { Text = label, Style = (Style)Application.Current.FindResource("FieldLabelText") });
+        var tb = new TextBox { Margin = new Thickness(0, 0, 0, 14) };
         sp.Children.Add(tb);
-        var btn = new Button { Content = "OK", Width = 80, Height = 34, Background = System.Windows.Media.Brushes.ForestGreen, Foreground = System.Windows.Media.Brushes.White, BorderThickness = new Thickness(0) };
+        var btn = new Button
+        {
+            Content = "OK",
+            MinWidth = 86,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Style = (Style)Application.Current.FindResource("PrimaryButton")
+        };
         sp.Children.Add(btn);
-        win.Content = sp;
+        win.Content = new Border
+        {
+            Margin = new Thickness(20),
+            Padding = new Thickness(18),
+            Style = (Style)Application.Current.FindResource("PanelCard"),
+            Child = sp
+        };
         string? result = null;
         btn.Click += (_, _) => { result = tb.Text.Trim(); win.DialogResult = true; };
         return win.ShowDialog() == true ? result : null;

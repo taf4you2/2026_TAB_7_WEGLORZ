@@ -37,8 +37,31 @@ public class ApiService
     public async Task<CardIssueVerificationDto?> VerifyCardForIssueAsync(string rfid)
     {
         var r = await _http.GetAsync($"/api/karty/{Uri.EscapeDataString(rfid)}/weryfikacja-wydania");
+        if (r.StatusCode == HttpStatusCode.NotFound)
+        {
+            return await VerifyCardForIssueFallbackAsync(rfid);
+        }
+
         r.EnsureSuccessStatusCode();
         return await r.Content.ReadFromJsonAsync<CardIssueVerificationDto>();
+    }
+
+    private async Task<CardIssueVerificationDto> VerifyCardForIssueFallbackAsync(string rfid)
+    {
+        var card = await GetCardAsync(rfid);
+        if (card == null)
+            return new CardIssueVerificationDto(false, $"Karta {rfid} nie istnieje w systemie.", null);
+
+        if (card.ActivePassId.HasValue)
+            return new CardIssueVerificationDto(false, $"Karta ma aktywny karnet: {card.ActivePassType ?? $"ID {card.ActivePassId.Value}"}.", card);
+
+        var canIssue = card.Status.Equals("wolna", StringComparison.OrdinalIgnoreCase) ||
+                       card.Status.Equals("free", StringComparison.OrdinalIgnoreCase) ||
+                       card.Status.Equals("available", StringComparison.OrdinalIgnoreCase);
+
+        return canIssue
+            ? new CardIssueVerificationDto(true, "Karta jest wolna i gotowa do wydania.", card)
+            : new CardIssueVerificationDto(false, $"Karta ma status '{card.Status}'.", card);
     }
 
     public async Task<List<CardDto>> GetCardsAsync(string? status = null, string? search = null)

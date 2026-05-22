@@ -1,39 +1,55 @@
-﻿<UserControl x:Class="KasjerApp.Views.Panels.SellPassPanel"
+<UserControl x:Class="KasjerApp.Views.Panels.SellPassPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="#F0F2F5">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="24" MaxWidth="640" HorizontalAlignment="Left">
+             Background="{StaticResource AppBackgroundBrush}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="20" MaxWidth="860" HorizontalAlignment="Stretch">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Text="Wydaj karnet na karte" FontSize="22" FontWeight="Bold" Foreground="#1565C0" Margin="0,0,0,20"/>
+            <TextBlock Grid.Row="0" Text="Wydaj karnet na kartę" Style="{StaticResource PageTitleText}"/>
 
-            <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="24" Margin="0,0,0,16">
-                <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+            <Border Grid.Row="1" Style="{StaticResource PanelCard}" Margin="0,0,0,14">
                 <StackPanel>
-                    <TextBlock Text="RFID karty" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
-                    <Grid Margin="0,0,0,8">
+                    <TextBlock Text="RFID karty" Style="{StaticResource FieldLabelText}"/>
+                    <Grid Margin="0,0,0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox x:Name="RfidBox" Grid.Column="0" Height="36" Padding="10,8" FontSize="14" BorderBrush="#CCC" BorderThickness="1" VerticalContentAlignment="Center"/>
-                        <Button Grid.Column="1" Content="Weryfikuj" Click="VerifyCard_Click" Background="#1565C0" Foreground="White" BorderThickness="0" Padding="14,0" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
+                        <TextBox x:Name="RfidBox" Grid.Column="0"/>
+                        <Button Grid.Column="1"
+                                Content="Weryfikuj"
+                                Click="VerifyCard_Click"
+                                Style="{StaticResource PrimaryButton}"
+                                Margin="8,0,0,0"/>
                     </Grid>
 
-                    <TextBlock Text="Lub wybierz wolna karte z listy:" FontSize="11" Foreground="#666" Margin="0,0,0,4"/>
-                    <ComboBox x:Name="FreeCardCombo" Height="34" Margin="0,0,0,16" DisplayMemberPath="DisplayName" FontSize="13" SelectionChanged="FreeCardCombo_SelectionChanged" Background="White" BorderBrush="#BBDEFB"/>
+                    <TextBlock Text="Lub wybierz wolną kartę z listy:" Style="{StaticResource MutedText}" Margin="0,0,0,5"/>
+                    <ComboBox x:Name="FreeCardCombo"
+                              Margin="0,0,0,16"
+                              DisplayMemberPath="DisplayName"
+                              SelectionChanged="FreeCardCombo_SelectionChanged"/>
 
-                    <Border x:Name="CardInfoBorder" Background="#E3F2FD" CornerRadius="6" Padding="12,8" Margin="0,0,0,16" Visibility="Collapsed">
-                        <TextBlock x:Name="CardInfoText" Foreground="#1565C0" FontSize="13" TextWrapping="Wrap"/>
+                    <Border x:Name="CardInfoBorder"
+                            Background="#E8F2FC"
+                            BorderBrush="#B8D5F2"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Padding="12,8"
+                            Margin="0,0,0,16"
+                            Visibility="Collapsed">
+                        <TextBlock x:Name="CardInfoText" Foreground="{StaticResource PrimaryBrush}" FontSize="13" TextWrapping="Wrap"/>
                     </Border>
 
-                    <TextBlock Text="Taryfa karnetu" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
-                    <ComboBox x:Name="TariffCombo" Height="36" Margin="0,0,0,16" DisplayMemberPath="DisplayName" FontSize="14" SelectionChanged="TariffCombo_SelectionChanged"/>
+                    <TextBlock Text="Taryfa karnetu" Style="{StaticResource FieldLabelText}"/>
+                    <ComboBox x:Name="TariffCombo"
+                              Margin="0,0,0,16"
+                              DisplayMemberPath="DisplayName"
+                              SelectionChanged="TariffCombo_SelectionChanged"/>
 
                     <Grid Margin="0,0,0,16">
                         <Grid.ColumnDefinitions>
@@ -42,41 +58,91 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Start" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
-                            <DatePicker x:Name="ValidFromPicker" Height="36" FontSize="14" SelectedDateFormat="Short" SelectedDateChanged="ValidFromPicker_SelectedDateChanged"/>
-                            <TextBox x:Name="ValidFromTimeBox" Height="30" Padding="8,5" Text="08:00" FontSize="13" BorderBrush="#CCC" BorderThickness="1" VerticalContentAlignment="Center" Margin="0,6,0,0" TextChanged="ValidFromTimeBox_TextChanged"/>
+                            <TextBlock Text="Start" Style="{StaticResource FieldLabelText}"/>
+                            <DatePicker x:Name="ValidFromPicker"
+                                        SelectedDateFormat="Short"
+                                        SelectedDateChanged="ValidFromPicker_SelectedDateChanged"/>
+                            <TextBox x:Name="ValidFromTimeBox"
+                                     Text="08:00"
+                                     Margin="0,6,0,0"
+                                     TextChanged="ValidFromTimeBox_TextChanged"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Koniec" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
-                            <TextBlock x:Name="ValidToText" Height="36" Padding="10,8" Background="#F5F7FA" FontSize="14"/>
+                            <TextBlock Text="Koniec" Style="{StaticResource FieldLabelText}"/>
+                            <Border Background="{StaticResource SurfaceMutedBrush}"
+                                    BorderBrush="{StaticResource BorderBrush}"
+                                    BorderThickness="1"
+                                    Padding="10,8"
+                                    MinHeight="34">
+                                <TextBlock x:Name="ValidToText" FontSize="13"/>
+                            </Border>
                         </StackPanel>
                     </Grid>
 
-                    <TextBlock Text="Narciarz - email (opcjonalne)" FontSize="12" Foreground="#444" Margin="0,0,0,4"/>
-                    <Grid Margin="0,0,0,4">
+                    <TextBlock Text="Narciarz - email (opcjonalne)" Style="{StaticResource FieldLabelText}"/>
+                    <Grid Margin="0,0,0,6">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox x:Name="UserEmailBox" Grid.Column="0" Height="36" Padding="10,8" FontSize="14" BorderBrush="#CCC" BorderThickness="1" VerticalContentAlignment="Center"/>
-                        <Button Grid.Column="1" Content="Szukaj" Click="UserSearch_Click" Background="#546E7A" Foreground="White" BorderThickness="0" Padding="14,0" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
+                        <TextBox x:Name="UserEmailBox"
+                                 Grid.Column="0"
+                                 KeyDown="UserEmailBox_KeyDown"
+                                 TextChanged="UserEmailBox_TextChanged"/>
+                        <Button Grid.Column="1"
+                                Content="Szukaj"
+                                Click="UserSearch_Click"
+                                Style="{StaticResource SecondaryButton}"
+                                Margin="8,0,0,0"/>
                     </Grid>
-                    <Border x:Name="UserInfoBorder" CornerRadius="6" Padding="10,7" Margin="0,0,0,8" Visibility="Collapsed">
+
+                    <Border x:Name="UserInfoBorder"
+                            CornerRadius="4"
+                            BorderThickness="1"
+                            Padding="10,7"
+                            Margin="0,0,0,8"
+                            Visibility="Collapsed">
                         <TextBlock x:Name="UserInfoText" FontSize="12" TextWrapping="Wrap"/>
                     </Border>
-                    <ComboBox x:Name="UserResultCombo" Height="34" Margin="0,0,0,12" DisplayMemberPath="DisplayName" FontSize="13" SelectionChanged="UserResultCombo_SelectionChanged" Visibility="Collapsed" Background="White" BorderBrush="#CE93D8"/>
+                    <ListBox x:Name="UserResultsList"
+                             Margin="0,0,0,12"
+                             MaxHeight="132"
+                             DisplayMemberPath="DisplayName"
+                             SelectionChanged="UserResultsList_SelectionChanged"
+                             Visibility="Collapsed"
+                             Background="White"
+                             BorderBrush="{StaticResource BorderBrush}"
+                             BorderThickness="1"/>
 
-                    <TextBlock x:Name="ErrorText" Foreground="#C62828" FontSize="12" Visibility="Collapsed" Margin="0,0,0,12" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="ErrorText"
+                               Foreground="{StaticResource DangerBrush}"
+                               FontSize="12"
+                               Visibility="Collapsed"
+                               Margin="0,0,0,12"
+                               TextWrapping="Wrap"/>
 
-                    <Button Content="Wydaj karnet" Click="SellBtn_Click" Background="#2E7D32" Foreground="White" BorderThickness="0" Height="42" FontSize="15" FontWeight="SemiBold" Cursor="Hand"/>
+                    <Button Content="Wydaj karnet"
+                            Click="SellBtn_Click"
+                            Style="{StaticResource SuccessButton}"
+                            Height="40"/>
                 </StackPanel>
             </Border>
 
-            <Border Grid.Row="2" x:Name="ConfirmBorder" Background="#E8F5E9" CornerRadius="8" Padding="20" Visibility="Collapsed">
-                <Border.Effect><DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.08"/></Border.Effect>
+            <Border Grid.Row="2"
+                    x:Name="ConfirmBorder"
+                    Background="#E8F5EF"
+                    BorderBrush="#B8DDCD"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="16"
+                    Visibility="Collapsed">
                 <StackPanel>
-                    <TextBlock Text="Karnet wydany pomyslnie" FontSize="15" FontWeight="Bold" Foreground="#2E7D32" Margin="0,0,0,8"/>
-                    <TextBlock x:Name="ConfirmText" Foreground="#1B5E20" FontSize="13" TextWrapping="Wrap"/>
+                    <TextBlock Text="Karnet wydany pomyślnie"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource SuccessBrush}"
+                               Margin="0,0,0,8"/>
+                    <TextBlock x:Name="ConfirmText" Foreground="{StaticResource SuccessBrush}" FontSize="13" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
         </Grid>

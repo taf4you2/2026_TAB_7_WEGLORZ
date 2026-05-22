@@ -1,53 +1,64 @@
-﻿<UserControl x:Class="KasjerApp.Views.Panels.PassesPanel"
+<UserControl x:Class="KasjerApp.Views.Panels.PassesPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="#F0F2F5"
+             Background="{StaticResource AppBackgroundBrush}"
              Loaded="PassesPanel_Loaded">
-    <Grid Margin="24">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Karnety i zwroty" FontSize="22" FontWeight="Bold" Foreground="#1565C0" Margin="0,0,0,16"/>
+        <TextBlock Grid.Row="0" Text="Karnety i zwroty" Style="{StaticResource PageTitleText}"/>
 
-        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,12">
-            <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBox x:Name="SearchBox" Grid.Column="0" Height="36" Padding="10,8" FontSize="14" BorderBrush="#CCC" BorderThickness="1" VerticalContentAlignment="Center" KeyDown="SearchBox_KeyDown"/>
-                <Button Grid.Column="1" Content="Szukaj" Click="SearchBtn_Click" Background="#1565C0" Foreground="White" BorderThickness="0" Padding="16,0" Margin="8,0,0,0" Height="36"/>
-                <Button Grid.Column="2" Content="Odswiez" Click="RefreshBtn_Click" Background="#00897B" Foreground="White" BorderThickness="0" Padding="12,0" Margin="6,0,0,0" Height="36"/>
-            </Grid>
+        <Border Grid.Row="1" Style="{StaticResource FilterPanel}">
+            <DockPanel LastChildFill="True">
+                <WrapPanel DockPanel.Dock="Right" Margin="8,0,0,0">
+                    <Button Content="Szukaj"
+                            Click="SearchBtn_Click"
+                            Style="{StaticResource PrimaryButton}"
+                            Margin="0,0,8,8"/>
+                    <Button Content="Odśwież"
+                            Click="RefreshBtn_Click"
+                            Style="{StaticResource SecondaryButton}"
+                            Margin="0,0,8,8"/>
+                    <Button x:Name="ReturnBtn"
+                            Content="Zwróć karnet"
+                            Click="ReturnBtn_Click"
+                            IsEnabled="False"
+                            Style="{StaticResource DangerButton}"
+                            Margin="0,0,12,8"/>
+                    <TextBlock x:Name="ActionMsg"
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Margin="0,0,0,8"/>
+                </WrapPanel>
+                <TextBox x:Name="SearchBox"
+                         MinWidth="180"
+                         Margin="0,0,0,8"
+                         KeyDown="SearchBox_KeyDown"/>
+            </DockPanel>
         </Border>
 
-        <Border Grid.Row="2" Background="White" CornerRadius="8" Margin="0,0,0,12">
-            <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
-            <DataGrid x:Name="PassesGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" GridLinesVisibility="Horizontal" RowBackground="White" AlternatingRowBackground="#F9FAFB" BorderThickness="0" SelectionChanged="PassesGrid_SelectionChanged" CanUserResizeRows="False" HeadersVisibility="Column" ColumnHeaderHeight="38">
+        <Border Grid.Row="2" Style="{StaticResource PanelCard}" Padding="0" Margin="0,0,0,12">
+            <DataGrid x:Name="PassesGrid"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      BorderThickness="0"
+                      SelectionChanged="PassesGrid_SelectionChanged">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID karnetu" Binding="{Binding PassId}" Width="90"/>
-                    <DataGridTextColumn Header="RFID" Binding="{Binding CardId}" Width="150"/>
-                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110"/>
-                    <DataGridTextColumn Header="Taryfa" Binding="{Binding Tariff}" Width="210"/>
-                    <DataGridTextColumn Header="Typ" Binding="{Binding PassType}" Width="120"/>
-                    <DataGridTextColumn Header="Wazny od" Binding="{Binding ValidFrom, StringFormat=dd.MM.yyyy HH:mm}" Width="130"/>
-                    <DataGridTextColumn Header="Wazny do" Binding="{Binding ValidTo, StringFormat=dd.MM.yyyy HH:mm}" Width="130"/>
-                    <DataGridTextColumn Header="Zjazdy" Binding="{Binding RemainingRides}" Width="*"/>
+                    <DataGridTextColumn Header="ID karnetu" Binding="{Binding PassId}" Width="90" MinWidth="80"/>
+                    <DataGridTextColumn Header="RFID" Binding="{Binding CardId}" Width="150" MinWidth="120"/>
+                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110" MinWidth="95"/>
+                    <DataGridTextColumn Header="Taryfa" Binding="{Binding Tariff}" Width="2*" MinWidth="180"/>
+                    <DataGridTextColumn Header="Typ" Binding="{Binding PassType}" Width="130" MinWidth="110"/>
+                    <DataGridTextColumn Header="Ważny od" Binding="{Binding ValidFrom, StringFormat=dd.MM.yyyy HH:mm}" Width="140" MinWidth="130"/>
+                    <DataGridTextColumn Header="Ważny do" Binding="{Binding ValidTo, StringFormat=dd.MM.yyyy HH:mm}" Width="140" MinWidth="130"/>
+                    <DataGridTextColumn Header="Zjazdy" Binding="{Binding RemainingRides}" Width="90" MinWidth="80"/>
                 </DataGrid.Columns>
             </DataGrid>
-        </Border>
-
-        <Border Grid.Row="3" Background="White" CornerRadius="8" Padding="16">
-            <StackPanel Orientation="Horizontal">
-                <Button x:Name="ReturnBtn" Content="Zwroc karnet" Click="ReturnBtn_Click" IsEnabled="False" Background="#C62828" Foreground="White" BorderThickness="0" Padding="16,10"/>
-                <TextBlock x:Name="ActionMsg" VerticalAlignment="Center" Margin="16,0,0,0" FontSize="12" Foreground="#555"/>
-            </StackPanel>
         </Border>
     </Grid>
 </UserControl>

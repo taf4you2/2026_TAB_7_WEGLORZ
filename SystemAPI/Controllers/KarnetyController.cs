@@ -155,6 +155,97 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
     }
 
     // POST /api/karnety/{id}/blokuj - zostawione dla zgodnosci API
+    // Post /api/karnety/zatwierdz-odbior
+    [HttpPost("zatwierdz-odbior")]
+    // Ten endpoint obsluguje wydawanie zarezerwowanych karnetów
+    //TODO(Koniecznie należy napisać logikę zabezpieczającą przed overbookingiem)
+    //Kasjerz podaje w requescie numer rezerwacji podany przez narciarza oraz RFID wolnej karty
+    // Pytanie do frontendu ,  co endpoint mialby zwracac. Wydaje mi sie ze nie musi nic zwracac oprocz ok/nieok
+    public async Task<IActionResult> GiveReservedCard([FromBody] ActivatePassRequest req)
+    {
+        //TODO ( Fix overbookingu , i przypisanie RFID karty do karnetu
+        
+        
+        //Najpierw wyszukajmy tej rezerwacji i karnetu - dwa zapytania sql
+        var managedReservation = await db.Reservations.Where(r => r.ReservationNumber == req.reservationNumber).FirstOrDefaultAsync();
+        
+        if (managedReservation==null)
+        {
+            return BadRequest(new { message = "Nie znaleziono rezerwacji o takim numerze" });
+        }
+        
+        var statusId = await db.DictPassStatuses.Where(s => s.Name == "oczekuje_na_odbior").Select(s => s.Id).FirstOrDefaultAsync();
+        if(statusId == 0)
+            return BadRequest(new { message = "Nie znaleziono statusu oczekuje_na_odbior w slowniku, dodaj go" });
+        var managedPasses = await db.SkiPasses
+            .Include(p => p.Status)
+            .Include(p => p.Tariff).Include(skiPass => skiPass.Reservation)
+            .Where(p => (p.ReservationId == managedReservation.Id) &&
+                        (p.StatusId==statusId)).ToListAsync<SkiPass>();
+        if (managedPasses.Count() != 1)
+        {
+            return BadRequest(new { message = "Nie znaleziono rezerwacji lub karnetu." });
+            
+        }
+
+        var managedPass = managedPasses.FirstOrDefault();
+        var managedPassDate = managedPass.Reservation?.ReservationDate;
+        
+
+        //check for expiration date...
+        if (managedPassDate != null && managedPass.ValidTo >= DateTime.UtcNow)
+        {
+            managedPass.StatusId = await db.DictPassStatuses
+                .Where(s => s.Name == "aktywny")
+                .Select(s => s.Id).FirstOrDefaultAsync();
+            
+            managedReservation.StatusId = await db.DictReservationStatuses
+                .Where(s => s.Name == "potwierdzona")
+                .Select(s => s.Id).FirstOrDefaultAsync();
+            
+            var activatedCard = await db.Cards
+                .Where(c => c.Id == req.cardRFID)
+                .FirstOrDefaultAsync();
+            if (activatedCard == null)
+            {
+                return BadRequest(new { message = "Nie znaleziono karty o takim RFID" });
+            }
+            managedPass.CardId = activatedCard.Id;
+            activatedCard.DepositPaid = true;
+
+            activatedCard.StatusId = await db.DictCardStatuses
+                .Where(s => s.Name == "zajeta")
+                .Select(s => s.Id)
+                .FirstOrDefaultAsync();
+           int chashierId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var transaction = new Transaction
+            {   CashierId = chashierId,
+                ReservationId = managedReservation.Id,
+                OperationTypeId = await db.DictOperationTypes
+                    .Where(o => o.Name == "odbieranie_karnetu")
+                    .Select(o => o.Id)
+                    .FirstOrDefaultAsync(),
+                Amount = managedPass.Tariff?.Price ?? 0,
+                TransactionDate = DateTime.UtcNow
+            };
+            db.Transactions.Add(transaction);
+            await db.SaveChangesAsync();
+            return Ok();
+        }
+        else
+        {
+            return BadRequest(new { message = "Data karnetu wygasla lub zostala utracona " });
+        }
+        
+        //Sprawdzmy czy rezerwacja istnieje i czy jest w terminie
+        //Zmienmy status karnetu na aktywny i rezerwacji na potwierdzona
+        //Zmieńmyy status karty na zajeta
+        //Transkacja ok. Ale narciarz nie musi fizycznie placic
+        
+        
+        return Ok();    
+    }
+    // POST /api/karnety/{id}/blokuj  — UC3
     [HttpPost("{id:int}/blokuj")]
     public async Task<IActionResult> BlockPass(int id, [FromBody] BlockPassRequest req)
     {
@@ -218,6 +309,8 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         pass.StatusId = returnedStatus?.Id;
         pass.BlockReason = req.Reason;
 
+        
+   
         var refundTransaction = new Transaction
         {
             ReservationId = pass.ReservationId,
@@ -245,7 +338,8 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         var preview = CalculateRefund(pass.ValidFrom, pass.ValidTo, pass.Tariff?.Price ?? 0);
         return Ok(preview);
     }
-
+    // 
+ 
     private static ReturnPreviewDto CalculateRefund(
         DateTime? validFrom, DateTime? validTo, decimal totalPrice)
     {
@@ -299,6 +393,7 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
     );
 }
 
+public record ActivatePassRequest(string reservationNumber, string cardRFID);
 public record CreatePassRequest(string CardId, int TariffId, DateTime ValidFrom, DateTime ValidTo, int? UserId);
 public record BlockPassRequest(string Reason);
 public record ReturnPassRequest(string Reason, bool ReturnCard);

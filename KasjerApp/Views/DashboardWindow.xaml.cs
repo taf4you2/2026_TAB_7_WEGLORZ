@@ -35,7 +35,6 @@ public partial class DashboardWindow : Window
             "passes" => new PassesPanel(_api),
             "cards" => new CardsPanel(_api),
             "transactions" => new TransactionsPanel(_api),
-            "shift" => new ShiftReportPanel(_api),
             _ => new SellPassPanel(_api)
         };
         Navigate(btn, panel);

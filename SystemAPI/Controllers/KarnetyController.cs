@@ -245,6 +245,50 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         
         return Ok();    
     }
+
+    [HttpGet("rezerwacje/{email}")]
+    public async Task<IActionResult> GetReservationsByEmail( string email)
+    {
+        if (string.IsNullOrEmpty(email))
+            return BadRequest(new {message  = "Given email is empty or null." });
+        var targetUser = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if(targetUser != null)
+        {
+            var targetReservations = await db.Reservations.Where(r => r.UserId == targetUser.Id)
+                .Include(rStatus => rStatus.Status)
+                .Include(r => r.SkiPasses)
+                .ThenInclude(sp => sp.Status)
+                .Include(r => r.SkiPasses)
+                .ThenInclude(sp => sp.Tariff)
+                .OrderByDescending(r => r.ReservationDate)
+                .ToListAsync();
+            
+            var result = targetReservations.Select(r => new
+            {
+                r.Id,
+                r.ReservationNumber,
+                r.ReservationDate,
+                status = r.Status?.Name,
+                passes = r.SkiPasses.Select(sp => new
+                {
+                    sp.Id,
+                    sp.CardId,
+                    status = sp.Status?.Name,
+                    tariff = sp.Tariff?.Name,
+                    price  = sp.Tariff?.Price,
+                    sp.ValidFrom,
+                    sp.ValidTo
+                })
+            });
+            
+            return Ok(result);
+            
+        }
+        return NotFound(new {message  = $"User with email {email} not found." });
+    }
+    
+    
+    
     // POST /api/karnety/{id}/blokuj  — UC3
     [HttpPost("{id:int}/blokuj")]
     public async Task<IActionResult> BlockPass(int id, [FromBody] BlockPassRequest req)

@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using KasjerApp.Models;
 
 namespace KasjerApp.Services;
@@ -127,6 +128,25 @@ public class ApiService
         var r = await _http.PostAsJsonAsync("/api/karnety", req);
         r.EnsureSuccessStatusCode();
         return await r.Content.ReadFromJsonAsync<PassDto>();
+    }
+
+    public async Task<ReservedPassActivationResponse?> ActivateReservedPassAsync(ActivatePassRequest req)
+    {
+        var r = await _http.PostAsJsonAsync("/api/karnety/zatwierdz-odbior", req);
+        r.EnsureSuccessStatusCode();
+        var body = await r.Content.ReadAsStringAsync();
+        return string.IsNullOrWhiteSpace(body)
+            ? null
+            : JsonSerializer.Deserialize<ReservedPassActivationResponse>(body, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+    }
+
+    public async Task<List<ReservationSearchDto>> GetReservationsByEmailAsync(string email)
+    {
+        var r = await _http.GetAsync($"/api/karnety/rezerwacje/{Uri.EscapeDataString(email)}");
+        if (r.StatusCode == HttpStatusCode.NotFound) return [];
+
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<List<ReservationSearchDto>>() ?? [];
     }
 
     public async Task BlockPassAsync(int id, string reason)

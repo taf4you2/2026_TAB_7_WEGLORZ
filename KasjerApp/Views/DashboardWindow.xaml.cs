@@ -15,7 +15,7 @@ public partial class DashboardWindow : Window
         InitializeComponent();
         _api = new ApiService(AppConfig.ApiBaseUrl, Session.Token!);
         UserLabel.Text = $"Kasjer ID: {Session.UserId}";
-        Navigate(BtnSellPass, new SellPassPanel(_api));
+        Navigate(BtnReservations, new ReservationsPanel(_api));
     }
 
     internal void Navigate(Button btn, UserControl panel)
@@ -31,11 +31,12 @@ public partial class DashboardWindow : Window
         var btn = (Button)sender;
         UserControl panel = (string)btn.Tag switch
         {
+            "reservations" => new ReservationsPanel(_api),
             "sell_pass" => new SellPassPanel(_api),
             "passes" => new PassesPanel(_api),
             "cards" => new CardsPanel(_api),
             "transactions" => new TransactionsPanel(_api),
-            _ => new SellPassPanel(_api)
+            _ => new ReservationsPanel(_api)
         };
         Navigate(btn, panel);
     }

@@ -42,6 +42,33 @@ public record SellTicketRequest(string CardId, int TariffId, DateTime ValidOn, i
 public record SellTicketResponse(int ReservationId, int Quantity, decimal TotalAmount, DateTime ValidOn);
 
 public record CreatePassRequest(string CardId, int TariffId, DateTime ValidFrom, DateTime ValidTo, int? UserId);
+public record ReservationSearchDto(
+    int Id,
+    string ReservationNumber,
+    DateTime? ReservationDate,
+    string? Status,
+    List<ReservationPassDto> Passes);
+
+public record ReservationPassDto(
+    int Id,
+    string? CardId,
+    string? Status,
+    string? Tariff,
+    decimal? Price,
+    DateTime? ValidFrom,
+    DateTime? ValidTo);
+
+public record ActivatePassRequest(string ReservationNumber, string CardRFID, int? PassId = null);
+public record ReservedPassActivationResponse(
+    int ReservationId,
+    string ReservationNumber,
+    int PassId,
+    string CardId,
+    string? PassStatus,
+    string? Tariff,
+    DateTime? ValidFrom,
+    DateTime? ValidTo,
+    string? OwnerEmail);
 
 public record BlockPassRequest(string Reason);
 public record BlockCardRequest(string Reason);

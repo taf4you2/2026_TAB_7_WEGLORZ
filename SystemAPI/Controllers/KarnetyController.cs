@@ -156,103 +156,140 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
 
     // POST /api/karnety/{id}/blokuj - zostawione dla zgodnosci API
     // Post /api/karnety/zatwierdz-odbior
+    [Authorize(Roles = "admin,kasjer")]
     [HttpPost("zatwierdz-odbior")]
-    // Ten endpoint obsluguje wydawanie zarezerwowanych karnetów
-    //TODO(Koniecznie należy napisać logikę zabezpieczającą przed overbookingiem)
-    //Kasjerz podaje w requescie numer rezerwacji podany przez narciarza oraz RFID wolnej karty
-    // Pytanie do frontendu ,  co endpoint mialby zwracac. Wydaje mi sie ze nie musi nic zwracac oprocz ok/nieok
     public async Task<IActionResult> GiveReservedCard([FromBody] ActivatePassRequest req)
     {
-        //TODO ( Fix overbookingu , i przypisanie RFID karty do karnetu
-        
-        
-        //Najpierw wyszukajmy tej rezerwacji i karnetu - dwa zapytania sql
-        var managedReservation = await db.Reservations.Where(r => r.ReservationNumber == req.reservationNumber).FirstOrDefaultAsync();
-        
-        if (managedReservation==null)
-        {
-            return BadRequest(new { message = "Nie znaleziono rezerwacji o takim numerze" });
-        }
-        
+        if (string.IsNullOrWhiteSpace(req.reservationNumber))
+            return BadRequest(new { message = "Podaj numer rezerwacji." });
+
+        if (string.IsNullOrWhiteSpace(req.cardRFID))
+            return BadRequest(new { message = "Podaj RFID karty." });
+
+        var managedReservation = await db.Reservations
+            .Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.ReservationNumber == req.reservationNumber);
+        if (managedReservation == null)
+            return BadRequest(new { message = "Nie znaleziono rezerwacji o takim numerze." });
+
         var statusId = await db.DictPassStatuses.Where(s => s.Name == "oczekuje_na_odbior").Select(s => s.Id).FirstOrDefaultAsync();
-        if(statusId == 0)
-            return BadRequest(new { message = "Nie znaleziono statusu oczekuje_na_odbior w slowniku, dodaj go" });
-        var managedPasses = await db.SkiPasses
+        if (statusId == 0)
+            return BadRequest(new { message = "Nie znaleziono statusu oczekuje_na_odbior w slowniku, dodaj go." });
+
+        var pendingPassesQuery = db.SkiPasses
             .Include(p => p.Status)
-            .Include(p => p.Tariff).Include(skiPass => skiPass.Reservation)
-            .Where(p => (p.ReservationId == managedReservation.Id) &&
-                        (p.StatusId==statusId)).ToListAsync<SkiPass>();
-        if (managedPasses.Count() != 1)
+            .Include(p => p.Tariff)
+            .Include(p => p.Reservation)
+            .Where(p => p.ReservationId == managedReservation.Id && p.StatusId == statusId);
+
+        SkiPass? managedPass;
+        if (req.passId.HasValue)
         {
-            return BadRequest(new { message = "Nie znaleziono rezerwacji lub karnetu." });
-            
-        }
-
-        var managedPass = managedPasses.FirstOrDefault();
-        var managedPassDate = managedPass.Reservation?.ReservationDate;
-        
-
-        //check for expiration date...
-        if (managedPassDate != null && managedPass.ValidTo >= DateTime.UtcNow)
-        {
-            managedPass.StatusId = await db.DictPassStatuses
-                .Where(s => s.Name == "aktywny")
-                .Select(s => s.Id).FirstOrDefaultAsync();
-            
-            managedReservation.StatusId = await db.DictReservationStatuses
-                .Where(s => s.Name == "potwierdzona")
-                .Select(s => s.Id).FirstOrDefaultAsync();
-            
-            var activatedCard = await db.Cards
-                .Where(c => c.Id == req.cardRFID)
-                .FirstOrDefaultAsync();
-            if (activatedCard == null)
-            {
-                return BadRequest(new { message = "Nie znaleziono karty o takim RFID" });
-            }
-            managedPass.CardId = activatedCard.Id;
-            activatedCard.DepositPaid = true;
-
-            activatedCard.StatusId = await db.DictCardStatuses
-                .Where(s => s.Name == "zajeta")
-                .Select(s => s.Id)
-                .FirstOrDefaultAsync();
-           int chashierId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var transaction = new Transaction
-            {   CashierId = chashierId,
-                ReservationId = managedReservation.Id,
-                OperationTypeId = await db.DictOperationTypes
-                    .Where(o => o.Name == "odbieranie_karnetu")
-                    .Select(o => o.Id)
-                    .FirstOrDefaultAsync(),
-                Amount = managedPass.Tariff?.Price ?? 0,
-                TransactionDate = DateTime.UtcNow
-            };
-            db.Transactions.Add(transaction);
-            await db.SaveChangesAsync();
-            return Ok();
+            managedPass = await pendingPassesQuery.FirstOrDefaultAsync(p => p.Id == req.passId.Value);
+            if (managedPass == null)
+                return BadRequest(new { message = "Nie znaleziono oczekującego karnetu w tej rezerwacji." });
         }
         else
         {
-            return BadRequest(new { message = "Data karnetu wygasla lub zostala utracona " });
+            var pendingPasses = await pendingPassesQuery.Take(2).ToListAsync();
+            if (pendingPasses.Count == 0)
+                return BadRequest(new { message = "Nie znaleziono rezerwacji lub karnetu do odbioru." });
+
+            if (pendingPasses.Count > 1)
+                return BadRequest(new { message = "Rezerwacja ma kilka karnetów do odbioru. Podaj passId." });
+
+            managedPass = pendingPasses[0];
         }
-        
-        //Sprawdzmy czy rezerwacja istnieje i czy jest w terminie
-        //Zmienmy status karnetu na aktywny i rezerwacji na potwierdzona
-        //Zmieńmyy status karty na zajeta
-        //Transkacja ok. Ale narciarz nie musi fizycznie placic
-        
-        
-        return Ok();    
+
+        if (!managedPass.ValidTo.HasValue || managedPass.ValidTo.Value < DateTime.UtcNow)
+            return BadRequest(new { message = "Data karnetu wygasła lub została utracona." });
+
+        var activatedCard = await db.Cards
+            .Include(c => c.Status)
+            .FirstOrDefaultAsync(c => c.Id == req.cardRFID);
+        if (activatedCard == null)
+            return BadRequest(new { message = "Nie znaleziono karty o takim RFID." });
+
+        if (!string.Equals(activatedCard.Status?.Name, "wolna", StringComparison.OrdinalIgnoreCase))
+            return Conflict(new { message = $"Karta ma status '{activatedCard.Status?.Name ?? "nieznany"}'." });
+
+        var hasActivePass = await db.SkiPasses
+            .Include(p => p.Status)
+            .AnyAsync(p =>
+                p.CardId == activatedCard.Id &&
+                p.ValidFrom <= DateTime.UtcNow &&
+                p.ValidTo >= DateTime.UtcNow &&
+                p.Status != null &&
+                p.Status.Name == "aktywny");
+        if (hasActivePass)
+            return Conflict(new { message = "Karta ma aktywny karnet." });
+
+        var activePassStatusId = await db.DictPassStatuses
+            .Where(s => s.Name == "aktywny")
+            .Select(s => s.Id)
+            .FirstOrDefaultAsync();
+        if (activePassStatusId == 0)
+            return BadRequest(new { message = "Nie znaleziono statusu aktywny w słowniku." });
+
+        var occupiedCardStatusId = await db.DictCardStatuses
+            .Where(s => s.Name == "zajeta")
+            .Select(s => s.Id)
+            .FirstOrDefaultAsync();
+        if (occupiedCardStatusId == 0)
+            return BadRequest(new { message = "Nie znaleziono statusu zajeta w słowniku." });
+
+        managedPass.StatusId = activePassStatusId;
+        managedPass.CardId = activatedCard.Id;
+        activatedCard.UserId = managedReservation.UserId;
+        activatedCard.DepositPaid = true;
+        activatedCard.StatusId = occupiedCardStatusId;
+
+        var hasOtherPendingPasses = await db.SkiPasses
+            .AnyAsync(p => p.ReservationId == managedReservation.Id && p.StatusId == statusId && p.Id != managedPass.Id);
+        if (!hasOtherPendingPasses)
+        {
+            managedReservation.StatusId = await db.DictReservationStatuses
+                .Where(s => s.Name == "potwierdzona")
+                .Select(s => s.Id)
+                .FirstOrDefaultAsync();
+        }
+
+        db.Transactions.Add(new Transaction
+        {
+            CashierId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
+            ReservationId = managedReservation.Id,
+            OperationTypeId = await db.DictOperationTypes
+                .Where(o => o.Name == "odbieranie_karnetu")
+                .Select(o => (int?)o.Id)
+                .FirstOrDefaultAsync(),
+            Amount = managedPass.Tariff?.Price ?? 0,
+            TransactionDate = DateTime.UtcNow
+        });
+
+        await db.SaveChangesAsync();
+
+        return Ok(new ReservedPassActivationResponse(
+            managedReservation.Id,
+            managedReservation.ReservationNumber,
+            managedPass.Id,
+            activatedCard.Id,
+            "aktywny",
+            managedPass.Tariff?.Name,
+            managedPass.ValidFrom,
+            managedPass.ValidTo,
+            managedReservation.User?.Email));
     }
 
+    [Authorize(Roles = "admin,kasjer")]
     [HttpGet("rezerwacje/{email}")]
-    public async Task<IActionResult> GetReservationsByEmail( string email)
+    public async Task<IActionResult> GetReservationsByEmail(string email)
     {
+        email = email.Trim();
         if (string.IsNullOrEmpty(email))
-            return BadRequest(new {message  = "Given email is empty or null." });
-        var targetUser = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
-        if(targetUser != null)
+            return BadRequest(new { message = "Podaj email narciarza." });
+
+        var targetUser = await db.Users.FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == email.ToLower());
+        if (targetUser != null)
         {
             var targetReservations = await db.Reservations.Where(r => r.UserId == targetUser.Id)
                 .Include(rStatus => rStatus.Status)
@@ -284,7 +321,7 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
             return Ok(result);
             
         }
-        return NotFound(new {message  = $"User with email {email} not found." });
+        return NotFound(new { message = $"Nie znaleziono narciarza o emailu {email}." });
     }
     
     
@@ -437,7 +474,17 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
     );
 }
 
-public record ActivatePassRequest(string reservationNumber, string cardRFID);
+public record ActivatePassRequest(string reservationNumber, string cardRFID, int? passId = null);
+public record ReservedPassActivationResponse(
+    int ReservationId,
+    string ReservationNumber,
+    int PassId,
+    string CardId,
+    string? PassStatus,
+    string? Tariff,
+    DateTime? ValidFrom,
+    DateTime? ValidTo,
+    string? OwnerEmail);
 public record CreatePassRequest(string CardId, int TariffId, DateTime ValidFrom, DateTime ValidTo, int? UserId);
 public record BlockPassRequest(string Reason);
 public record ReturnPassRequest(string Reason, bool ReturnCard);

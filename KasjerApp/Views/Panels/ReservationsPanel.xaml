@@ -33,7 +33,31 @@
                     <TextBlock Text="Email narciarza" Style="{StaticResource FieldLabelText}"/>
                     <TextBox x:Name="EmailBox"
                              MinWidth="240"
-                             KeyDown="EmailBox_KeyDown"/>
+                             KeyDown="EmailBox_KeyDown"
+                             PreviewKeyDown="EmailBox_PreviewKeyDown"
+                             TextChanged="EmailBox_TextChanged"
+                             LostFocus="EmailBox_LostFocus"/>
+                    <Popup x:Name="SuggestionsPopup"
+                           PlacementTarget="{Binding ElementName=EmailBox}"
+                           Placement="Bottom"
+                           StaysOpen="False"
+                           AllowsTransparency="True"
+                           PopupAnimation="Fade"
+                           Focusable="False">
+                        <Border Background="White"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="2"
+                                SnapsToDevicePixels="True">
+                            <ListBox x:Name="SuggestionsList"
+                                     MinWidth="240"
+                                     MaxHeight="180"
+                                     BorderThickness="0"
+                                     DisplayMemberPath="Email"
+                                     PreviewKeyDown="SuggestionsList_PreviewKeyDown"
+                                     PreviewMouseLeftButtonUp="SuggestionsList_PreviewMouseLeftButtonUp"/>
+                        </Border>
+                    </Popup>
                 </StackPanel>
             </DockPanel>
         </Border>

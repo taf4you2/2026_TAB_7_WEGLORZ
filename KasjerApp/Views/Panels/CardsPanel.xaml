@@ -90,11 +90,7 @@
         </Border>
 
         <Border Grid.Row="3"
-                Background="#E8F2FC"
-                BorderBrush="#B8D5F2"
-                BorderThickness="1"
-                CornerRadius="4"
-                Padding="12,8"
+                Style="{StaticResource InfoBorder}"
                 Margin="0,0,0,10">
             <StackPanel>
                 <TextBlock x:Name="PassesLabel"

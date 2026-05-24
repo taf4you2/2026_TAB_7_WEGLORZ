@@ -121,7 +121,7 @@ SELECT setval(pg_get_serial_sequence('"tariff"', 'id'), 20);
 
 INSERT INTO "card" (id, status_id, user_id, deposit_paid, block_reason, physical_condition, added_to_pool_at) VALUES
   ('A3:F2:11:CC', 1, 4, true, NULL, 'dobry', NOW() - INTERVAL '30 days'),
-  ('B7:AA:32:0E', 1, 4, false, NULL, 'dobry', NOW() - INTERVAL '20 days'),
+  ('B7:AA:32:0E', 1, NULL, false, NULL, 'dobry', NOW() - INTERVAL '20 days'),
   ('C1:DE:84:57', 1, NULL, false, NULL, 'dobry', NOW() - INTERVAL '10 days'),
   ('E9:CC:01:A3', 1, NULL, false, NULL, 'dobry', NOW() - INTERVAL '5 days'),
   ('F0:11:22:33', 1, NULL, false, NULL, 'dobry', NOW() - INTERVAL '3 days'),
@@ -130,15 +130,17 @@ INSERT INTO "card" (id, status_id, user_id, deposit_paid, block_reason, physical
   ('55:66:77:88', 1, NULL, false, NULL, 'nowy',  NOW());
 
 -- ========== REZERWACJE, KARNETY I TRANSAKCJE ==========
--- narciarz@example.com (id=4) — aktywny karnet 5-dniowy + wygasły z poprzedniego sezonu
+-- narciarz@example.com (id=4) — rezerwacja online do odbioru, aktywny karnet 5-dniowy + wygasły z poprzedniego sezonu
 
 INSERT INTO "reservation" (id, reservation_number, user_id, reservation_date, status_id) VALUES
   (1, 'RES-20260430120000000', 4, NOW() - INTERVAL '3 days', 1),
-  (2, 'RES-20250115090000000', 4, NOW() - INTERVAL '110 days', 1);
+  (2, 'RES-20250115090000000', 4, NOW() - INTERVAL '110 days', 1),
+  (3, 'ONL-20260523090000000', 4, NOW(), 3);
 
 INSERT INTO "ski_pass" (id, card_id, tariff_id, reservation_id, status_id, valid_from, valid_to, initial_rides, remaining_rides) VALUES
   (1, 'A3:F2:11:CC', 16, 1, 1, NOW() - INTERVAL '2 days', NOW() + INTERVAL '3 days', NULL, NULL),
-  (2, 'B7:AA:32:0E', 13, 2, 5, NOW() - INTERVAL '107 days', NOW() - INTERVAL '104 days', NULL, NULL);
+  (2, 'B7:AA:32:0E', 13, 2, 5, NOW() - INTERVAL '107 days', NOW() - INTERVAL '104 days', NULL, NULL),
+  (3, NULL, 13, 3, 6, NOW(), NOW() + INTERVAL '3 days', NULL, NULL);
 
 UPDATE "card" SET status_id = 2 WHERE id = 'A3:F2:11:CC';
 

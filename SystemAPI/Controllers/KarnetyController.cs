@@ -377,30 +377,59 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
     {
         var pass = await db.SkiPasses
             .Include(sp => sp.Tariff)
+            .Include(sp => sp.Card)
             .FirstOrDefaultAsync(sp => sp.Id == id);
 
         if (pass == null) return NotFound();
 
-        var preview = CalculateRefund(pass.ValidFrom, pass.ValidTo, pass.Tariff?.Price ?? 0);
+        var (cardEligible, cardBlockReason) = await CheckCardReturnEligibility(pass.Id, pass.CardId);
+        var depositPaid = pass.Card?.DepositPaid == true;
+        var preview = CalculateRefund(pass.ValidFrom, pass.ValidTo, pass.Tariff?.Price ?? 0,
+            req.ReturnCard, depositPaid, cardEligible, cardBlockReason);
 
         var returnedStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "zwrocony");
-        // TODO: typ operacji "zwrot_karnetu"
-        var opType = await db.DictOperationTypes.FirstOrDefaultAsync(o => o.Name == "zwrot_karnetu");
+        var refundOpType = await db.DictOperationTypes.FirstOrDefaultAsync(o => o.Name == "zwrot_karnetu");
+        var cashierId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         pass.StatusId = returnedStatus?.Id;
         pass.BlockReason = req.Reason;
 
-        
-   
-        var refundTransaction = new Transaction
+        var refundAmount = Math.Max(0, preview.RefundForUnusedDays - preview.ManipulationFee);
+        db.Transactions.Add(new Transaction
         {
             ReservationId = pass.ReservationId,
-            CashierId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
-            OperationTypeId = opType?.Id,
-            Amount = -preview.TotalRefund,
+            CashierId = cashierId,
+            OperationTypeId = refundOpType?.Id,
+            Amount = -refundAmount,
             TransactionDate = DateTime.UtcNow
-        };
-        db.Transactions.Add(refundTransaction);
+        });
+
+        if (req.ReturnCard && cardEligible && pass.Card != null)
+        {
+            var freeStatusId = await db.DictCardStatuses
+                .Where(s => s.Name == "wolna")
+                .Select(s => (int?)s.Id)
+                .FirstOrDefaultAsync();
+
+            pass.Card.StatusId = freeStatusId;
+            pass.Card.UserId = null;
+            pass.Card.BlockReason = null;
+            pass.Card.DepositPaid = false;
+
+            if (preview.DepositReturn > 0)
+            {
+                var depositOpType = await db.DictOperationTypes.FirstOrDefaultAsync(o => o.Name == "kaucja");
+                db.Transactions.Add(new Transaction
+                {
+                    ReservationId = pass.ReservationId,
+                    CashierId = cashierId,
+                    OperationTypeId = depositOpType?.Id,
+                    Amount = -preview.DepositReturn,
+                    TransactionDate = DateTime.UtcNow
+                });
+            }
+        }
+
         await db.SaveChangesAsync();
 
         return Ok(preview);
@@ -412,22 +441,35 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
     {
         var pass = await db.SkiPasses
             .Include(sp => sp.Tariff)
+            .Include(sp => sp.Card)
             .FirstOrDefaultAsync(sp => sp.Id == id);
 
         if (pass == null) return NotFound();
 
-        var preview = CalculateRefund(pass.ValidFrom, pass.ValidTo, pass.Tariff?.Price ?? 0);
+        var (cardEligible, cardBlockReason) = await CheckCardReturnEligibility(pass.Id, pass.CardId);
+        var depositPaid = pass.Card?.DepositPaid == true;
+        var preview = CalculateRefund(pass.ValidFrom, pass.ValidTo, pass.Tariff?.Price ?? 0,
+            returnCard, depositPaid, cardEligible, cardBlockReason);
         return Ok(preview);
     }
     // 
  
+    private const decimal CardDepositAmount = 20m;
+    private const decimal ManipulationFee = 10m;
+
     private static ReturnPreviewDto CalculateRefund(
-        DateTime? validFrom, DateTime? validTo, decimal totalPrice)
+        DateTime? validFrom,
+        DateTime? validTo,
+        decimal totalPrice,
+        bool returnCard,
+        bool depositPaid,
+        bool cardReturnEligible,
+        string? cardReturnBlockReason)
     {
-        const decimal ManipulationFee = 10m;
+        var depositReturn = returnCard && cardReturnEligible && depositPaid ? CardDepositAmount : 0m;
 
         if (validFrom == null || validTo == null)
-            return new ReturnPreviewDto(totalPrice, 0, 0, 0, ManipulationFee, 0, 0);
+            return new ReturnPreviewDto(totalPrice, 0, 0, 0, ManipulationFee, depositReturn, depositReturn, cardReturnEligible, cardReturnBlockReason);
 
         var totalDays = (int)(validTo.Value - validFrom.Value).TotalDays;
         var usedDays = Math.Max(0, (int)(DateTime.UtcNow - validFrom.Value).TotalDays);
@@ -435,10 +477,28 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
 
         var pricePerDay = totalDays > 0 ? totalPrice / totalDays : 0;
         var refund = pricePerDay * remainingDays;
-        var deposit = 0m;
-        var total = Math.Max(0, refund - ManipulationFee);
+        var total = Math.Max(0, refund - ManipulationFee) + depositReturn;
 
-        return new ReturnPreviewDto(totalPrice, totalDays, usedDays, refund, ManipulationFee, deposit, total);
+        return new ReturnPreviewDto(totalPrice, totalDays, usedDays, refund, ManipulationFee, depositReturn, total, cardReturnEligible, cardReturnBlockReason);
+    }
+
+    private async Task<(bool eligible, string? reason)> CheckCardReturnEligibility(int passId, string? cardId)
+    {
+        if (string.IsNullOrEmpty(cardId))
+            return (false, "Karnet nie jest przypisany do karty.");
+
+        var now = DateTime.UtcNow;
+        var hasOtherActiveOrBlocked = await db.SkiPasses
+            .Include(p => p.Status)
+            .AnyAsync(p =>
+                p.CardId == cardId &&
+                p.Id != passId &&
+                (p.Status!.Name == "zablokowany" ||
+                 (p.Status.Name == "aktywny" && p.ValidFrom <= now && p.ValidTo >= now)));
+
+        return hasOtherActiveOrBlocked
+            ? (false, "Karta ma inne aktywne lub zablokowane karnety.")
+            : (true, null);
     }
 
     private async Task ExpireOutdatedPasses(string cardId)
@@ -509,7 +569,9 @@ public record ReturnPreviewDto(
     decimal RefundForUnusedDays,
     decimal ManipulationFee,
     decimal DepositReturn,
-    decimal TotalRefund
+    decimal TotalRefund,
+    bool CardReturnEligible,
+    string? CardReturnBlockReason
 );
 
 

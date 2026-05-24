@@ -168,10 +168,11 @@ public class ApiService
         return await r.Content.ReadFromJsonAsync<ReturnPreviewDto>();
     }
 
-    public async Task ReturnPassAsync(int id, ReturnPassRequest req)
+    public async Task<ReturnPreviewDto?> ReturnPassAsync(int id, ReturnPassRequest req)
     {
         var r = await _http.PostAsJsonAsync($"/api/karnety/{id}/zwrot", req);
         r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<ReturnPreviewDto>();
     }
 
     // â”€â”€ UĹĽytkownicy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

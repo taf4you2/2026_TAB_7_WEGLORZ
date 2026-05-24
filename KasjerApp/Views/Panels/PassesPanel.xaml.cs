@@ -67,7 +67,32 @@ public partial class PassesPanel : UserControl
     {
         _selected = PassesGrid.SelectedItem as PassListItem;
         ReturnBtn.IsEnabled = _selected != null;
+        ReturnCardOnlyBtn.IsEnabled = _selected != null && !string.IsNullOrEmpty(_selected.CardId);
         ActionMsg.Text = _selected != null ? $"Wybrany karnet ID: {_selected.PassId}" : "";
+    }
+
+    private async void ReturnCardOnlyBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selected == null || string.IsNullOrEmpty(_selected.CardId)) return;
+
+        var confirm = MessageBox.Show(
+            Window.GetWindow(this)!,
+            $"Odebrać kartę {_selected.CardId} i wypłacić kaucję?\nKarnety na karcie zostaną nietknięte.",
+            "Odbiór karty",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+        if (confirm != MessageBoxResult.Yes) return;
+
+        try
+        {
+            var result = await _api.ReturnCardAsync(_selected.CardId);
+            ActionMsg.Text = $"Karta {_selected.CardId} odebrana. Kaucja: {result?.DepositReturn ?? 0:N2} PLN.";
+            await LoadAsync(SearchBox.Text.Trim());
+        }
+        catch (Exception ex)
+        {
+            ActionMsg.Text = $"Blad odbioru karty: {ex.Message}";
+        }
     }
 
     private async void ReturnBtn_Click(object sender, RoutedEventArgs e)
@@ -78,8 +103,23 @@ public partial class PassesPanel : UserControl
 
         try
         {
-            await _api.ReturnPassAsync(_selected.PassId, new ReturnPassRequest(dlg.Reason, dlg.ReturnCard));
-            ActionMsg.Text = $"Zwrot karnetu {_selected.PassId} zatwierdzony.";
+            var result = await _api.ReturnPassAsync(_selected.PassId, new ReturnPassRequest(dlg.Reason, dlg.ReturnCard));
+            var passId = _selected.PassId;
+            var refundForDays = result != null ? Math.Max(0, result.RefundForUnusedDays - result.ManipulationFee) : 0;
+
+            if (result != null && dlg.ReturnCard && result.CardReturnEligible)
+            {
+                ActionMsg.Text = $"Zwrot karnetu {passId}: {refundForDays:N2} PLN. Karta zwrocona, kaucja: {result.DepositReturn:N2} PLN.";
+            }
+            else if (result != null && dlg.ReturnCard)
+            {
+                ActionMsg.Text = $"Zwrot karnetu {passId}: {refundForDays:N2} PLN. Karta nie zwrocona ({result.CardReturnBlockReason ?? "nieznany powod"}).";
+            }
+            else
+            {
+                ActionMsg.Text = $"Zwrot karnetu {passId}: {refundForDays:N2} PLN. Kaucja do rozliczenia w panelu Karty RFID.";
+            }
+
             await LoadAsync(SearchBox.Text.Trim());
         }
         catch (Exception ex)

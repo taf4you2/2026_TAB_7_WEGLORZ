@@ -1,8 +1,11 @@
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using KasjerApp.Models;
 using KasjerApp.Services;
 
@@ -10,16 +13,25 @@ namespace KasjerApp.Views.Panels;
 
 public partial class ReservationsPanel : UserControl
 {
+    private const int SuggestionDebounceMs = 250;
+    private const int SuggestionMinChars = 2;
+    private const int SuggestionMaxItems = 8;
+
     private readonly ApiService _api;
+    private readonly DispatcherTimer _suggestionTimer;
     private List<ReservationSearchDto> _reservations = [];
     private ReservationSearchDto? _selectedReservation;
     private ReservationSearchDto? _activeReservation;
     private ReservationPassItem? _selectedPass;
+    private CancellationTokenSource? _suggestionCts;
+    private bool _suppressSuggestions;
 
     public ReservationsPanel(ApiService api)
     {
         InitializeComponent();
         _api = api;
+        _suggestionTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(SuggestionDebounceMs) };
+        _suggestionTimer.Tick += SuggestionTimer_Tick;
         Loaded += async (_, _) => await LoadFreeCardsAsync();
     }
 
@@ -27,7 +39,10 @@ public partial class ReservationsPanel : UserControl
 
     private void ClearBtn_Click(object sender, RoutedEventArgs e)
     {
+        _suppressSuggestions = true;
         EmailBox.Clear();
+        _suppressSuggestions = false;
+        CloseSuggestions();
         _reservations = [];
         _selectedReservation = null;
         _activeReservation = null;
@@ -47,7 +62,122 @@ public partial class ReservationsPanel : UserControl
         if (e.Key != Key.Enter) return;
 
         e.Handled = true;
+        CloseSuggestions();
         await SearchReservationsAsync();
+    }
+
+    private void EmailBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape && SuggestionsPopup.IsOpen)
+        {
+            CloseSuggestions();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Down && SuggestionsPopup.IsOpen && SuggestionsList.Items.Count > 0)
+        {
+            SuggestionsList.SelectedIndex = 0;
+            var container = SuggestionsList.ItemContainerGenerator.ContainerFromIndex(0) as ListBoxItem;
+            container?.Focus();
+            e.Handled = true;
+        }
+    }
+
+    private void EmailBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_suppressSuggestions) return;
+
+        _suggestionTimer.Stop();
+        _suggestionTimer.Start();
+    }
+
+    private void EmailBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (!SuggestionsList.IsKeyboardFocusWithin)
+            CloseSuggestions();
+    }
+
+    private async void SuggestionTimer_Tick(object? sender, EventArgs e)
+    {
+        _suggestionTimer.Stop();
+        var query = EmailBox.Text.Trim();
+        if (query.Length < SuggestionMinChars)
+        {
+            CloseSuggestions();
+            return;
+        }
+
+        _suggestionCts?.Cancel();
+        _suggestionCts = new CancellationTokenSource();
+        var token = _suggestionCts.Token;
+
+        try
+        {
+            var users = await _api.SearchUsersAsync(query);
+            if (token.IsCancellationRequested) return;
+
+            if (users.Count == 0)
+            {
+                CloseSuggestions();
+                return;
+            }
+
+            SuggestionsList.ItemsSource = users.Take(SuggestionMaxItems).ToList();
+            SuggestionsList.SelectedIndex = -1;
+            SuggestionsPopup.IsOpen = EmailBox.IsKeyboardFocused;
+        }
+        catch
+        {
+            CloseSuggestions();
+        }
+    }
+
+    private void SuggestionsList_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is DependencyObject src &&
+            ItemsControl.ContainerFromElement(SuggestionsList, src) is ListBoxItem item &&
+            item.DataContext is UserDto user)
+        {
+            PickSuggestion(user);
+            e.Handled = true;
+        }
+    }
+
+    private void SuggestionsList_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && SuggestionsList.SelectedItem is UserDto user)
+        {
+            PickSuggestion(user);
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Escape)
+        {
+            CloseSuggestions();
+            EmailBox.Focus();
+            e.Handled = true;
+        }
+    }
+
+    private async void PickSuggestion(UserDto user)
+    {
+        _suppressSuggestions = true;
+        EmailBox.Text = user.Email;
+        EmailBox.CaretIndex = user.Email.Length;
+        _suppressSuggestions = false;
+        CloseSuggestions();
+        EmailBox.Focus();
+        await SearchReservationsAsync();
+    }
+
+    private void CloseSuggestions()
+    {
+        _suggestionTimer.Stop();
+        _suggestionCts?.Cancel();
+        SuggestionsPopup.IsOpen = false;
+        SuggestionsList.ItemsSource = null;
     }
 
     private async Task SearchReservationsAsync()

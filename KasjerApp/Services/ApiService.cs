@@ -103,8 +103,35 @@ public class ApiService
     public async Task<CardReturnDto?> ReturnCardAsync(string rfid)
     {
         var r = await _http.PostAsync($"/api/karty/{Uri.EscapeDataString(rfid)}/zwrot", null);
-        r.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowApiMessageAsync(r);
         return await r.Content.ReadFromJsonAsync<CardReturnDto>();
+    }
+
+    private static async Task EnsureSuccessOrThrowApiMessageAsync(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode) return;
+
+        var body = await response.Content.ReadAsStringAsync();
+        string? message = null;
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(body);
+                if (doc.RootElement.ValueKind == JsonValueKind.Object &&
+                    doc.RootElement.TryGetProperty("message", out var msg) &&
+                    msg.ValueKind == JsonValueKind.String)
+                {
+                    message = msg.GetString();
+                }
+            }
+            catch (JsonException)
+            {
+                // body nie jest JSON-em — zostawiamy null
+            }
+        }
+
+        throw new InvalidOperationException(message ?? $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}");
     }
 
     // â”€â”€ Karnety â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

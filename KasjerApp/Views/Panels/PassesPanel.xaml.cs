@@ -77,7 +77,7 @@ public partial class PassesPanel : UserControl
 
         var confirm = MessageBox.Show(
             Window.GetWindow(this)!,
-            $"Odebrać kartę {_selected.CardId} i wypłacić kaucję?\nKarnety na karcie zostaną nietknięte.",
+            $"Odebrać kartę {_selected.CardId} i wypłacić kaucję?\nAktywne karnety na tej karcie zostaną wygaszone (bez refundu). Zablokowane karnety wymagają najpierw odblokowania.",
             "Odbiór karty",
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);

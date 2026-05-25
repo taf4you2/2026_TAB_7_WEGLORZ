@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Administratora — SkiAdmin</title>
+    <title>Panel Administratora - SkiAdmin</title>
     <style>
         :root {
             --primary: #3b82f6;
@@ -28,7 +28,6 @@
             min-height: 100vh;
         }
 
-        /* Sidebar */
         aside {
             width: 260px;
             background: var(--panel-dark);
@@ -42,22 +41,14 @@
             font-size: 20px;
             font-weight: 700;
             color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
             border-bottom: 1px solid var(--border);
         }
 
-        nav {
-            flex: 1;
-            padding: 16px 0;
-        }
+        nav { flex: 1; padding: 16px 0; }
 
         .nav-item {
             padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            display: block;
             color: var(--text-muted);
             text-decoration: none;
             cursor: pointer;
@@ -65,174 +56,72 @@
             border-left: 4px solid transparent;
         }
 
-        .nav-item:hover {
-            color: var(--text-light);
-            background: rgba(255, 255, 255, 0.05);
-        }
+        .nav-item:hover { color: var(--text-light); background: rgba(255, 255, 255, 0.05); }
+        .nav-item.active { color: var(--text-light); background: rgba(59, 130, 246, 0.1); border-left-color: var(--primary); }
 
-        .nav-item.active {
-            color: var(--text-light);
-            background: rgba(59, 130, 246, 0.1);
-            border-left-color: var(--primary);
-        }
-
-        .sidebar-footer {
-            padding: 16px;
-            border-top: 1px solid var(--border);
-        }
+        .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
 
         .logout-btn {
-            width: 100%;
-            padding: 10px;
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            border-radius: 8px;
-            cursor: pointer;
-            font: inherit;
-            font-weight: 600;
-            transition: 0.2s;
+            width: 100%; padding: 10px; background: rgba(239, 68, 68, 0.1); color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; cursor: pointer; font: inherit; font-weight: 600;
         }
 
-        .logout-btn:hover { background: rgba(239, 68, 68, 0.2); }
+        main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* Main Content */
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+        header { height: 70px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
 
-        header {
-            height: 70px;
-            padding: 0 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .content {
-            flex: 1;
-            padding: 32px;
-            overflow-y: auto;
-        }
+        .content { flex: 1; padding: 32px; overflow-y: auto; }
 
         h1 { font-size: 24px; margin-bottom: 8px; }
         .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
 
-        /* Cards & Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 24px;
-            margin-bottom: 32px;
-        }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 32px; }
 
-        .stat-card {
-            background: var(--panel-dark);
-            padding: 24px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-
+        .stat-card { background: var(--panel-dark); padding: 24px; border-radius: 12px; border: 1px solid var(--border); }
         .stat-label { font-size: 14px; color: var(--text-muted); margin-bottom: 8px; }
-        .stat-value { font-size: 32px; font-weight: 700; }
+        .stat-value { font-size: 28px; font-weight: 700; }
 
-        .card {
-            background: var(--panel-dark);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            margin-bottom: 24px;
-            overflow: hidden;
-        }
-
-        .card-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
+        .card { background: var(--panel-dark); border-radius: 12px; border: 1px solid var(--border); margin-bottom: 24px; overflow: hidden; }
+        .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .card-body { padding: 24px; }
 
-        /* Tables */
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 12px 16px; color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase; }
+        th { text-align: left; padding: 12px 16px; color: var(--text-muted); font-size: 13px; font-weight: 600; }
         td { padding: 16px; border-top: 1px solid var(--border); font-size: 14px; }
-        tr:hover { background: rgba(255, 255, 255, 0.02); }
 
-        .badge {
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .badge-admin { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
-        .badge-kasjer { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-        .badge-narciarz { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
         .badge-active { background: rgba(16, 185, 129, 0.1); color: var(--success); }
         .badge-inactive { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .badge-info { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
 
-        /* Buttons */
-        .btn {
-            padding: 8px 16px;
-            border-radius: 8px;
-            font: inherit;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            transition: 0.2s;
-        }
+        .btn { padding: 8px 16px; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer; border: none; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-light); }
-        .btn-outline:hover { background: rgba(255, 255, 255, 0.05); }
 
-        /* Sections */
         .section { display: none; }
         .section.active { display: block; }
 
-        #toast {
-            position: fixed; bottom: 24px; right: 24px;
-            padding: 16px 24px; border-radius: 12px;
-            background: var(--panel-dark); border: 1px solid var(--border);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            transform: translateY(150%); transition: 0.3s;
-            z-index: 1000;
-        }
-
-        /* Infrastructure list */
-        .infra-lift { margin-bottom: 24px; }
-        .infra-lift-header { font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
-        .infra-gates { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-        .infra-gate { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
-
-        /* Failed scans list */
         .failed-scan { padding: 12px; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; font-size: 13px; }
-        .failed-scan:last-child { border-bottom: 0; }
+        
+        .infra-lift { margin-bottom: 24px; }
+        .infra-gates { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+        .infra-gate { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
 
-        /* Comparison stats */
-        .comp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-        .comp-box { padding: 20px; border-radius: 12px; text-align: center; }
-        .comp-online { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); }
-        .comp-onsite { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); }
+        #toast { position: fixed; bottom: 24px; right: 24px; padding: 16px 24px; border-radius: 12px; background: var(--panel-dark); border: 1px solid var(--border); transform: translateY(150%); transition: 0.3s; z-index: 3000; }
     </style>
 </head>
 <body>
     <aside>
-        <div class="brand">⚙️ SkiAdmin</div>
+        <div class="brand">SkiAdmin</div>
         <nav id="sidebar-nav">
-            <div class="nav-item active" onclick="showSection('dashboard', this)">📊 Dashboard</div>
-            <div class="nav-item" onclick="showSection('infra', this)">🚡 Infrastruktura</div>
-            <div class="nav-item" onclick="showSection('sales', this)">💰 Sprzedaż i Kasy</div>
-            <div class="nav-item" onclick="showSection('staff', this)">🛡️ Kadra i Uprawnienia</div>
-            <div class="nav-item" onclick="showSection('customers', this)">👥 Baza Klientów</div>
+            <div class="nav-item active" onclick="showSection('dashboard', this)">Dashboard</div>
+            <div class="nav-item" onclick="showSection('infra', this)">Infrastruktura</div>
+            <div class="nav-item" onclick="showSection('sales', this)">Sprzedaz i Kasy</div>
+            <div class="nav-item" onclick="showSection('staff', this)">Pracownicy</div>
+            <div class="nav-item" onclick="showSection('customers', this)">Klienci</div>
         </nav>
         <div class="sidebar-footer">
-            <button class="logout-btn" onclick="logout()">Wyloguj się</button>
+            <button class="logout-btn" onclick="logout()">Wyloguj sie</button>
         </div>
     </aside>
 
@@ -243,187 +132,130 @@
         </header>
 
         <div class="content">
-            <!-- DASHBOARD -->
             <div id="sec-dashboard" class="section active">
-                <h1>Witaj w SkiAdmin</h1>
-                <p class="subtitle">Podgląd stanu stacji w czasie rzeczywistym</p>
+                <h1>Dashboard</h1>
+                <p class="subtitle">Podglad stanu stacji narciarskiej</p>
                 
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">Sprzedane bilety (dziś)</div>
-                        <div id="stat-tickets" class="stat-value">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Aktywne karnety</div>
-                        <div id="stat-passes" class="stat-value">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Przychód (dziś)</div>
-                        <div id="stat-revenue" class="stat-value">0 zł</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Oczekujące zwroty</div>
-                        <div id="stat-returns" class="stat-value">0</div>
-                    </div>
+                    <div class="stat-card"><div class="stat-label">Bilety dzis</div><div id="stat-tickets" class="stat-value">0</div></div>
+                    <div class="stat-card"><div class="stat-label">Aktywne karnety</div><div id="stat-passes" class="stat-value">0</div></div>
+                    <div class="stat-card"><div class="stat-label">Przychod dzis</div><div id="stat-revenue" class="stat-value">0 zl</div></div>
+                    <div class="stat-card"><div class="stat-label">Zwroty</div><div id="stat-returns" class="stat-value">0</div></div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Ostatnie nieudane odbicia</h3>
-                        <p style="font-size: 13px; color: var(--text-muted);">Alerty z bramek (20 ostatnich)</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                    <div class="card">
+                        <div class="card-header"><h3>Ruch dzisiaj (godzinowo)</h3></div>
+                        <div class="card-body" id="hourly-traffic-chart" style="display: flex; align-items: flex-end; gap: 4px; height: 150px; padding-top: 20px;">
+                            Laduje dane...
+                        </div>
                     </div>
-                    <div class="card-body" id="failed-scans-list" style="padding: 0;">
-                        <div style="padding: 24px; text-align: center;">Ładowanie alertów...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- INFRASTRUCTURE -->
-            <div id="sec-infra" class="section">
-                <h1>Monitor Infrastruktury</h1>
-                <p class="subtitle">Status aktywności wyciągów i bramek</p>
-                <div id="infra-list">
-                    Ładowanie danych...
-                </div>
-            </div>
-
-            <!-- SALES & CASHIERS -->
-            <div id="sec-sales" class="section">
-                <h1>Sprzedaż i Kasy</h1>
-                <p class="subtitle">Aktywni kasjerzy i analiza kanałów sprzedaży</p>
-
-                <div class="card">
-                    <div class="card-header"><h3>Porównanie kanałów (30 dni)</h3></div>
-                    <div class="card-body">
-                        <div class="comp-grid" id="sales-comp">
-                            Ładowanie porównania...
+                    <div class="card">
+                        <div class="card-header"><h3>Statusy kart RFID</h3></div>
+                        <div class="card-body" id="card-status-list">
+                            Laduje dane...
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="card-header"><h3>Aktywne kasy i zmiany</h3></div>
-                    <div class="card-body">
-                        <table id="active-cashiers-table">
-                            <thead>
-                                <tr>
-                                    <th>Kasjer</th>
-                                    <th>Rozpoczęcie zmiany</th>
-                                    <th>Czas pracy</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="active-cashiers-tbody">
-                                <tr><td colspan="4" style="text-align: center;">Brak aktywnych kasjerów.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <div class="card-header"><h3>Oblozenie wyciagow (15 min)</h3></div>
+                    <div class="card-body" id="realtime-occupancy-list">Laduje...</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h3>Ostatnie bledy na bramkach</h3></div>
+                    <div class="card-body" id="failed-scans-list" style="padding: 0;">Laduje...</div>
                 </div>
             </div>
 
-            <!-- STAFF -->
+            <div id="sec-infra" class="section">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 24px;">
+                    <h1>Infrastruktura</h1>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-outline" onclick="openGateModal()">+ Bramka</button>
+                        <button class="btn btn-primary" onclick="openLiftModal()">+ Wyciag</button>
+                    </div>
+                </div>
+                <div id="infra-list">Laduje...</div>
+            </div>
+
+            <div id="sec-sales" class="section">
+                <h1>Sprzedaz i Kasy</h1>
+                <p class="subtitle">Analiza kanalow i aktywni pracownicy</p>
+                <div class="card"><div class="card-body"><div id="sales-comp" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;"></div></div></div>
+                <div class="card"><div class="card-header"><h3>Aktywne zmiany</h3></div><div class="card-body">
+                    <table><thead><tr><th>Pracownik</th><th>Start</th><th>Czas</th><th>Status</th></tr></thead>
+                    <tbody id="active-cashiers-tbody"></tbody></table>
+                </div></div>
+            </div>
+
             <div id="sec-staff" class="section">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                        <h1>Kadra i Uprawnienia</h1>
-                        <p class="subtitle">Zarządzanie kontami pracowników stacji</p>
-                    </div>
-                    <button class="btn btn-primary" onclick="openUserModal()">+ Dodaj Pracownika</button>
+                <div style="display: flex; justify-content: space-between;">
+                    <h1>Pracownicy</h1>
+                    <button class="btn btn-primary" onclick="openUserModal()">+ Nowy pracownik</button>
                 </div>
-                <div class="card">
-                    <div class="card-body">
-                        <table id="staff-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Login</th>
-                                    <th>Rola</th>
-                                    <th>Status</th>
-                                    <th>Akcje</th>
-                                </tr>
-                            </thead>
-                            <tbody id="staff-tbody">
-                                <tr><td colspan="5" style="text-align: center;">Ładowanie listy pracowników...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <div class="card"><div class="card-body">
+                    <table><thead><tr><th>ID</th><th>Login</th><th>Rola</th><th>Status</th><th>Akcje</th></tr></thead>
+                    <tbody id="staff-tbody"></tbody></table>
+                </div></div>
             </div>
 
-            <!-- CUSTOMERS -->
             <div id="sec-customers" class="section">
-                <h1>Baza Klientów</h1>
-                <p class="subtitle">Zarejestrowani użytkownicy i posiadacze kont online</p>
-                <div class="card">
-                    <div class="card-body">
-                        <table id="customers-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>E-mail</th>
-                                    <th>Status</th>
-                                    <th>Akcje</th>
-                                </tr>
-                            </thead>
-                            <tbody id="customers-tbody">
-                                <tr><td colspan="4" style="text-align: center;">Ładowanie listy klientów...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <h1>Baza Klientow</h1>
+                <div class="card"><div class="card-body">
+                    <table><thead><tr><th>ID</th><th>Email</th><th>Status</th><th>Akcje</th></tr></thead>
+                    <tbody id="customers-tbody"></tbody></table>
+                </div></div>
             </div>
         </div>
     </main>
 
-    <!-- MODAL -->
     <div id="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; place-items: center;">
         <div class="card" style="width: 400px; margin-bottom: 0;">
-            <div class="card-header">
-                <h3 id="modal-title">Dodaj Pracownika</h3>
-            </div>
-            <div class="card-body">
-                <form id="user-form">
-                    <div style="margin-bottom: 16px;">
-                        <label style="display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">Login / E-mail</label>
-                        <input type="text" id="user-login" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required>
-                    </div>
-                    <div style="margin-bottom: 16px;">
-                        <label style="display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">Hasło</label>
-                        <input type="password" id="user-password" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required>
-                    </div>
-                    <div style="margin-bottom: 16px;">
-                        <label style="display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">Rola</label>
-                        <select id="user-role" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;">
-                            <option value="kasjer">Kasjer</option>
-                            <option value="admin">Administrator</option>
-                        </select>
-                    </div>
-                    <div style="margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
-                        <input type="checkbox" id="user-active" checked>
-                        <label for="user-active" style="font-size: 14px;">Konto aktywne</label>
-                    </div>
-                    <div style="display: flex; gap: 12px;">
-                        <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeUserModal()">Anuluj</button>
-                        <button type="submit" class="btn btn-primary" style="flex: 1;">Zapisz</button>
-                    </div>
-                </form>
-            </div>
+            <div class="card-header"><h3 id="modal-title">Pracownik</h3></div>
+            <div class="card-body"><form id="user-form">
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Login</label><input type="text" id="user-login" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required></div>
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Haslo</label><input type="password" id="user-password" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"></div>
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Rola</label><select id="user-role" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"><option value="kasjer">Kasjer</option><option value="admin">Administrator</option></select></div>
+                <div style="margin-bottom: 20px;"><input type="checkbox" id="user-active" checked> <label for="user-active">Aktywny</label></div>
+                <div style="display: flex; gap: 12px;"><button type="button" class="btn btn-outline" style="flex:1" onclick="closeUserModal()">Anuluj</button><button type="submit" class="btn btn-primary" style="flex:1">Zapisz</button></div>
+            </form></div>
         </div>
     </div>
 
-    <!-- HISTORY MODAL -->
-    <div id="modal-overlay-history" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2100; place-items: center;">
-        <div class="card" style="width: min(600px, 90vw); max-height: 85vh; margin-bottom: 0; display: flex; flex-direction: column;">
-            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 id="modal-history-title">Historia użytkownika</h3>
-                <button class="btn btn-outline" style="padding: 4px 12px;" onclick="closeHistoryModal()">×</button>
-            </div>
-            <div class="card-body" id="modal-history-content" style="overflow-y: auto; flex: 1; padding: 24px;">
-                Ładowanie historii...
-            </div>
-            <div class="card-header" style="border-top: 1px solid var(--border); border-bottom: 0; justify-content: flex-end;">
-                <button class="btn btn-primary" onclick="closeHistoryModal()">Zamknij</button>
-            </div>
+    <div id="modal-overlay-lift" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; place-items: center;">
+        <div class="card" style="width: 400px; margin-bottom: 0;">
+            <div class="card-header"><h3 id="modal-lift-title">Wyciag</h3></div>
+            <div class="card-body"><form id="lift-form">
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Nazwa</label><input type="text" id="lift-name" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required></div>
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Status</label><select id="lift-status" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"><option value="otwarty">Otwarty</option><option value="zamkniety">Zamkniety</option><option value="awaria">Awaria</option></select></div>
+                <div style="display:flex; gap:12px; margin-bottom:20px;">
+                    <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Otwarcie</label><input type="time" id="lift-opens" value="08:00" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"></div>
+                    <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Zamkniecie</label><input type="time" id="lift-closes" value="20:00" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"></div>
+                </div>
+                <div style="display: flex; gap: 12px;"><button type="button" class="btn btn-outline" style="flex:1" onclick="closeLiftModal()">Anuluj</button><button type="submit" class="btn btn-primary" style="flex:1">Zapisz</button></div>
+            </form></div>
+        </div>
+    </div>
+
+    <div id="modal-overlay-gate" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; place-items: center;">
+        <div class="card" style="width: 400px; margin-bottom: 0;">
+            <div class="card-header"><h3 id="modal-gate-title">Bramka</h3></div>
+            <div class="card-body"><form id="gate-form">
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Nazwa</label><input type="text" id="gate-name" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required></div>
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Wyciag</label><select id="gate-lift-id" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required></select></div>
+                <div style="margin-bottom: 20px;"><input type="checkbox" id="gate-active" checked> <label for="gate-active">Aktywna</label></div>
+                <div style="display: flex; gap: 12px;"><button type="button" class="btn btn-outline" style="flex:1" onclick="closeGateModal()">Anuluj</button><button type="submit" class="btn btn-primary" style="flex:1">Zapisz</button></div>
+            </form></div>
+        </div>
+    </div>
+
+    <div id="modal-overlay-history" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; place-items: center;">
+        <div class="card" style="width: 600px; max-height: 80vh; display: flex; flex-direction: column;">
+            <div class="card-header"><h3 id="modal-history-title">Historia</h3></div>
+            <div class="card-body" id="modal-history-content" style="overflow-y: auto; flex: 1;"></div>
+            <div class="card-header" style="border-top: 1px solid var(--border); border-bottom:0; justify-content: flex-end;"><button class="btn btn-primary" onclick="closeHistoryModal()">Zamknij</button></div>
         </div>
     </div>
 
@@ -432,70 +264,15 @@
     <script>
         const token = localStorage.getItem('jwt_token');
 
-        function openUserModal() {
-            document.getElementById('modal-overlay').style.display = 'grid';
-            document.getElementById('user-form').reset();
-            document.getElementById('user-active').checked = true;
-        }
-
-        function closeUserModal() {
-            document.getElementById('modal-overlay').style.display = 'none';
-        }
-
-        document.getElementById('user-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const login = document.getElementById('user-login').value;
-            const password = document.getElementById('user-password').value;
-            const role = document.getElementById('user-role').value;
-            const isActive = document.getElementById('user-active').checked;
-
-            try {
-                const res = await fetch('/api/users', {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ login, password, role, isActive })
-                });
-
-                if (res.ok) {
-                    showToast('Użytkownik został utworzony', 'success');
-                    closeUserModal();
-                    loadUsers();
-                } else {
-                    const err = await res.json().catch(() => ({}));
-                    showToast(err.message || 'Błąd podczas tworzenia użytkownika', 'error');
-                }
-            } catch (e) {
-                showToast('Błąd połączenia z serwerem', 'error');
-            }
-        });
-
-        function parseJwt(token) {
-            try {
-                const base64Url = token.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-                return JSON.parse(jsonPayload);
-            } catch (e) { return null; }
-        }
+        function parseJwt(t) { try { return JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch(e) { return null; } }
 
         async function apiFetch(path) {
             try {
-                const res = await fetch(path, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const res = await fetch(path, { headers: { 'Authorization': `Bearer ${token}` } });
                 if (res.status === 401) logout();
-                if (!res.ok) throw new Error('API Error');
+                if (!res.ok) throw new Error();
                 return await res.json();
-            } catch (e) {
-                console.error(e);
-                showToast('Błąd komunikacji z API', 'error');
-                return null;
-            }
+            } catch (e) { showToast('Blad API', 'error'); return null; }
         }
 
         function showSection(id, el) {
@@ -503,7 +280,6 @@
             document.getElementById('sec-' + id).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             if (el) el.classList.add('active');
-
             if (id === 'dashboard') loadDashboard();
             if (id === 'infra') loadInfra();
             if (id === 'sales') loadSales();
@@ -515,204 +291,170 @@
             if (stats) {
                 document.getElementById('stat-tickets').textContent = stats.ticketsSoldToday;
                 document.getElementById('stat-passes').textContent = stats.activePasses;
-                document.getElementById('stat-revenue').textContent = stats.shiftRevenue.toLocaleString('pl-PL') + ' zł';
+                document.getElementById('stat-revenue').textContent = stats.shiftRevenue.toLocaleString() + ' zl';
                 document.getElementById('stat-returns').textContent = stats.pendingReturns;
             }
 
+            const traffic = await apiFetch('/api/statystyki/ruch-godzinowy');
+            if (traffic) {
+                const max = Math.max(...traffic.map(t => t.count), 1);
+                document.getElementById('hourly-traffic-chart').innerHTML = traffic.map(t => `
+                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                        <div style="width:100%; background:var(--primary); border-radius:4px 4px 0 0; height:${(t.count/max)*100}px; min-height:2px;"></div>
+                        <span style="font-size:9px; color:var(--text-muted);">${t.hour}h</span>
+                    </div>
+                `).join('');
+            }
+
+            const cardStats = await apiFetch('/api/statystyki/statusy-kart');
+            if (cardStats) {
+                document.getElementById('card-status-list').innerHTML = cardStats.map(s => `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+                        <span>${s.status}</span><span style="font-weight:700;">${s.count}</span>
+                    </div>
+                `).join('');
+            }
+
+            const occ = await apiFetch('/api/statystyki/oblozenie-minuty');
+            if (occ) {
+                document.getElementById('realtime-occupancy-list').innerHTML = occ.map(i => `
+                    <div style="margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+                            <span>${i.liftName}</span><span>${i.count} os. / 15min</span>
+                        </div>
+                        <div style="height:6px; background:var(--border); border-radius:3px; overflow:hidden;">
+                            <div style="width:${Math.min(100, i.count/2)}%; height:100%; background:var(--primary);"></div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
             const failed = await apiFetch('/api/statystyki/nieudane-odbicia');
-            const failedList = document.getElementById('failed-scans-list');
             if (failed) {
-                if (failed.length === 0) {
-                    failedList.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-muted);">Brak alertów z bramek.</div>';
-                } else {
-                    failedList.innerHTML = `
-                        <div class="failed-scan" style="background: rgba(255,255,255,0.05); font-weight: 600;">
-                            <div>Karta RFID</div><div>Bramka</div><div>Powód</div><div>Czas</div>
-                        </div>
-                        ` + failed.map(f => `
-                        <div class="failed-scan">
-                            <div style="font-family: monospace;">${f.cardId}</div>
-                            <div>${f.gateName}</div>
-                            <div style="color: var(--danger); font-weight: 600;">${f.result.toUpperCase()}</div>
-                            <div style="color: var(--text-muted);">${new Date(f.scanTime).toLocaleTimeString()}</div>
-                        </div>
-                    `).join('');
-                }
+                document.getElementById('failed-scans-list').innerHTML = failed.map(f => `
+                    <div class="failed-scan">
+                        <span style="font-family:monospace;">${f.cardId}</span>
+                        <span>${f.gateName}</span>
+                        <span style="color:var(--danger); font-weight:600;">${f.result}</span>
+                        <span style="color:var(--text-muted);">${new Date(f.scanTime).toLocaleTimeString()}</span>
+                    </div>
+                `).join('');
             }
         }
 
         async function loadInfra() {
             const data = await apiFetch('/api/statystyki/infrastruktura');
-            const container = document.getElementById('infra-list');
             if (data) {
-                container.innerHTML = data.map(lift => `
-                    <div class="infra-lift">
-                        <div class="infra-lift-header">
-                            <span>🚡</span> ${lift.name}
+                document.getElementById('infra-list').innerHTML = data.map(l => `
+                    <div class="card infra-lift">
+                        <div class="card-header">
+                            <span style="font-weight:700;">Wyciag: ${l.name}</span>
+                            <button class="btn btn-outline" style="padding:4px 8px; font-size:12px;" onclick="openLiftModal(true, ${l.id}, '${l.name}')">Edytuj</button>
                         </div>
-                        <div class="infra-gates">
-                            ${lift.gates.map(gate => `
+                        <div class="card-body"><div class="infra-gates">
+                            ${l.gates.map(g => `
                                 <div class="infra-gate">
-                                    <span>${gate.name}</span>
-                                    <span class="badge badge-${gate.isActive ? 'active' : 'inactive'}">
-                                        ${gate.isActive ? 'ONLINE' : 'OFFLINE'}
-                                    </span>
+                                    <div style="font-size:13px; font-weight:600;">${g.name}</div>
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <span class="badge badge-${g.isActive ? 'active' : 'inactive'}">${g.isActive ? 'ON' : 'OFF'}</span>
+                                        <button class="btn btn-outline" style="padding:2px 6px; font-size:10px;" onclick="openGateModal(true, ${g.id}, '${g.name}', ${l.id}, ${g.isActive})">X</button>
+                                    </div>
                                 </div>
                             `).join('')}
-                        </div>
+                            <div class="infra-gate" style="border-style:dashed; cursor:pointer; color:var(--primary); justify-content:center;" onclick="openGateModal(false, null, '', ${l.id})">+ Bramka</div>
+                        </div></div>
                     </div>
                 `).join('');
             }
         }
 
-        async function loadSales() {
-            const comp = await apiFetch('/api/statystyki/sprzedaz-porownanie');
-            if (comp) {
-                document.getElementById('sales-comp').innerHTML = `
-                    <div class="comp-box comp-online">
-                        <div style="font-size: 14px; color: var(--primary);">ZAKUPY ONLINE</div>
-                        <div style="font-size: 28px; font-weight: 700;">${comp.online.amount.toLocaleString()} zł</div>
-                        <div style="font-size: 12px; color: var(--text-muted);">${comp.online.count} transakcji</div>
-                    </div>
-                    <div class="comp-box comp-onsite">
-                        <div style="font-size: 14px; color: var(--success);">SPRZEDAŻ W KASACH</div>
-                        <div style="font-size: 28px; font-weight: 700;">${comp.onsite.amount.toLocaleString()} zł</div>
-                        <div style="font-size: 12px; color: var(--text-muted);">${comp.onsite.count} transakcji</div>
-                    </div>
-                `;
-            }
-
-            const active = await apiFetch('/api/statystyki/aktywni-kasjerzy');
-            const tbody = document.getElementById('active-cashiers-tbody');
-            if (active) {
-                if (active.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Brak aktywnych kasjerów.</td></tr>';
-                } else {
-                    tbody.innerHTML = active.map(c => {
-                        const start = new Date(c.startTime);
-                        const diff = Math.floor((new Date() - start) / 60000); // minuty
-                        const h = Math.floor(diff/60);
-                        const m = diff % 60;
-                        return `
-                            <tr>
-                                <td style="font-weight: 600;">👤 ${c.login}</td>
-                                <td>${start.toLocaleTimeString()}</td>
-                                <td>${h}h ${m}m</td>
-                                <td><span class="badge badge-active">W TRAKCIE ZMIANY</span></td>
-                            </tr>
-                        `;
-                    }).join('');
-                }
-            }
+        let isUserEdit = false, currentUserId = null;
+        function openUserModal(edit=false, id=null, login='', role='kasjer', active=true) {
+            isUserEdit = edit; currentUserId = id;
+            document.getElementById('modal-overlay').style.display = 'grid';
+            document.getElementById('modal-title').textContent = edit ? 'Edycja pracownika' : 'Nowy pracownik';
+            document.getElementById('user-login').value = login;
+            document.getElementById('user-password').value = '';
+            document.getElementById('user-role').value = role;
+            document.getElementById('user-active').checked = active;
         }
+        function closeUserModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+        document.getElementById('user-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = { login: document.getElementById('user-login').value, password: document.getElementById('user-password').value, role: document.getElementById('user-role').value, isActive: document.getElementById('user-active').checked };
+            const res = await fetch(isUserEdit ? `/api/users/${currentUserId}` : '/api/users', { method: isUserEdit ? 'PUT' : 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (res.ok) { showToast('Zapisano'); closeUserModal(); loadUsers(); } else showToast('Blad zapisu', 'error');
+        };
+
+        let isLiftEdit = false, currentLiftId = null;
+        function openLiftModal(edit=false, id=null, name='') {
+            isLiftEdit = edit; currentLiftId = id;
+            document.getElementById('modal-overlay-lift').style.display = 'grid';
+            document.getElementById('lift-name').value = name;
+        }
+        function closeLiftModal() { document.getElementById('modal-overlay-lift').style.display = 'none'; }
+        document.getElementById('lift-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = { name: document.getElementById('lift-name').value, status: document.getElementById('lift-status').value, opensAt: document.getElementById('lift-opens').value + ":00", closesAt: document.getElementById('lift-closes').value + ":00" };
+            const res = await fetch(isLiftEdit ? `/api/wyciagi/${currentLiftId}` : '/api/wyciagi', { method: isLiftEdit ? 'PUT' : 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (res.ok) { showToast('Zapisano'); closeLiftModal(); loadInfra(); }
+        };
+
+        let isGateEdit = false, currentGateId = null;
+        async function openGateModal(edit=false, id=null, name='', liftId=null, active=true) {
+            isGateEdit = edit; currentGateId = id;
+            const lifts = await apiFetch('/api/wyciagi');
+            document.getElementById('gate-lift-id').innerHTML = lifts.map(l => `<option value="${l.id}" ${l.id==liftId?'selected':''}>${l.name}</option>`).join('');
+            document.getElementById('modal-overlay-gate').style.display = 'grid';
+            document.getElementById('gate-name').value = name;
+            document.getElementById('gate-active').checked = active;
+        }
+        function closeGateModal() { document.getElementById('modal-overlay-gate').style.display = 'none'; }
+        document.getElementById('gate-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = { name: document.getElementById('gate-name').value, liftId: parseInt(document.getElementById('gate-lift-id').value), isActive: document.getElementById('gate-active').checked };
+            const res = await fetch(isGateEdit ? `/api/bramki/${currentGateId}` : '/api/bramki', { method: isGateEdit ? 'PUT' : 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (res.ok) { showToast('Zapisano'); closeGateModal(); loadInfra(); }
+        };
 
         async function loadUsers() {
             const users = await apiFetch('/api/users/all');
-            const staffTbody = document.getElementById('staff-tbody');
-            const customersTbody = document.getElementById('customers-tbody');
-            
             if (users) {
-                const staff = users.filter(u => u.role === 'admin' || u.role === 'kasjer');
+                const staff = users.filter(u => u.role !== 'narciarz');
                 const customers = users.filter(u => u.role === 'narciarz');
-
-                staffTbody.innerHTML = staff.map(u => `
-                    <tr>
-                        <td>${u.id}</td>
-                        <td style="font-weight: 500;">${u.login}</td>
-                        <td><span class="badge badge-${u.role}">${u.role.toUpperCase()}</span></td>
-                        <td><span class="badge badge-${u.isActive ? 'active' : 'inactive'}">${u.isActive ? 'AKTYWNY' : 'NIEAKTYWNY'}</span></td>
-                        <td>
-                            <button class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 12px;" onclick="alert('Edycja ID: ${u.id}')">Edytuj</button>
-                        </td>
-                    </tr>
-                `).join('');
-
-                customersTbody.innerHTML = customers.map(u => `
-                    <tr>
-                        <td>${u.id}</td>
-                        <td style="font-weight: 500;">${u.login}</td>
-                        <td><span class="badge badge-active">NARCIARZ</span></td>
-                        <td>
-                            <button class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 12px;" onclick="openHistoryModal(${u.id}, '${u.login}')">Szczegóły</button>
-                        </td>
-                    </tr>
-                `).join('');
+                document.getElementById('staff-tbody').innerHTML = staff.map(u => `<tr><td>${u.id}</td><td>${u.login}</td><td>${u.role}</td><td><span class="badge badge-${u.isActive?'active':'inactive'}">${u.isActive?'TAK':'NIE'}</span></td><td><button class="btn btn-outline" onclick="openUserModal(true, ${u.id}, '${u.login}', '${u.role}', ${u.isActive})">E</button></td></tr>`).join('');
+                document.getElementById('customers-tbody').innerHTML = customers.map(u => `<tr><td>${u.id}</td><td>${u.login}</td><td><span class="badge badge-info">OK</span></td><td><button class="btn btn-outline" onclick="openHistoryModal(${u.id}, '${u.login}')">S</button></td></tr>`).join('');
             }
         }
 
-        async function openHistoryModal(userId, email) {
-            const history = await apiFetch(`/api/users/${userId}/history`);
-            if (!history) return;
-
-            const modalOverlay = document.getElementById('modal-overlay-history');
-            const titleEl = document.getElementById('modal-history-title');
-            const contentEl = document.getElementById('modal-history-content');
-
-            titleEl.textContent = `Historia: ${email}`;
-            modalOverlay.style.display = 'grid';
-
-            if (history.reservations.length === 0) {
-                contentEl.innerHTML = '<p style="padding: 24px; text-align: center; color: var(--text-muted);">Brak historii operacji dla tego użytkownika.</p>';
-                return;
+        async function openHistoryModal(id, email) {
+            const h = await apiFetch(`/api/users/${id}/history`);
+            if (h) {
+                document.getElementById('modal-history-title').textContent = email;
+                document.getElementById('modal-overlay-history').style.display = 'grid';
+                document.getElementById('modal-history-content').innerHTML = h.reservations.map(r => `<div class="card" style="margin-bottom:12px; padding:12px;"><div style="font-weight:700;">Rez: ${r.reservationNumber} (${r.status})</div><div style="font-size:12px; color:var(--text-muted);">${new Date(r.reservationDate).toLocaleString()}</div></div>`).join('') || 'Brak danych';
             }
+        }
+        function closeHistoryModal() { document.getElementById('modal-overlay-history').style.display = 'none'; }
 
-            contentEl.innerHTML = history.reservations.map(res => `
-                <div class="card" style="margin-bottom: 16px; border-color: rgba(255,255,255,0.1);">
-                    <div class="card-header" style="padding: 12px 16px; background: rgba(255,255,255,0.03);">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-weight: 600; font-size: 14px;">Rezerwacja ${res.reservationNumber}</span>
-                            <span class="badge badge-active" style="font-size: 11px;">${res.status?.toUpperCase() || 'OK'}</span>
-                        </div>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Data: ${new Date(res.reservationDate).toLocaleString()}</div>
-                    </div>
-                    <div class="card-body" style="padding: 16px;">
-                        <div style="margin-bottom: 12px;">
-                            <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Karnety</h4>
-                            ${res.passes.map(p => `
-                                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
-                                    <span>${p.tariff || 'Karnet standard'}</span>
-                                    <span style="font-family: monospace; color: var(--primary);">${p.cardId || 'Oczekiwanie na odbiór'}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div>
-                            <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Transakcje</h4>
-                            ${res.transactions.map(t => `
-                                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
-                                    <span>${t.operationType || 'Płatność'}</span>
-                                    <span style="font-weight: 600;">${t.amount.toLocaleString()} zł</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+        async function loadSales() {
+            const comp = await apiFetch('/api/statystyki/sprzedaz-porownanie');
+            if (comp) document.getElementById('sales-comp').innerHTML = `<div style="background:rgba(59,130,246,0.1); padding:20px; border-radius:12px; text-align:center;">ONLINE<br><span style="font-size:24px; font-weight:700;">${comp.online.amount} zl</span></div><div style="background:rgba(16,185,129,0.1); padding:20px; border-radius:12px; text-align:center;">KASA<br><span style="font-size:24px; font-weight:700;">${comp.onsite.amount} zl</span></div>`;
+            const active = await apiFetch('/api/statystyki/aktywni-kasjerzy');
+            if (active) document.getElementById('active-cashiers-tbody').innerHTML = active.map(c => `<tr><td>${c.login}</td><td>${new Date(c.startTime).toLocaleTimeString()}</td><td>-</td><td><span class="badge badge-active">ZMIANA</span></td></tr>`).join('');
         }
 
-        function closeHistoryModal() {
-            document.getElementById('modal-overlay-history').style.display = 'none';
+        function showToast(m, type='info') {
+            const t = document.getElementById('toast'); t.textContent = m; t.style.borderColor = type==='error'?'var(--danger)':'var(--border)'; t.style.transform = 'translateY(0)';
+            setTimeout(() => { t.style.transform = 'translateY(150%)'; }, 3000);
         }
 
-        function showToast(msg, type = 'info') {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.style.borderColor = type === 'error' ? 'var(--danger)' : 'var(--border)';
-            toast.style.transform = 'translateY(0)';
-            setTimeout(() => { toast.style.transform = 'translateY(150%)'; }, 3000);
-        }
-
-        function logout() {
-            localStorage.removeItem('jwt_token');
-            window.location.href = 'admin-login.html';
-        }
+        function logout() { localStorage.removeItem('jwt_token'); window.location.href = 'admin-login.html'; }
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (!token) { window.location.href = 'admin-login.html'; return; }
-            const payload = parseJwt(token);
-            if (!payload || (payload.role !== 'admin' && payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] !== 'admin')) {
-                logout(); return;
-            }
-            document.getElementById('user-display').textContent = `Zalogowano jako: ${payload.unique_name || payload.name || 'Administrator'}`;
+            const p = parseJwt(token);
+            if (!p || (p.role!=='admin' && p['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']!=='admin')) logout();
+            document.getElementById('user-display').textContent = 'Zalogowano: ' + (p.unique_name || p.name || 'Admin');
             loadDashboard();
         });
     </script>

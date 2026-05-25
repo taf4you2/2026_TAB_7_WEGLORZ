@@ -131,6 +131,71 @@ public class StatystykiController(SkiResortDbContext db) : ControllerBase
         return Ok(activeShifts);
     }
 
+    // GET /api/statystyki/oblozenie-minuty
+    // Zwraca liczbę przejść przez bramki dla każdego wyciągu z ostatnich 15 minut
+    [Authorize(Roles = "admin")]
+    [HttpGet("oblozenie-minuty")]
+    public async Task<IActionResult> GetRealtimeOccupancy()
+    {
+        var minutesAgo = DateTime.UtcNow.AddMinutes(-15);
+
+        var occupancy = await db.GateScans
+            .Include(gs => gs.Gate)
+                .ThenInclude(g => g!.Lift)
+            .Where(gs => gs.ScanTime >= minutesAgo && gs.VerificationResult != null && gs.VerificationResult.Name == "ok")
+            .GroupBy(gs => new { gs.Gate!.LiftId, LiftName = gs.Gate!.Lift!.Name })
+            .Select(g => new
+            {
+                g.Key.LiftId,
+                g.Key.LiftName,
+                Count = g.Count()
+            })
+            .ToListAsync();
+
+        return Ok(occupancy);
+    }
+
+    // GET /api/statystyki/ruch-godzinowy
+    // Zwraca liczbe przejsc przez bramki w rozbiciu na godziny (dzisiaj)
+    [Authorize(Roles = "admin")]
+    [HttpGet("ruch-godzinowy")]
+    public async Task<IActionResult> GetHourlyTraffic()
+    {
+        var today = DateTime.UtcNow.Date;
+
+        var traffic = await db.GateScans
+            .Where(gs => gs.ScanTime >= today && gs.VerificationResult != null && gs.VerificationResult.Name == "ok")
+            .GroupBy(gs => gs.ScanTime!.Value.Hour)
+            .Select(g => new
+            {
+                Hour = g.Key,
+                Count = g.Count()
+            })
+            .OrderBy(x => x.Hour)
+            .ToListAsync();
+
+        return Ok(traffic);
+    }
+
+    // GET /api/statystyki/statusy-kart
+    // Zwraca liczbe kart w kazdym statusie
+    [Authorize(Roles = "admin")]
+    [HttpGet("statusy-kart")]
+    public async Task<IActionResult> GetCardStatusDistribution()
+    {
+        var stats = await db.Cards
+            .Include(c => c.Status)
+            .GroupBy(c => c.Status!.Name)
+            .Select(g => new
+            {
+                Status = g.Key ?? "Nieznany",
+                Count = g.Count()
+            })
+            .ToListAsync();
+
+        return Ok(stats);
+    }
+
     [HttpGet("wyciagi")]
     public async Task<IActionResult> GetLiftsTraffic()
     {

@@ -31,6 +31,12 @@
         </Border>
 
         <StackPanel Grid.Row="2" Margin="0,0,0,14">
+            <CheckBox x:Name="ReturnCardCheck"
+                      Content="Zwróć również kartę i wypłać kaucję"
+                      IsChecked="True"
+                      Margin="0,0,0,10"
+                      Checked="ReturnCardCheck_Changed"
+                      Unchecked="ReturnCardCheck_Changed"/>
             <TextBlock Text="Powód zwrotu:" Style="{StaticResource FieldLabelText}"/>
             <TextBox x:Name="ReasonBox"/>
         </StackPanel>

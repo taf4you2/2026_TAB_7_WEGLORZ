@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using KasjerApp.Models;
 
 namespace KasjerApp.Services;
@@ -102,8 +103,35 @@ public class ApiService
     public async Task<CardReturnDto?> ReturnCardAsync(string rfid)
     {
         var r = await _http.PostAsync($"/api/karty/{Uri.EscapeDataString(rfid)}/zwrot", null);
-        r.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowApiMessageAsync(r);
         return await r.Content.ReadFromJsonAsync<CardReturnDto>();
+    }
+
+    private static async Task EnsureSuccessOrThrowApiMessageAsync(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode) return;
+
+        var body = await response.Content.ReadAsStringAsync();
+        string? message = null;
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(body);
+                if (doc.RootElement.ValueKind == JsonValueKind.Object &&
+                    doc.RootElement.TryGetProperty("message", out var msg) &&
+                    msg.ValueKind == JsonValueKind.String)
+                {
+                    message = msg.GetString();
+                }
+            }
+            catch (JsonException)
+            {
+                // body nie jest JSON-em — zostawiamy null
+            }
+        }
+
+        throw new InvalidOperationException(message ?? $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}");
     }
 
     // â”€â”€ Karnety â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -129,6 +157,25 @@ public class ApiService
         return await r.Content.ReadFromJsonAsync<PassDto>();
     }
 
+    public async Task<ReservedPassActivationResponse?> ActivateReservedPassAsync(ActivatePassRequest req)
+    {
+        var r = await _http.PostAsJsonAsync("/api/karnety/zatwierdz-odbior", req);
+        r.EnsureSuccessStatusCode();
+        var body = await r.Content.ReadAsStringAsync();
+        return string.IsNullOrWhiteSpace(body)
+            ? null
+            : JsonSerializer.Deserialize<ReservedPassActivationResponse>(body, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+    }
+
+    public async Task<List<ReservationSearchDto>> GetReservationsByEmailAsync(string email)
+    {
+        var r = await _http.GetAsync($"/api/karnety/rezerwacje/{Uri.EscapeDataString(email)}");
+        if (r.StatusCode == HttpStatusCode.NotFound) return [];
+
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<List<ReservationSearchDto>>() ?? [];
+    }
+
     public async Task BlockPassAsync(int id, string reason)
     {
         var r = await _http.PostAsJsonAsync($"/api/karnety/{id}/blokuj", new BlockPassRequest(reason));
@@ -148,10 +195,11 @@ public class ApiService
         return await r.Content.ReadFromJsonAsync<ReturnPreviewDto>();
     }
 
-    public async Task ReturnPassAsync(int id, ReturnPassRequest req)
+    public async Task<ReturnPreviewDto?> ReturnPassAsync(int id, ReturnPassRequest req)
     {
         var r = await _http.PostAsJsonAsync($"/api/karnety/{id}/zwrot", req);
         r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<ReturnPreviewDto>();
     }
 
     // â”€â”€ UĹĽytkownicy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

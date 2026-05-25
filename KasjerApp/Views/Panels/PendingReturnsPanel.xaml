@@ -6,6 +6,8 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <DockPanel Grid.Row="0" LastChildFill="True" Margin="0,0,0,14">
@@ -20,11 +22,6 @@
                         IsEnabled="False"
                         Style="{StaticResource DangerButton}"
                         Margin="0,0,12,8"/>
-                <TextBlock x:Name="ActionMsg"
-                           VerticalAlignment="Center"
-                           FontSize="12"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           Margin="0,0,12,8"/>
                 <TextBlock x:Name="MsgText"
                            VerticalAlignment="Center"
                            FontSize="12"
@@ -52,5 +49,56 @@
                 </DataGrid.Columns>
             </DataGrid>
         </Border>
+
+        <Border Grid.Row="2"
+                x:Name="DetailsBorder"
+                Style="{StaticResource InfoBorder}"
+                Margin="0,0,0,10"
+                Visibility="Collapsed">
+            <StackPanel>
+                <TextBlock Text="Szczegóły wybranego zwrotu" Style="{StaticResource SectionHeaderText}"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,12,8">
+                        <TextBlock Text="ID karnetu" Style="{StaticResource FieldLabelText}"/>
+                        <TextBlock x:Name="DetailPassId" FontSize="13"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Grid.Row="0" Margin="0,0,12,8">
+                        <TextBlock Text="RFID karty" Style="{StaticResource FieldLabelText}"/>
+                        <TextBlock x:Name="DetailCardRfid" FontSize="13"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Grid.Row="0" Margin="0,0,0,8">
+                        <TextBlock Text="Właściciel" Style="{StaticResource FieldLabelText}"/>
+                        <TextBlock x:Name="DetailOwnerEmail" FontSize="13" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="0" Grid.Row="1" Margin="0,0,12,0">
+                        <TextBlock Text="Typ karnetu" Style="{StaticResource FieldLabelText}"/>
+                        <TextBlock x:Name="DetailPassType" FontSize="13"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Grid.Row="1" Margin="0,0,12,0">
+                        <TextBlock Text="Dni pozostałe" Style="{StaticResource FieldLabelText}"/>
+                        <TextBlock x:Name="DetailRemainingDays" FontSize="13"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Grid.Row="1">
+                        <TextBlock Text="Szacowany zwrot" Style="{StaticResource FieldLabelText}"/>
+                        <TextBlock x:Name="DetailEstimatedRefund" FontSize="13" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <TextBlock Grid.Row="3"
+                   x:Name="ActionMsg"
+                   FontSize="13"
+                   Foreground="{StaticResource TextSecondaryBrush}"
+                   TextWrapping="Wrap"/>
     </Grid>
 </UserControl>

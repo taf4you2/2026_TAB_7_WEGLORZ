@@ -13,7 +13,8 @@ public record PassDto(int Id, string CardId, string? Status, string? Tariff, str
     DateTime? ValidFrom, DateTime? ValidTo, int? InitialRides, int? RemainingRides, string? BlockReason);
 
 public record ReturnPreviewDto(decimal GrossAmount, int TotalDays, int UsedDays,
-    decimal RefundForUnusedDays, decimal ManipulationFee, decimal DepositReturn, decimal TotalRefund);
+    decimal RefundForUnusedDays, decimal ManipulationFee, decimal DepositReturn, decimal TotalRefund,
+    bool CardReturnEligible, string? CardReturnBlockReason);
 
 // ── Transakcje ────────────────────────────────────────────────────────────────
 public record TransactionDto(int Id, string? OperationType, string? Tariff, decimal Amount,
@@ -22,12 +23,6 @@ public record TransactionDto(int Id, string? OperationType, string? Tariff, deci
 public record ShiftReportDto(string CashierLogin, DateOnly Date, int TotalSalesCount,
     decimal TotalSalesAmount, int TotalReturnsCount, decimal TotalReturnsAmount,
     decimal NetRevenue, decimal CashAmount, decimal CardAmount);
-
-// ── Statystyki ────────────────────────────────────────────────────────────────
-// ── Raport zmiany ─────────────────────────────────────────────────────────────
-// ── Przejazdy ─────────────────────────────────────────────────────────────────
-public record GateScanDto(int Id, string? CardId, string? GateName, string? LiftName,
-    DateTime? ScanTime, string? Result);
 
 // ── Oczekujące zwroty ─────────────────────────────────────────────────────────
 public record PendingReturnDto(int PassId, string CardRfid, string? OwnerEmail, string? PassType,
@@ -42,6 +37,33 @@ public record SellTicketRequest(string CardId, int TariffId, DateTime ValidOn, i
 public record SellTicketResponse(int ReservationId, int Quantity, decimal TotalAmount, DateTime ValidOn);
 
 public record CreatePassRequest(string CardId, int TariffId, DateTime ValidFrom, DateTime ValidTo, int? UserId);
+public record ReservationSearchDto(
+    int Id,
+    string ReservationNumber,
+    DateTime? ReservationDate,
+    string? Status,
+    List<ReservationPassDto> Passes);
+
+public record ReservationPassDto(
+    int Id,
+    string? CardId,
+    string? Status,
+    string? Tariff,
+    decimal? Price,
+    DateTime? ValidFrom,
+    DateTime? ValidTo);
+
+public record ActivatePassRequest(string ReservationNumber, string CardRFID, int? PassId = null);
+public record ReservedPassActivationResponse(
+    int ReservationId,
+    string ReservationNumber,
+    int PassId,
+    string CardId,
+    string? PassStatus,
+    string? Tariff,
+    DateTime? ValidFrom,
+    DateTime? ValidTo,
+    string? OwnerEmail);
 
 public record BlockPassRequest(string Reason);
 public record BlockCardRequest(string Reason);

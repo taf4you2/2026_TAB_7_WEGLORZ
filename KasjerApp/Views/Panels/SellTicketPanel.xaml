@@ -35,11 +35,7 @@
                               SelectionChanged="FreeCardCombo_SelectionChanged"/>
 
                     <Border x:Name="CardInfoBorder"
-                            Background="#E8F2FC"
-                            BorderBrush="#B8D5F2"
-                            BorderThickness="1"
-                            CornerRadius="4"
-                            Padding="12,8"
+                            Style="{StaticResource InfoBorder}"
                             Margin="0,0,0,16"
                             Visibility="Collapsed">
                         <TextBlock x:Name="CardInfoText" Foreground="{StaticResource PrimaryBrush}" FontSize="13" TextWrapping="Wrap"/>
@@ -74,10 +70,7 @@
 
             <Border Grid.Row="2"
                     x:Name="ConfirmBorder"
-                    Background="#E8F5EF"
-                    BorderBrush="#B8DDCD"
-                    BorderThickness="1"
-                    CornerRadius="4"
+                    Style="{StaticResource SuccessInfoBorder}"
                     Padding="16"
                     Visibility="Collapsed">
                 <StackPanel>

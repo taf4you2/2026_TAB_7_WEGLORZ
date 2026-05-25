@@ -81,7 +81,8 @@
 
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Margin="0,12,0,12">
-                    <Button x:Name="BtnSellPass" Content="Wydaj karnet" Click="Nav_Click" Tag="sell_pass" Style="{StaticResource NavBtn}" IsEnabled="False"/>
+                    <Button x:Name="BtnReservations" Content="Rezerwacje" Click="Nav_Click" Tag="reservations" Style="{StaticResource NavBtn}" IsEnabled="False"/>
+                    <Button x:Name="BtnSellPass" Content="Wydaj karnet" Click="Nav_Click" Tag="sell_pass" Style="{StaticResource NavBtn}"/>
                     <Button x:Name="BtnPasses" Content="Karnety i zwroty" Click="Nav_Click" Tag="passes" Style="{StaticResource NavBtn}"/>
                     <Button x:Name="BtnCards" Content="Karty RFID" Click="Nav_Click" Tag="cards" Style="{StaticResource NavBtn}"/>
                     <Button x:Name="BtnTransactions" Content="Transakcje" Click="Nav_Click" Tag="transactions" Style="{StaticResource NavBtn}"/>

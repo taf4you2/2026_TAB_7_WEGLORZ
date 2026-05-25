@@ -162,12 +162,25 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
         var card = await LoadCard(rfid).FirstOrDefaultAsync();
         if (card == null) return NotFound(new { message = $"Karta {rfid} nie istnieje." });
 
+        var hasBlockedPass = card.SkiPasses.Any(sp => sp.Status?.Name == "zablokowany");
+        if (hasBlockedPass)
+            return Conflict(new { message = "Nie mozna odebrac karty z zablokowanym karnetem. Najpierw odblokuj karnet." });
+
+        // Aktywne karnety nie blokują odbioru — kasjer może odebrać kartę wczesniej.
+        // Karnety zostają wygaszone (status "wygasly"), karta wraca do puli.
         var now = DateTime.UtcNow;
-        var hasActiveOrBlockedPass = card.SkiPasses.Any(sp =>
-            sp.Status?.Name == "zablokowany" ||
-            (sp.Status?.Name == "aktywny" && sp.ValidFrom <= now && sp.ValidTo >= now));
-        if (hasActiveOrBlockedPass)
-            return Conflict(new { message = "Nie mozna zwrocic karty z aktywnym lub zablokowanym karnetem." });
+        var expiredStatusId = await db.DictPassStatuses
+            .Where(s => s.Name == "wygasly")
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync();
+        if (expiredStatusId.HasValue)
+        {
+            var activePasses = card.SkiPasses
+                .Where(sp => sp.Status?.Name == "aktywny" && sp.ValidFrom <= now && sp.ValidTo >= now)
+                .ToList();
+            foreach (var pass in activePasses)
+                pass.StatusId = expiredStatusId.Value;
+        }
 
         var depositReturn = card.DepositPaid == true ? 20m : 0m;
         var freeId = await db.DictCardStatuses.Where(s => s.Name == "wolna").Select(s => (int?)s.Id).FirstOrDefaultAsync();

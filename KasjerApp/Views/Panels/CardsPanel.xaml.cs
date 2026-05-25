@@ -128,13 +128,6 @@ public partial class CardsPanel : UserControl
         }
     }
 
-    private async Task RefreshPassesAsync()
-    {
-        if (_selectedCard == null) return;
-        var passes = await _api.GetPassesByCardAsync(_selectedCard.Id);
-        PassesGrid.ItemsSource = passes;
-    }
-
     private void ResetPassesSection()
     {
         _selectedPass = null;

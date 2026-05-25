@@ -45,9 +45,22 @@ public partial class PendingReturnsPanel : UserControl
     {
         _selected = ReturnsGrid.SelectedItem as PendingReturnDto;
         ReturnBtn.IsEnabled = _selected != null;
-        ActionMsg.Text = _selected != null
-            ? $"Wybrany karnet ID: {_selected.PassId}  (szac. {_selected.EstimatedRefund:N2} PLN)"
-            : "";
+
+        if (_selected == null)
+        {
+            DetailsBorder.Visibility = Visibility.Collapsed;
+            ActionMsg.Text = "";
+            return;
+        }
+
+        DetailPassId.Text = _selected.PassId.ToString();
+        DetailCardRfid.Text = _selected.CardRfid;
+        DetailOwnerEmail.Text = _selected.OwnerEmail ?? "—";
+        DetailPassType.Text = _selected.PassType ?? "—";
+        DetailRemainingDays.Text = _selected.RemainingDays.ToString();
+        DetailEstimatedRefund.Text = $"{_selected.EstimatedRefund:N2} PLN";
+        DetailsBorder.Visibility = Visibility.Visible;
+        ActionMsg.Text = "";
     }
 
     private async void ReturnBtn_Click(object sender, RoutedEventArgs e)
@@ -60,8 +73,23 @@ public partial class PendingReturnsPanel : UserControl
 
         try
         {
-            await _api.ReturnPassAsync(_selected.PassId, new ReturnPassRequest(dlg.Reason, dlg.ReturnCard));
-            ActionMsg.Text = $"Zwrot karnetu {_selected.PassId} zatwierdzony.";
+            var result = await _api.ReturnPassAsync(_selected.PassId, new ReturnPassRequest(dlg.Reason, dlg.ReturnCard));
+            var passId = _selected.PassId;
+            var refundForDays = result != null ? Math.Max(0, result.RefundForUnusedDays - result.ManipulationFee) : 0;
+
+            if (result != null && dlg.ReturnCard && result.CardReturnEligible)
+            {
+                ActionMsg.Text = $"Zwrot karnetu {passId}: {refundForDays:N2} PLN. Karta zwrócona, kaucja: {result.DepositReturn:N2} PLN.";
+            }
+            else if (result != null && dlg.ReturnCard)
+            {
+                ActionMsg.Text = $"Zwrot karnetu {passId}: {refundForDays:N2} PLN. Karta nie zwrócona ({result.CardReturnBlockReason ?? "nieznany powód"}).";
+            }
+            else
+            {
+                ActionMsg.Text = $"Zwrot karnetu {passId}: {refundForDays:N2} PLN. Kaucja do rozliczenia w panelu Karty RFID.";
+            }
+
             await LoadAsync();
         }
         catch (Exception ex)

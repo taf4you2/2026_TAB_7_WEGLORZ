@@ -9,7 +9,7 @@ public partial class ReturnDialog : Window
     private readonly int _passId;
 
     public string Reason => ReasonBox.Text.Trim();
-    public bool ReturnCard => false;
+    public bool ReturnCard => ReturnCardCheck.IsChecked == true;
 
     public ReturnDialog(ApiService api, int passId)
     {
@@ -19,19 +19,32 @@ public partial class ReturnDialog : Window
         Loaded += async (_, _) => await RefreshPreviewAsync();
     }
 
+    private async void ReturnCardCheck_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!IsLoaded) return;
+        await RefreshPreviewAsync();
+    }
+
     private async Task RefreshPreviewAsync()
     {
         try
         {
-            var p = await _api.GetReturnPreviewAsync(_passId, false);
+            var p = await _api.GetReturnPreviewAsync(_passId, ReturnCard);
             if (p == null) { PreviewText.Text = "Brak danych."; return; }
+
+            var cardLine = ReturnCard
+                ? p.CardReturnEligible
+                    ? $"Zwrot karty: TAK, kaucja: {p.DepositReturn:N2} PLN"
+                    : $"Zwrot karty: NIE — {p.CardReturnBlockReason ?? "karta nie kwalifikuje sie do zwrotu"}"
+                : "Zwrot karty: pomijany (kaucja rozliczana osobno w panelu Karty RFID)";
+
             PreviewText.Text =
                 $"Kwota brutto: {p.GrossAmount:N2} PLN\n" +
                 $"Dni lacznie / uzywane: {p.TotalDays} / {p.UsedDays}\n" +
                 $"Zwrot za niewykorzystane: {p.RefundForUnusedDays:N2} PLN\n" +
                 $"Oplata manipulacyjna: -{p.ManipulationFee:N2} PLN\n" +
-                $"Kaucja jest rozliczana osobno przy zwrocie fizycznej karty.\n" +
-                $"RAZEM do zwrotu: {p.TotalRefund:N2} PLN";
+                $"{cardLine}\n" +
+                $"RAZEM do wyplaty: {p.TotalRefund:N2} PLN";
         }
         catch (Exception ex)
         {

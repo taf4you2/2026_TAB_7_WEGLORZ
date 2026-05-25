@@ -28,7 +28,15 @@
                             Click="ReturnBtn_Click"
                             IsEnabled="False"
                             Style="{StaticResource DangerButton}"
-                            Margin="0,0,12,8"/>
+                            Margin="0,0,8,8"
+                            ToolTip="Refund za niewykorzystane dni, opcjonalnie wraz z odbiorem karty i kaucji."/>
+                    <Button x:Name="ReturnCardOnlyBtn"
+                            Content="Odbierz kartę"
+                            Click="ReturnCardOnlyBtn_Click"
+                            IsEnabled="False"
+                            Style="{StaticResource WarningButton}"
+                            Margin="0,0,12,8"
+                            ToolTip="Tylko zwala kartę i wypłaca kaucję. Bez refundu za karnet. Działa też dla wygasłych/zwróconych karnetów."/>
                     <TextBlock x:Name="ActionMsg"
                                VerticalAlignment="Center"
                                FontSize="12"

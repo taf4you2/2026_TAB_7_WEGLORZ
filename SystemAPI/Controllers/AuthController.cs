@@ -21,22 +21,22 @@ public class AuthController(SkiResortDbContext db, IConfiguration config) : Cont
         if (req.Role == "kasjer")
         {
             var cashier = await db.Cashiers
-                .FirstOrDefaultAsync(c => c.Login == req.Email && c.IsActive == true);
+                .FirstOrDefaultAsync(c => c.Login == req.Email && (c.IsActive == true || c.IsActive == null));
 
             if (cashier == null || !BCrypt.Net.BCrypt.Verify(req.Password, cashier.PasswordHash))
                 return Unauthorized(new { message = "Nieprawidłowy login lub hasło." });
 
-            return Ok(new LoginResponse(cashier.Id, "kasjer", GenerateToken(cashier.Id, "kasjer")));
+            return Ok(new LoginResponse(cashier.Id, "kasjer", GenerateToken(cashier.Id, "kasjer", cashier.Login)));
         }
         else if (req.Role == "admin")
         {
             var admin = await db.Administrators
-                .FirstOrDefaultAsync(a => a.Login == req.Email && a.IsActive == true);
+                .FirstOrDefaultAsync(a => a.Login == req.Email && (a.IsActive == true || a.IsActive == null));
 
             if (admin == null || !BCrypt.Net.BCrypt.Verify(req.Password, admin.PasswordHash))
                 return Unauthorized(new { message = "Nieprawidłowy login lub hasło." });
 
-            return Ok(new LoginResponse(admin.Id, "admin", GenerateToken(admin.Id, "admin")));
+            return Ok(new LoginResponse(admin.Id, "admin", GenerateToken(admin.Id, "admin", admin.Login)));
         }
         else if (req.Role == "narciarz")
         {
@@ -46,7 +46,7 @@ public class AuthController(SkiResortDbContext db, IConfiguration config) : Cont
             if (user == null || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
                 return Unauthorized(new { message = "Nieprawidłowy e-mail lub hasło." });
 
-            return Ok(new LoginResponse(user.Id, "narciarz", GenerateToken(user.Id, "narciarz")));
+            return Ok(new LoginResponse(user.Id, "narciarz", GenerateToken(user.Id, "narciarz", user.Email)));
         }
 
         return BadRequest(new { message = "Nieznana rola." });
@@ -75,7 +75,7 @@ public class AuthController(SkiResortDbContext db, IConfiguration config) : Cont
         db.Users.Add(user);
         await db.SaveChangesAsync();
 
-        return Ok(new LoginResponse(user.Id, "narciarz", GenerateToken(user.Id, "narciarz")));
+        return Ok(new LoginResponse(user.Id, "narciarz", GenerateToken(user.Id, "narciarz", user.Email)));
     }
 
     // POST /api/auth/logout
@@ -83,7 +83,7 @@ public class AuthController(SkiResortDbContext db, IConfiguration config) : Cont
     [HttpPost("logout")]
     public IActionResult Logout() => NoContent();
 
-    private string GenerateToken(int userId, string role)
+    private string GenerateToken(int userId, string role, string name)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JwtSecret"]!));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -91,7 +91,9 @@ public class AuthController(SkiResortDbContext db, IConfiguration config) : Cont
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            new Claim(ClaimTypes.Role, role)
+            new Claim(ClaimTypes.Role, role),
+            new Claim(ClaimTypes.Name, name),
+            new Claim("unique_name", name)
         };
 
         var token = new JwtSecurityToken(

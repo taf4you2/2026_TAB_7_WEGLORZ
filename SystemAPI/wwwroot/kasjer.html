@@ -993,6 +993,11 @@
     window.location.replace('admin-login.html');
   }
 
+  // Zabezpieczenie: jeśli admin wejdzie na kasjer.html, przekieruj go do admin.html
+  if (role === 'admin') {
+    window.location.replace('admin.html');
+  }
+
   if (payload) {
     const userName = payload.unique_name || payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || 'Użytkownik';
     document.querySelector('.sidebar-user .name').textContent = userName;

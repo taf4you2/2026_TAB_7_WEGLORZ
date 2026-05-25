@@ -118,16 +118,24 @@
         <h1>SkiAdmin</h1>
         <div class="subtitle">Logowanie do panelu zarządzania</div>
 
-        <label for="email">E-mail kasjera / administratora</label>
-        <input type="email" id="email" value="kasjer@stacja.pl" autocomplete="username">
+        <label for="email">E-mail administratora / kasjera</label>
+        <input type="email" id="email" value="admin@stacja.pl" autocomplete="username">
 
         <label for="password">Hasło</label>
         <input type="password" id="password" value="haslo123" autocomplete="current-password">
+
+        <label for="role">Zaloguj jako</label>
+        <select id="role" style="width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #334155; border-radius: 8px; font: inherit; background: #0f172a; color: #f8fafc;">
+            <option value="admin">Administrator</option>
+            <option value="kasjer">Kasjer</option>
+        </select>
 
         <button class="submit" type="button" id="loginButton">Zaloguj się</button>
         <div class="error" id="error"></div>
 
         <div class="hint">
+            Dane testowe (rola: administrator):<br>
+            <strong>admin@stacja.pl</strong> / <strong>haslo123</strong><br>
             Dane testowe (rola: kasjer):<br>
             <strong>kasjer@stacja.pl</strong> / <strong>haslo123</strong>
         </div>
@@ -136,32 +144,30 @@
     <script>
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
+        const roleSelect = document.getElementById('role');
         const errorBox = document.getElementById('error');
+        const loginButton = document.getElementById('loginButton');
 
-        document.getElementById('loginButton').addEventListener('click', login);
+        loginButton.addEventListener('click', login);
         passwordInput.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
 
         async function login() {
             hideError();
             const email = emailInput.value.trim();
             const password = passwordInput.value;
+            const role = roleSelect.value;
+            
             if (!email || !password) { showError('Podaj e-mail i hasło.'); return; }
 
+            loginButton.disabled = true;
+            loginButton.textContent = 'Logowanie...';
+
             try {
-                // Najpierw próbujemy zalogować jako admin, potem jako kasjer
-                let res = await fetch('/api/auth/login', {
+                const res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, role: 'admin' })
+                    body: JSON.stringify({ email, password, role })
                 });
-
-                if (!res.ok) {
-                    res = await fetch('/api/auth/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password, role: 'kasjer' })
-                    });
-                }
 
                 if (!res.ok) {
                     const d = await res.json().catch(() => ({}));
@@ -179,6 +185,9 @@
                 }
             } catch (e) {
                 showError('Brak połączenia z API: ' + e.message);
+            } finally {
+                loginButton.disabled = false;
+                loginButton.textContent = 'Zaloguj się';
             }
         }
 

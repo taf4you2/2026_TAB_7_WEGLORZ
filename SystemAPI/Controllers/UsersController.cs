@@ -211,6 +211,51 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
         return Ok();
     }
 
+    // GET /api/users/{id}/history
+    // Zwraca historię rezerwacji i transakcji dla konkretnego użytkownika.
+    [Authorize(Roles = "admin,kasjer")]
+    [HttpGet("{id}/history")]
+    public async Task<IActionResult> GetUserHistory(int id)
+    {
+        var reservations = await db.Reservations
+            .Include(r => r.Status)
+            .Include(r => r.SkiPasses)
+                .ThenInclude(sp => sp.Tariff)
+            .Include(r => r.Transactions)
+                .ThenInclude(t => t.OperationType)
+            .Where(r => r.UserId == id)
+            .OrderByDescending(r => r.ReservationDate)
+            .ToListAsync();
+
+        var result = new
+        {
+            Reservations = reservations.Select(r => new
+            {
+                r.Id,
+                r.ReservationNumber,
+                r.ReservationDate,
+                Status = r.Status?.Name,
+                Passes = r.SkiPasses.Select(sp => new
+                {
+                    sp.Id,
+                    sp.CardId,
+                    Tariff = sp.Tariff?.Name,
+                    sp.ValidFrom,
+                    sp.ValidTo
+                }),
+                Transactions = r.Transactions.Select(t => new
+                {
+                    t.Id,
+                    OperationType = t.OperationType?.Name,
+                    t.Amount,
+                    t.TransactionDate
+                })
+            })
+        };
+
+        return Ok(result);
+    }
+
     // DELETE /api/users/{id}?role={role}
     [HttpDelete("{id}")]
     [Authorize(Roles = "admin")]

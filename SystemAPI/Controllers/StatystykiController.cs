@@ -40,6 +40,97 @@ public class StatystykiController(SkiResortDbContext db) : ControllerBase
         return Ok(new DashboardDto(ticketsSoldToday, activePasses, shiftRevenue, pendingReturns));
     }
 
+    // GET /api/statystyki/infrastruktura
+    // Zwraca status wyciągów i bramek
+    [Authorize(Roles = "admin")]
+    [HttpGet("infrastruktura")]
+    public async Task<IActionResult> GetInfrastructureStatus()
+    {
+        var lifts = await db.Lifts
+            .Include(l => l.Gates)
+            .OrderBy(l => l.Name)
+            .Select(l => new
+            {
+                l.Id,
+                l.Name,
+                Gates = l.Gates.Select(g => new { g.Id, g.Name, IsActive = g.IsActive ?? false }).ToList()
+            })
+            .ToListAsync();
+
+        return Ok(lifts);
+    }
+
+    // GET /api/statystyki/nieudane-odbicia
+    // Zwraca ostatnie 20 nieudanych prób przejścia przez bramkę
+    [Authorize(Roles = "admin")]
+    [HttpGet("nieudane-odbicia")]
+    public async Task<IActionResult> GetFailedScans()
+    {
+        var failedScans = await db.GateScans
+            .Include(gs => gs.Gate)
+            .Include(gs => gs.VerificationResult)
+            .Where(gs => gs.VerificationResult != null && gs.VerificationResult.Name != "ok")
+            .OrderByDescending(gs => gs.ScanTime)
+            .Take(20)
+            .Select(gs => new
+            {
+                gs.Id,
+                gs.CardId,
+                GateName = gs.Gate != null ? gs.Gate.Name : "Nieznana",
+                gs.ScanTime,
+                Result = gs.VerificationResult != null ? gs.VerificationResult.Name : "Błąd"
+            })
+            .ToListAsync();
+
+        return Ok(failedScans);
+    }
+
+    // GET /api/statystyki/sprzedaz-porownanie
+    // Porównanie sprzedaży online vs stacjonarnej z ostatnich 30 dni
+    [Authorize(Roles = "admin")]
+    [HttpGet("sprzedaz-porownanie")]
+    public async Task<IActionResult> GetSalesComparison()
+    {
+        var startDate = DateTime.UtcNow.AddDays(-30);
+
+        var transactions = await db.Transactions
+            .Where(t => t.TransactionDate >= startDate && t.Amount > 0)
+            .ToListAsync();
+
+        var onsiteSales = transactions.Where(t => t.CashierId != null).Sum(t => t.Amount);
+        var onlineSales = transactions.Where(t => t.CashierId == null).Sum(t => t.Amount);
+
+        // Liczba rezerwacji online vs stacjonarnych
+        var onsiteCount = transactions.Count(t => t.CashierId != null);
+        var onlineCount = transactions.Count(t => t.CashierId == null);
+
+        return Ok(new
+        {
+            Onsite = new { Amount = onsiteSales, Count = onsiteCount },
+            Online = new { Amount = onlineSales, Count = onlineCount }
+        });
+    }
+
+    // GET /api/statystyki/aktywni-kasjerzy
+    // Zwraca listę kasjerów, którzy mają otwartą zmianę (brak EndTime w ostatnim raporcie)
+    [Authorize(Roles = "admin")]
+    [HttpGet("aktywni-kasjerzy")]
+    public async Task<IActionResult> GetActiveCashiers()
+    {
+        var activeShifts = await db.ShiftReports
+            .Include(r => r.Cashier)
+            .Where(r => r.EndTime == null)
+            .Select(r => new
+            {
+                r.CashierId,
+                Login = r.Cashier != null ? r.Cashier.Login : "Nieznany",
+                r.StartTime
+            })
+            .ToListAsync();
+
+        return Ok(activeShifts);
+    }
+
     [HttpGet("wyciagi")]
     public async Task<IActionResult> GetLiftsTraffic()
     {

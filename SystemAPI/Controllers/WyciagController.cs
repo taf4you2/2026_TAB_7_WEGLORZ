@@ -4,11 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using SystemStacjiNarciarskiejDLL;
 using SystemStacjiNarciarskiejDLL.Models;
 
+using Microsoft.AspNetCore.SignalR;
+using SystemAPI.Hubs;
+
 namespace SystemAPI.Controllers;
 
 [ApiController]
 [Route("api/wyciagi")]
-public class WyciagController(SkiResortDbContext db) : ControllerBase
+public class WyciagController(SkiResortDbContext db, IHubContext<InfrastructureHub> hub) : ControllerBase
 {
     // GET /api/wyciagi
     // Publiczny endpoint — zwraca listę wyciągów z dzisiejszym rozkładem i statusem.
@@ -25,6 +28,7 @@ public class WyciagController(SkiResortDbContext db) : ControllerBase
                 .ThenInclude(lt => lt.Trail)
                     .ThenInclude(t => t!.Difficulty)
             .Include(l => l.Gates)
+            .Include(l => l.Status)
             .OrderBy(l => l.Name)
             .ToListAsync();
 
@@ -34,9 +38,11 @@ public class WyciagController(SkiResortDbContext db) : ControllerBase
             var opens = todaySchedule?.OpeningTime;
             var closes = todaySchedule?.ClosingTime;
 
-            // Status na podstawie rozkładu dnia: czynny jeśli jesteśmy w oknie godzin pracy
+            // Status na podstawie słownika, a jeśli brak, to z rozkładu dnia
             string status;
-            if (opens == null || closes == null)
+            if (l.Status != null)
+                status = l.Status.Name;
+            else if (opens == null || closes == null)
                 status = "nieczynny";
             else if (now < opens)
                 status = "przed_otwarciem";
@@ -55,6 +61,8 @@ public class WyciagController(SkiResortDbContext db) : ControllerBase
                 l.Id,
                 l.Name,
                 status,
+                l.Capacity,
+                l.Type,
                 opens,
                 closes,
                 trails
@@ -69,7 +77,11 @@ public class WyciagController(SkiResortDbContext db) : ControllerBase
     [Authorize(Roles = "admin,kasjer")]
     public async Task<IActionResult> Create([FromBody] LiftModifyRequest req)
     {
-        var lift = new Lift { Name = req.Name };
+        var lift = new Lift { 
+            Name = req.Name,
+            Capacity = req.Capacity,
+            Type = req.Type 
+        };
         db.Lifts.Add(lift);
         await db.SaveChangesAsync();
 
@@ -98,6 +110,8 @@ public class WyciagController(SkiResortDbContext db) : ControllerBase
         if (lift == null) return NotFound();
 
         lift.Name = req.Name;
+        lift.Capacity = req.Capacity;
+        lift.Type = req.Type;
 
         // Aktualizuj lub dodaj rozkład dla wszystkich dni
         for (int i = 0; i <= 6; i++)
@@ -140,12 +154,89 @@ public class WyciagController(SkiResortDbContext db) : ControllerBase
 
         return NoContent();
     }
+
+    // PUT /api/wyciagi/{id}/status
+    [HttpPut("{id}/status")]
+    [Authorize(Roles = "admin,kasjer")]
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateLiftStatusRequest req)
+    {
+        var lift = await db.Lifts.FindAsync(id);
+        if (lift == null) return NotFound();
+
+        // 1=Otwarty, 2=Zamknięty, 3=Awaria, 4=Przerwa - tak będą ułożone ID z SQL inserta
+        lift.StatusId = req.StatusId;
+        await db.SaveChangesAsync();
+
+        // Informowanie klientów via SignalR
+        await hub.Clients.All.SendAsync("LiftStatusUpdated", id, req.StatusId);
+
+        return Ok();
+    }
+
+    // PUT /api/wyciagi/{id}/trasy
+    [HttpPut("{id}/trasy")]
+    [Authorize(Roles = "admin,kasjer")]
+    public async Task<IActionResult> UpdateTrails(int id, [FromBody] int[] trailIds)
+    {
+        var lift = await db.Lifts.Include(l => l.LiftTrails).FirstOrDefaultAsync(l => l.Id == id);
+        if (lift == null) return NotFound();
+
+        db.LiftTrails.RemoveRange(lift.LiftTrails);
+        foreach (var tId in trailIds)
+        {
+            db.LiftTrails.Add(new LiftTrail { LiftId = id, TrailId = tId });
+        }
+        await db.SaveChangesAsync();
+        return Ok();
+    }
+
+    // GET /api/wyciagi/{id}/harmonogram
+    [HttpGet("{id}/harmonogram")]
+    public async Task<IActionResult> GetSchedules(int id)
+    {
+        var schedules = await db.LiftSchedules
+            .Where(s => s.LiftId == id)
+            .Select(s => new {
+                s.Id,
+                s.DayOfWeek,
+                s.OpeningTime,
+                s.ClosingTime,
+                s.SeasonId
+            })
+            .ToListAsync();
+        return Ok(schedules);
+    }
+
+    // PUT /api/wyciagi/{id}/harmonogram
+    [HttpPut("{id}/harmonogram")]
+    [Authorize(Roles = "admin,kasjer")]
+    public async Task<IActionResult> UpdateSchedules(int id, [FromBody] LiftScheduleRequest[] req)
+    {
+        var lift = await db.Lifts.Include(l => l.Schedules).FirstOrDefaultAsync(l => l.Id == id);
+        if (lift == null) return NotFound();
+
+        db.LiftSchedules.RemoveRange(lift.Schedules);
+        foreach (var s in req)
+        {
+            db.LiftSchedules.Add(new LiftSchedule {
+                LiftId = id,
+                DayOfWeek = s.DayOfWeek,
+                OpeningTime = s.OpeningTime,
+                ClosingTime = s.ClosingTime,
+                SeasonId = s.SeasonId
+            });
+        }
+        await db.SaveChangesAsync();
+        return Ok();
+    }
 }
 
 public record LiftDto(
     int Id,
     string Name,
     string Status,
+    int? Capacity,
+    string? Type,
     TimeSpan? OpensAt,
     TimeSpan? ClosesAt,
     TrailSummaryDto[] Trails
@@ -156,6 +247,12 @@ public record TrailSummaryDto(int Id, string Name, string? Difficulty);
 public record LiftModifyRequest(
     string Name,
     string Status,
+    int? Capacity,
+    string? Type,
     TimeSpan? OpensAt,
     TimeSpan? ClosesAt
 );
+
+public record UpdateLiftStatusRequest(int? StatusId);
+
+public record LiftScheduleRequest(int? DayOfWeek, TimeSpan? OpeningTime, TimeSpan? ClosingTime, int? SeasonId);

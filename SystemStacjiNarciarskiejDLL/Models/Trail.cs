@@ -25,6 +25,16 @@ public class Trail
     public int? DifficultyId { get; set; }
     public virtual DictTrailDifficulty? Difficulty { get; set; }
 
+    [Column("snow_condition")]
+    public string? SnowCondition { get; set; }
+
+    [Column("preparation_status")]
+    public string? PreparationStatus { get; set; }
+
+    [Column("status_id")]
+    public int? StatusId { get; set; }
+    public virtual DictTrailStatus? Status { get; set; }
+
     [Column("planner_id")]
     public int? PlannerId { get; set; }
     public virtual TrailPlanner? Planner { get; set; }

@@ -74,6 +74,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Inicjalizacja SignalR
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/infrastructureHub")
+        .withAutomaticReconnect()
+        .build();
+
+    connection.on("LiftStatusUpdated", (id, statusId) => {
+        showToast(`Status wyciągu #${id} został zmieniony.`, 'info');
+        if (document.getElementById('lifts-table')) {
+            loadLiftsModule(mainContent, token, false);
+        }
+    });
+
+    connection.on("TrailStatusUpdated", (id, statusId) => {
+        showToast(`Status trasy #${id} został zmieniony.`, 'info');
+        if (document.getElementById('trails-table')) {
+            loadTrailsModule(mainContent, token, false);
+        }
+    });
+
+    connection.start().catch(err => console.error("SignalR Error:", err));
+
+
     const navLinks = document.querySelectorAll('.nav-link');
     const mainContent = document.getElementById('main-content');
     const pageTitle = document.getElementById('page-title');
@@ -175,7 +198,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadCardsModule(mainContent, token);
                     break;
                 case 'tariffs':
-                    loadTariffsModule(mainContent, token);
+                    if (typeof loadTariffsModule === 'function') loadTariffsModule(mainContent, token);
+                    else mainContent.innerHTML = modulesContent['tariffs'];
                     break;
                 case 'users':
                     if (userRole === 'admin') {
@@ -866,40 +890,39 @@ async function deleteUser(userId, role) {
 }
 
 // Zewnętrzna asynchroniczna funkcja do modułu Wyciągów
-async function loadLiftsModule(container, token) {
-    // 1. Wstrzyknięcie szkieletu tabeli HTML z komunikatem ładowania
-    container.innerHTML = `
-        <div class="module-content" >
-            <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                    <div>
-                        <h3>Zarządzanie wyciągami</h3>
-                        <p style="color: var(--text-muted); margin-top: 8px;">Poniżej znajduje się aktualny wykaz wyciągów pobrany bezpośrednio z systemu.</p>
+async function loadLiftsModule(container, token, showSkeleton = true) {
+    if (showSkeleton) {
+        container.innerHTML = `
+            <div class="module-content" >
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <div>
+                            <h3>Zarządzanie wyciągami</h3>
+                            <p style="color: var(--text-muted); margin-top: 8px;">Poniżej znajduje się aktualny wykaz wyciągów pobrany bezpośrednio z systemu.</p>
+                        </div>
+                        <button class="btn-primary" onclick="showLiftForm()">Dodaj Wyciąg</button>
                     </div>
-                    <button class="btn-primary" onclick="showLiftForm()">Dodaj Wyciąg</button>
-                </div>
 
-                <div id="lifts-container">
-                    <p id="lifts-loading">Pobieranie danych z bazy...</p>
-                    <table class="data-table" id="lifts-table" style="display: none; width: 100%; border-collapse: collapse; text-align: left;">
-                        <thead>
-                            <tr style="border-bottom: 2px solid var(--border-color);">
-                                <th style="padding: 12px; color: var(--text-muted);">ID</th>
-                                <th style="padding: 12px; color: var(--text-muted);">Nazwa</th>
-                                <th style="padding: 12px; color: var(--text-muted);">Status</th>
-                                <th style="padding: 12px; color: var(--text-muted);">Otwarcie</th>
-                                <th style="padding: 12px; color: var(--text-muted);">Zamknięcie</th>
-                                <th style="padding: 12px; color: var(--text-muted); text-align: right;">Akcje</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Tutaj pętla wygeneruje wiersze -->
-                        </tbody>
-                    </table>
+                    <div id="lifts-container">
+                        <p id="lifts-loading">Pobieranie danych z bazy...</p>
+                        <table class="data-table" id="lifts-table" style="display: none; width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color);">
+                                    <th style="padding: 12px; color: var(--text-muted);">Nazwa (ID)</th>
+                                    <th style="padding: 12px; color: var(--text-muted);">Parametry</th>
+                                    <th style="padding: 12px; color: var(--text-muted);">Status (Szybka Zmiana)</th>
+                                    <th style="padding: 12px; color: var(--text-muted);">Trasy</th>
+                                    <th style="padding: 12px; color: var(--text-muted); text-align: right;">Akcje</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
-        `;
+            `;
+    }
 
     try {
         // 2. Fetch danych (żądanie GET do kontrolera WyciagController)
@@ -929,28 +952,38 @@ async function loadLiftsModule(container, token) {
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid var(--border-color)';
 
-                // Stylowanie w zależności od statusu wyciągu
-                let statusColor = 'var(--text-main)';
-                let statusText = lift.status;
-                if (statusText === 'czynny') { statusColor = '#10b981'; statusText = 'Czynny'; }
-                else if (statusText === 'nieczynny') { statusColor = '#ef4444'; statusText = 'Nieczynny'; }
-                else if (statusText === 'przed_otwarciem') { statusColor = '#f59e0b'; statusText = 'Przed otwarciem'; }
-                else if (statusText === 'po_zamknieciu') { statusColor = '#f59e0b'; statusText = 'Po zamknięciu'; }
-
-                // Obcinanie sekund z TimeSpan (jeżeli są przesyłane w formacie hh:mm:ss)
                 const opens = lift.opensAt ? lift.opensAt.substring(0, 5) : '-';
                 const closes = lift.closesAt ? lift.closesAt.substring(0, 5) : '-';
 
-                // Serializacja obiektu do JSON dla przycisku edycji
                 const liftJson = JSON.stringify(lift).replace(/"/g, '&quot;');
+                
+                // Mapowanie statusu powracającego z API
+                let statusVal = "";
+                if(lift.status === 'Otwarty') statusVal = 1;
+                else if(lift.status === 'Zamknięty z powodu warunków') statusVal = 2;
+                else if(lift.status === 'Awaria') statusVal = 3;
+                else if(lift.status === 'Przerwa techniczna') statusVal = 4;
+
+                let statusSelect = `
+                    <select class="form-control" style="width: auto; display: inline-block; padding: 4px; font-size: 13px;" onchange="updateLiftStatus(${lift.id}, this.value)">
+                        <option value="" ${statusVal === "" ? 'selected' : ''}>Wg harmonogramu (${lift.status})</option>
+                        <option value="1" ${statusVal === 1 ? 'selected' : ''} style="color: #10b981;">Otwarty</option>
+                        <option value="2" ${statusVal === 2 ? 'selected' : ''} style="color: #f59e0b;">Zamknięty z powodu warunków</option>
+                        <option value="3" ${statusVal === 3 ? 'selected' : ''} style="color: #ef4444;">Awaria</option>
+                        <option value="4" ${statusVal === 4 ? 'selected' : ''} style="color: #f59e0b;">Przerwa techniczna</option>
+                    </select>
+                `;
 
                 tr.innerHTML = `
-        <td style = "padding: 12px;" > ${ lift.id }</td>
-                    <td style="padding: 12px; font-weight: 500;">${lift.name}</td>
-                    <td style="padding: 12px; color: ${statusColor}; font-weight: 600;">${statusText}</td>
-                    <td style="padding: 12px;">${opens}</td>
-                    <td style="padding: 12px;">${closes}</td>
-                    <td style="padding: 12px; text-align: right;">
+                    <td style="padding: 12px; font-weight: 500;">${lift.name} <span style="color: var(--text-muted); font-size: 12px;">(#${lift.id})</span></td>
+                    <td style="padding: 12px; font-size: 13px;">
+                        Typ: ${lift.type || '-'} <br>
+                        Przepustowość: ${lift.capacity ? lift.capacity + ' os/h' : '-'} <br>
+                        Dziś: ${opens} - ${closes}
+                    </td>
+                    <td style="padding: 12px;">${statusSelect}</td>
+                    <td style="padding: 12px; font-size: 13px;">${lift.trails && lift.trails.length > 0 ? lift.trails.map(t => t.name).join(', ') : '-'}</td>
+                    <td style="padding: 12px; text-align: right; white-space: nowrap;">
                         <button class="action-btn edit" onclick="showLiftForm(${liftJson})" title="Edytuj">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
@@ -958,7 +991,7 @@ async function loadLiftsModule(container, token) {
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                     </td>
-    `;
+                `;
                 tbody.appendChild(tr);
             });
         }
@@ -1015,23 +1048,20 @@ function showLiftForm(lift = null) {
                 <label for="lift-name">Nazwa wyciągu</label>
                 <input type="text" id="lift-name" class="form-control" required value="${isEdit ? lift.name : ''}">
             </div>
-            <div class="form-group">
-                <label for="lift-status">Status</label>
-                <select id="lift-status" class="form-control" required>
-                    <option value="czynny" ${isEdit && lift.status === 'czynny' ? 'selected' : ''}>Czynny</option>
-                    <option value="nieczynny" ${isEdit && lift.status === 'nieczynny' ? 'selected' : ''}>Nieczynny</option>
-                    <option value="przed_otwarciem" ${isEdit && lift.status === 'przed_otwarciem' ? 'selected' : ''}>Przed otwarciem</option>
-                    <option value="po_zamknieciu" ${isEdit && lift.status === 'po_zamknieciu' ? 'selected' : ''}>Po zamknięciu</option>
-                </select>
-            </div>
             <div style="display: flex; gap: 16px;">
                 <div class="form-group" style="flex: 1;">
-                    <label for="lift-opens">Otwarcie</label>
-                    <input type="time" id="lift-opens" class="form-control" required value="${opens}">
+                    <label for="lift-type">Rodzaj wyciągu</label>
+                    <select id="lift-type" class="form-control">
+                        <option value="">Wybierz...</option>
+                        <option value="Orczyk" ${isEdit && lift.type === 'Orczyk' ? 'selected' : ''}>Orczyk</option>
+                        <option value="Krzesełko" ${isEdit && lift.type === 'Krzesełko' ? 'selected' : ''}>Krzesełko</option>
+                        <option value="Gondola" ${isEdit && lift.type === 'Gondola' ? 'selected' : ''}>Gondola</option>
+                        <option value="Talerzyk" ${isEdit && lift.type === 'Talerzyk' ? 'selected' : ''}>Talerzyk</option>
+                    </select>
                 </div>
                 <div class="form-group" style="flex: 1;">
-                    <label for="lift-closes">Zamknięcie</label>
-                    <input type="time" id="lift-closes" class="form-control" required value="${closes}">
+                    <label for="lift-capacity">Przepustowość (os./h)</label>
+                    <input type="number" id="lift-capacity" class="form-control" value="${isEdit && lift.capacity ? lift.capacity : ''}">
                 </div>
             </div>
             <div class="modal-footer">
@@ -1041,6 +1071,25 @@ function showLiftForm(lift = null) {
         </form>
         `;
     openModal(title, content);
+}
+
+async function updateLiftStatus(liftId, statusId) {
+    const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+    try {
+        const response = await fetch(`/api/wyciagi/${liftId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ statusId: statusId ? parseInt(statusId) : null })
+        });
+        if (!response.ok) {
+            showToast('Nie udało się zmienić statusu.', 'error');
+        }
+    } catch (error) {
+        showToast('Błąd połączenia z serwerem.', 'error');
+    }
 }
 
 async function handleLiftSubmit(event, liftId) {
@@ -1053,14 +1102,14 @@ async function handleLiftSubmit(event, liftId) {
         return;
     }
 
-    const opensInput = document.getElementById('lift-opens').value;
-    const closesInput = document.getElementById('lift-closes').value;
+    const typeInput = document.getElementById('lift-type').value;
+    const capacityInput = document.getElementById('lift-capacity').value;
     
     const payload = {
         name: name,
-        status: document.getElementById('lift-status').value,
-        opensAt: opensInput.length === 5 ? opensInput + ':00' : opensInput,
-        closesAt: closesInput.length === 5 ? closesInput + ':00' : closesInput
+        type: typeInput || null,
+        capacity: capacityInput ? parseInt(capacityInput) : null,
+        status: ''
     };
 
     if (liftId) {
@@ -1177,12 +1226,21 @@ async function loadGatesModule(container, token) {
 
                 let statusColor = gate.isActive ? '#10b981' : '#ef4444';
                 let statusText = gate.isActive ? 'Aktywna' : 'Nieaktywna';
+                
+                let onlineColor = gate.isOnline ? '#10b981' : '#ef4444';
+                let onlineText = gate.isOnline ? 'Online' : 'Offline';
 
                 const gateJson = JSON.stringify(gate).replace(/"/g, '&quot;');
 
                 tr.innerHTML = `
-        <td style = "padding: 12px;" > ${ gate.id }</td>
-                    <td style="padding: 12px; font-weight: 500;">${gate.name || '-'}</td>
+                    <td style="padding: 12px;">${gate.id}</td>
+                    <td style="padding: 12px; font-weight: 500;">
+                        ${gate.name || '-'}
+                        <span style="margin-left: 8px; font-size: 11px; padding: 2px 6px; border-radius: 12px; background-color: ${onlineColor}22; color: ${onlineColor}; display: inline-flex; align-items: center; gap: 4px;">
+                            <div style="width: 6px; height: 6px; border-radius: 50%; background-color: ${onlineColor};"></div>
+                            ${onlineText}
+                        </span>
+                    </td>
                     <td style="padding: 12px;">${gate.liftName || '(Brak)'}</td>
                     <td style="padding: 12px; color: ${statusColor}; font-weight: 600;">${statusText}</td>
                     <td style="padding: 12px; text-align: right;">
@@ -1483,11 +1541,10 @@ async function loadTrailsModule(container, token) {
                     <table class="data-table" id="trails-table" style="display: none; width: 100%; border-collapse: collapse; text-align: left;">
                         <thead>
                             <tr style="border-bottom: 2px solid var(--border-color);">
-                                <th style="padding: 12px; color: var(--text-muted);">ID</th>
-                                <th style="padding: 12px; color: var(--text-muted);">Nazwa Trasy</th>
-                                <th style="padding: 12px; color: var(--text-muted);">Poziom Trudności</th>
-                                <th style="padding: 12px; color: var(--text-muted);">Długość (m)</th>
-                                <th style="padding: 12px; color: var(--text-muted);">Lokalizacja</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Nazwa (ID)</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Parametry</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Stan Trasy</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Status (Szybka Zmiana)</th>
                                 <th style="padding: 12px; color: var(--text-muted); text-align: right;">Akcje</th>
                             </tr>
                         </thead>
@@ -1523,13 +1580,31 @@ async function loadTrailsModule(container, token) {
                 tr.style.borderBottom = '1px solid var(--border-color)';
 
                 const trailJson = JSON.stringify(trail).replace(/"/g, '&quot;');
+                
+                let statusVal = "";
+                if(trail.statusName === 'Otwarta') statusVal = 1;
+                else if(trail.statusName === 'Zamknięta') statusVal = 2;
+
+                let statusSelect = `
+                    <select class="form-control" style="width: auto; display: inline-block; padding: 4px; font-size: 13px;" onchange="updateTrailStatus(${trail.id}, this.value)">
+                        <option value="" ${statusVal === "" ? 'selected' : ''}>Brak</option>
+                        <option value="1" ${statusVal === 1 ? 'selected' : ''} style="color: #10b981;">Otwarta</option>
+                        <option value="2" ${statusVal === 2 ? 'selected' : ''} style="color: #ef4444;">Zamknięta</option>
+                    </select>
+                `;
 
                 tr.innerHTML = `
-                    <td style="padding: 12px;">${trail.id}</td>
-                    <td style="padding: 12px; font-weight: 500;">${trail.name}</td>
-                    <td style="padding: 12px;">${trail.difficulty || '-'}</td>
-                    <td style="padding: 12px;">${trail.length ? trail.length + ' m' : '-'}</td>
-                    <td style="padding: 12px;">${trail.location || '-'}</td>
+                    <td style="padding: 12px; font-weight: 500;">${trail.name} <span style="color: var(--text-muted); font-size: 12px;">(#${trail.id})</span></td>
+                    <td style="padding: 12px; font-size: 13px;">
+                        Trudność: ${trail.difficulty || '-'} <br>
+                        Długość: ${trail.length ? trail.length + ' m' : '-'} <br>
+                        Lokalizacja: ${trail.location || '-'}
+                    </td>
+                    <td style="padding: 12px; font-size: 13px;">
+                        Naśnieżenie: ${trail.snowCondition || '-'} <br>
+                        Przygotowanie: ${trail.preparationStatus || '-'}
+                    </td>
+                    <td style="padding: 12px;">${statusSelect}</td>
                     <td style="padding: 12px; text-align: right;">
                         <button class="action-btn edit" onclick="showTrailForm(${trailJson})" title="Edytuj">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -1595,6 +1670,16 @@ async function showTrailForm(trail = null) {
                     <input type="text" id="trail-location" class="form-control" value="${isEdit && trail.location ? trail.location : ''}">
                 </div>
             </div>
+            <div style="display: flex; gap: 16px;">
+                <div class="form-group" style="flex: 1;">
+                    <label for="trail-snow">Stan naśnieżenia</label>
+                    <input type="text" id="trail-snow" class="form-control" value="${isEdit && trail.snowCondition ? trail.snowCondition : ''}">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="trail-prep">Stan przygotowania</label>
+                    <input type="text" id="trail-prep" class="form-control" value="${isEdit && trail.preparationStatus ? trail.preparationStatus : ''}">
+                </div>
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="closeModal()">Anuluj</button>
                 <button type="submit" class="btn-primary">Zapisz</button>
@@ -1618,7 +1703,9 @@ async function handleTrailSubmit(event, trailId) {
         name: name,
         difficulty: document.getElementById('trail-difficulty').value || null,
         length: document.getElementById('trail-length').value ? parseFloat(document.getElementById('trail-length').value) : null,
-        location: document.getElementById('trail-location').value || null
+        location: document.getElementById('trail-location').value || null,
+        snowCondition: document.getElementById('trail-snow').value || null,
+        preparationStatus: document.getElementById('trail-prep').value || null
     };
 
     const method = trailId ? 'PUT' : 'POST';
@@ -1641,6 +1728,25 @@ async function handleTrailSubmit(event, trailId) {
         } else {
             const errorMsg = await response.text();
             showToast('Błąd: ' + errorMsg, 'error');
+        }
+    } catch (error) {
+        showToast('Błąd połączenia z serwerem.', 'error');
+    }
+}
+
+async function updateTrailStatus(trailId, statusId) {
+    const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+    try {
+        const response = await fetch(`/api/trasy/${trailId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ statusId: statusId ? parseInt(statusId) : null })
+        });
+        if (!response.ok) {
+            showToast('Nie udało się zmienić statusu.', 'error');
         }
     } catch (error) {
         showToast('Błąd połączenia z serwerem.', 'error');
@@ -1683,6 +1789,10 @@ async function loadCardsModule(container, token) {
                     <div>
                         <h3>Zarządzanie kartami RFID</h3>
                         <p style="color: var(--text-muted); margin-top: 8px;">Wyszukiwanie kart, podgląd przypisanych karnetów oraz blokowanie.</p>
+                    </div>
+                    <div>
+                        <button class="btn-primary" onclick="showCardBatchForm()">Magazyn Kart (Generuj)</button>
+                        <button class="btn-secondary" style="margin-left: 8px; color: var(--danger); border-color: var(--danger);" onclick="showBlockBatchForm()">Zablokuj Serię</button>
                     </div>
                 </div>
 
@@ -1807,8 +1917,9 @@ async function showCardDetails(rfid) {
                             <p>${card.depositPaid ? 'Tak' : 'Nie'}</p>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 8px;">
+                    <div style="display: flex; gap: 8px; align-items: center;">
                         ${statusAction}
+                        <button class="btn-primary" style="background-color: var(--primary-color);" onclick="showSpecialPassForm('${card.id}')">Wydaj Specjalny</button>
                     </div>
                     ${card.blockReason ? `<p style="margin-top: 12px; padding: 12px; background: #fee2e2; border-radius: 8px; color: #991b1b;"><strong>Powód blokady:</strong> ${card.blockReason}</p>` : ''}
                 </div>
@@ -1908,3 +2019,856 @@ async function blockPass(passId, rfid) {
         }
     } catch (e) { showToast('Błąd połączenia.', 'error'); }
 }
+
+// Moduł Raportów (Analityka i Wykresy)
+async function loadReportsModule(container, token) {
+    container.innerHTML = `
+        <div class="module-content">
+            <div class="card" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3>Analityka i Statystyki</h3>
+                    <p>Zaawansowane raporty biznesowe w postaci interaktywnych wykresów.</p>
+                </div>
+                <select id="reports-period" class="form-control" style="width: 200px;" onchange="fetchAnalyticsData()">
+                    <option value="day">Dzisiaj / Ostatnie 30 dni</option>
+                    <option value="week">Ostatnie 12 tygodni</option>
+                    <option value="month">Ostatnie 12 miesięcy</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                <div class="card" style="margin-bottom: 0;">
+                    <h4 style="margin-bottom: 16px;">Obciążenie Wyciągów (Dzisiaj)</h4>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="chart-hourly-traffic"></canvas>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom: 0;">
+                    <h4 style="margin-bottom: 16px;">Przychody ze Sprzedaży</h4>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="chart-revenue-trend"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                <div class="card" style="margin-bottom: 0;">
+                    <h4 style="margin-bottom: 16px;">Kanały Sprzedaży (Ten Miesiąc)</h4>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="chart-sales-channels"></canvas>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom: 0;">
+                    <h4 style="margin-bottom: 16px;">Popularność Karnetów</h4>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="chart-pass-popularity"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Deklaracja zmiennych instancji wykresów dla późniejszego niszczenia
+    window.chartInstances = window.chartInstances || {};
+    
+    window.fetchAnalyticsData = async () => {
+        const period = document.getElementById('reports-period').value;
+        const hdrs = { 'Authorization': 'Bearer ' + token };
+
+        try {
+            // 1. Obciążenie godzinowe
+            const res1 = await fetch('/api/statystyki/obciazenie-godzinowe', { headers: hdrs });
+            if (res1.ok) {
+                const data = await res1.json();
+                const ctx = document.getElementById('chart-hourly-traffic');
+                if (window.chartInstances.hourly) window.chartInstances.hourly.destroy();
+                
+                const datasets = data.map((d, i) => {
+                    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+                    return {
+                        label: d.liftName,
+                        data: d.data,
+                        borderColor: colors[i % colors.length],
+                        backgroundColor: colors[i % colors.length] + '22',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    };
+                });
+
+                window.chartInstances.hourly = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                        datasets: datasets
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            // 2. Przychody
+            const res2 = await fetch(`/api/statystyki/przychody-trend?period=${period}`, { headers: hdrs });
+            if (res2.ok) {
+                const data = await res2.json();
+                const ctx = document.getElementById('chart-revenue-trend');
+                if (window.chartInstances.revenue) window.chartInstances.revenue.destroy();
+                
+                window.chartInstances.revenue = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.map(d => d.dateLabel),
+                        datasets: [{
+                            label: 'Przychód (PLN)',
+                            data: data.map(d => d.revenue),
+                            backgroundColor: '#6366f1',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            // 3. Kanały Sprzedaży
+            const res3 = await fetch('/api/statystyki/kanaly-sprzedazy', { headers: hdrs });
+            if (res3.ok) {
+                const data = await res3.json();
+                const ctx = document.getElementById('chart-sales-channels');
+                if (window.chartInstances.channels) window.chartInstances.channels.destroy();
+                
+                window.chartInstances.channels = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Kasy Fizyczne', 'Sprzedaż Online'],
+                        datasets: [{
+                            data: [data.posSales, data.onlineSales],
+                            backgroundColor: ['#10b981', '#3b82f6'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+                });
+            }
+
+            // 4. Popularność Karnetów
+            const res4 = await fetch('/api/statystyki/popularnosc-karnetow', { headers: hdrs });
+            if (res4.ok) {
+                const data = await res4.json();
+                const ctx = document.getElementById('chart-pass-popularity');
+                if (window.chartInstances.popularity) window.chartInstances.popularity.destroy();
+                
+                window.chartInstances.popularity = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: data.map(d => d.tariffName),
+                        datasets: [{
+                            data: data.map(d => d.count),
+                            backgroundColor: ['#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'],
+                            borderWidth: 1,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+        } catch (error) {
+        } else {
+            showToast('Błąd podczas blokowania.', 'error');
+        }
+    } catch (e) { showToast('Błąd połączenia.', 'error'); }
+}
+
+async function unblockCard(rfid) {
+    if (!confirm('Czy na pewno chcesz odblokować tę kartę?')) return;
+    const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+    try {
+        const res = await fetch(`/api/karty/${rfid}/odblokuj`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (res.ok) {
+            closeModal();
+            fetchCards();
+            showToast('Karta została odblokowana.', 'success');
+        } else {
+            showToast('Błąd podczas odblokowywania.', 'error');
+        }
+    } catch (e) { showToast('Błąd połączenia.', 'error'); }
+}
+
+async function blockPass(passId, rfid) {
+    const reason = prompt('Podaj powód zablokowania karnetu:');
+    if (reason === null) return;
+
+    const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+    try {
+        const res = await fetch(`/api/karnety/${passId}/blokuj`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason })
+        });
+        if (res.ok) {
+            showToast('Karnet został zablokowany.', 'success');
+            showCardDetails(rfid); // Odśwież widok szczegółów
+        } else {
+            showToast('Błąd podczas blokowania karnetu.', 'error');
+        }
+    } catch (e) { showToast('Błąd połączenia.', 'error'); }
+}
+
+// Moduł Raportów (Analityka i Wykresy)
+async function loadReportsModule(container, token) {
+    container.innerHTML = `
+        <div class="module-content">
+            <div class="card" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3>Analityka i Statystyki</h3>
+                    <p>Zaawansowane raporty biznesowe w postaci interaktywnych wykresów.</p>
+                </div>
+                <select id="reports-period" class="form-control" style="width: 200px;" onchange="fetchAnalyticsData()">
+                    <option value="day">Dzisiaj / Ostatnie 30 dni</option>
+                    <option value="week">Ostatnie 12 tygodni</option>
+                    <option value="month">Ostatnie 12 miesięcy</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                <div class="card" style="margin-bottom: 0;">
+                    <h4 style="margin-bottom: 16px;">Obciążenie Wyciągów (Dzisiaj)</h4>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="chart-hourly-traffic"></canvas>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom: 0;">
+                    <h4 style="margin-bottom: 16px;">Przychody ze Sprzedaży</h4>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="chart-revenue-trend"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                <div class="card" style="margin-bottom: 0;">
+                    <h4 style="margin-bottom: 16px;">Kanały Sprzedaży (Ten Miesiąc)</h4>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="chart-sales-channels"></canvas>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom: 0;">
+                    <h4 style="margin-bottom: 16px;">Popularność Karnetów</h4>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="chart-pass-popularity"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Deklaracja zmiennych instancji wykresów dla późniejszego niszczenia
+    window.chartInstances = window.chartInstances || {};
+    
+    window.fetchAnalyticsData = async () => {
+        const period = document.getElementById('reports-period').value;
+        const hdrs = { 'Authorization': 'Bearer ' + token };
+
+        try {
+            // 1. Obciążenie godzinowe
+            const res1 = await fetch('/api/statystyki/obciazenie-godzinowe', { headers: hdrs });
+            if (res1.ok) {
+                const data = await res1.json();
+                const ctx = document.getElementById('chart-hourly-traffic');
+                if (window.chartInstances.hourly) window.chartInstances.hourly.destroy();
+                
+                const datasets = data.map((d, i) => {
+                    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+                    return {
+                        label: d.liftName,
+                        data: d.data,
+                        borderColor: colors[i % colors.length],
+                        backgroundColor: colors[i % colors.length] + '22',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    };
+                });
+
+                window.chartInstances.hourly = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                        datasets: datasets
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            // 2. Przychody
+            const res2 = await fetch(`/api/statystyki/przychody-trend?period=${period}`, { headers: hdrs });
+            if (res2.ok) {
+                const data = await res2.json();
+                const ctx = document.getElementById('chart-revenue-trend');
+                if (window.chartInstances.revenue) window.chartInstances.revenue.destroy();
+                
+                window.chartInstances.revenue = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.map(d => d.dateLabel),
+                        datasets: [{
+                            label: 'Przychód (PLN)',
+                            data: data.map(d => d.revenue),
+                            backgroundColor: '#6366f1',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            // 3. Kanały Sprzedaży
+            const res3 = await fetch('/api/statystyki/kanaly-sprzedazy', { headers: hdrs });
+            if (res3.ok) {
+                const data = await res3.json();
+                const ctx = document.getElementById('chart-sales-channels');
+                if (window.chartInstances.channels) window.chartInstances.channels.destroy();
+                
+                window.chartInstances.channels = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Kasy Fizyczne', 'Sprzedaż Online'],
+                        datasets: [{
+                            data: [data.posSales, data.onlineSales],
+                            backgroundColor: ['#10b981', '#3b82f6'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+                });
+            }
+
+            // 4. Popularność Karnetów
+            const res4 = await fetch('/api/statystyki/popularnosc-karnetow', { headers: hdrs });
+            if (res4.ok) {
+                const data = await res4.json();
+                const ctx = document.getElementById('chart-pass-popularity');
+                if (window.chartInstances.popularity) window.chartInstances.popularity.destroy();
+                
+                window.chartInstances.popularity = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: data.map(d => d.tariffName),
+                        datasets: [{
+                            data: data.map(d => d.count),
+                            backgroundColor: ['#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'],
+                            borderWidth: 1,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+        } catch (error) {
+            console.error('Błąd pobierania analityki', error);
+            showToast('Nie udało się załadować danych analitycznych.', 'error');
+        }
+    };
+
+    fetchAnalyticsData();
+}
+
+// --- FAZA 3: Karty i Taryfy ---
+window.showCardBatchForm = function() {
+    const content = `
+        <form onsubmit="handleCardBatchSubmit(event)">
+            <div class="form-group">
+                <label>Przedrostek (np. SKI-)</label>
+                <input type="text" id="batch-prefix" class="form-control" required value="SKI-">
+            </div>
+            <div class="form-group">
+                <label>Numer startowy</label>
+                <input type="number" id="batch-start" class="form-control" required value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label>Długość numeru (ilość cyfr z zerami, np. 4 dla 0001)</label>
+                <input type="number" id="batch-len" class="form-control" required value="4" min="1">
+            </div>
+            <div class="form-group">
+                <label>Ilość sztuk</label>
+                <input type="number" id="batch-count" class="form-control" required value="100" min="1">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Anuluj</button>
+                <button type="submit" class="btn-primary">Generuj</button>
+            </div>
+        </form>
+    `;
+    openModal('Generuj Partię Kart', content);
+};
+
+window.handleCardBatchSubmit = async function(event) {
+    event.preventDefault();
+    const payload = {
+        prefix: document.getElementById('batch-prefix').value,
+        startNumber: parseInt(document.getElementById('batch-start').value),
+        numberLength: parseInt(document.getElementById('batch-len').value),
+        count: parseInt(document.getElementById('batch-count').value)
+    };
+    try {
+        const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+        const res = await fetch('/api/karty/partia', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if(res.ok) {
+            const data = await res.json();
+            showToast(`Wygenerowano ${data.generatedCount} kart (pominięto ${data.skippedCount}).`, 'success');
+            closeModal();
+            fetchCards();
+        } else showToast('Błąd generowania partii.', 'error');
+    } catch(e) { showToast('Błąd', 'error'); }
+};
+
+window.showBlockBatchForm = function() {
+    const content = `
+        <form onsubmit="handleBlockBatchSubmit(event)">
+            <div class="form-group">
+                <label>Przedrostek (np. SKI-)</label>
+                <input type="text" id="bb-prefix" class="form-control" required value="SKI-">
+            </div>
+            <div class="form-group">
+                <label>Numer startowy (od)</label>
+                <input type="number" id="bb-start" class="form-control" required min="1">
+            </div>
+            <div class="form-group">
+                <label>Numer końcowy (do)</label>
+                <input type="number" id="bb-end" class="form-control" required min="1">
+            </div>
+            <div class="form-group">
+                <label>Powód</label>
+                <input type="text" id="bb-reason" class="form-control" required value="Zgubiona partia w transporcie">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Anuluj</button>
+                <button type="submit" class="btn-primary" style="background-color: var(--danger);">Zablokuj Serię</button>
+            </div>
+        </form>
+    `;
+    openModal('Zablokuj Serię Kart', content);
+};
+
+window.handleBlockBatchSubmit = async function(event) {
+    event.preventDefault();
+    const payload = {
+        prefix: document.getElementById('bb-prefix').value,
+        startNumber: parseInt(document.getElementById('bb-start').value),
+        endNumber: parseInt(document.getElementById('bb-end').value),
+        reason: document.getElementById('bb-reason').value
+    };
+    try {
+        const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+        const res = await fetch('/api/karty/partia/zablokuj', {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if(res.ok) {
+            const data = await res.json();
+            showToast(`Zablokowano ${data.blockedCount} kart.`, 'success');
+            closeModal();
+            fetchCards();
+        } else showToast('Błąd.', 'error');
+    } catch(e) { showToast('Błąd', 'error'); }
+};
+
+window.showSpecialPassForm = async function(rfid) {
+    const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+    let tariffOpts = '';
+    try {
+        const res = await fetch('/api/taryfy', { headers: { 'Authorization': 'Bearer ' + token } });
+        if(res.ok) {
+            const tariffs = await res.json();
+            tariffs.forEach(t => { tariffOpts += `<option value="${t.id}">${t.name} ${t.discountType ? '('+t.discountType+')' : ''}</option>`; });
+        }
+    } catch(e){}
+
+    const content = `
+        <form onsubmit="handleSpecialPassSubmit(event, '${rfid}')">
+            <div class="form-group">
+                <label>Wybierz taryfę</label>
+                <select id="sp-tariff" class="form-control" required>${tariffOpts}</select>
+            </div>
+            <div class="form-group">
+                <label>Powód (np. GOPR, Rekompensata)</label>
+                <input type="text" id="sp-reason" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Ważny od (Opcjonalnie)</label>
+                <input type="datetime-local" id="sp-from" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Ważny do (Opcjonalnie)</label>
+                <input type="datetime-local" id="sp-to" class="form-control">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Anuluj</button>
+                <button type="submit" class="btn-primary" style="background-color: var(--primary-color);">Wydaj Karnet</button>
+            </div>
+        </form>
+    `;
+    openModal('Wydaj Karnet Specjalny dla ' + rfid, content);
+};
+
+window.handleSpecialPassSubmit = async function(event, rfid) {
+    event.preventDefault();
+    const fromV = document.getElementById('sp-from').value;
+    const toV = document.getElementById('sp-to').value;
+    const payload = {
+        cardId: rfid,
+        tariffId: parseInt(document.getElementById('sp-tariff').value),
+        reason: document.getElementById('sp-reason').value,
+        validFrom: fromV ? new Date(fromV).toISOString() : null,
+        validTo: toV ? new Date(toV).toISOString() : null
+    };
+    try {
+        const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+        const res = await fetch('/api/karnety/specjalne', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if(res.ok) {
+            showToast('Karnet specjalny wydany.', 'success');
+            closeModal();
+            showCardDetails(rfid);
+            fetchCards();
+        } else {
+            const err = await res.text();
+            showToast('Błąd: ' + err, 'error');
+        }
+    } catch(e) { showToast('Błąd.', 'error'); }
+};
+
+window.loadTariffsModule = async function(container, token) {
+    container.innerHTML = `
+        <div class="module-content">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div>
+                        <h3>Zarządzanie taryfami</h3>
+                        <p style="color: var(--text-muted); margin-top: 8px;">Kreator cenników i taryf narciarskich.</p>
+                    </div>
+                    <button class="btn-primary" onclick="showTariffCreator()">Kreator Taryf</button>
+                </div>
+                <div id="tariffs-container">
+                    <table class="data-table" id="tariffs-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 12px; color: var(--text-muted);">Nazwa Grupy</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Ulga</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Cena</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Sezon / Typ</th>
+                                <th style="padding: 12px; color: var(--text-muted); text-align: right;">Akcje</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+
+    window.fetchTariffs = async () => {
+        try {
+            const res = await fetch('/api/taryfy', { headers: { 'Authorization': 'Bearer ' + token } });
+            if(res.ok) {
+                const data = await res.json();
+                const tbody = document.querySelector('#tariffs-table tbody');
+                tbody.innerHTML = '';
+                data.forEach(t => {
+                    const tr = document.createElement('tr');
+                    tr.style.borderBottom = '1px solid var(--border-color)';
+                    tr.innerHTML = `
+                        <td style="padding: 12px; font-weight: 500;">${t.name}</td>
+                        <td style="padding: 12px;">${t.discountType || 'Standard'}</td>
+                        <td style="padding: 12px;">${t.price ? t.price.toFixed(2) + ' PLN' : '-'}</td>
+                        <td style="padding: 12px;">${t.season || '-'} / ${t.passType || '-'}</td>
+                        <td style="padding: 12px; text-align: right;">
+                            <button class="btn-secondary" style="color: var(--danger); border-color: var(--danger); padding: 4px 8px; font-size: 12px;" onclick="deleteTariff(${t.id})">Usuń</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        } catch(e){}
+    };
+    fetchTariffs();
+};
+
+window.showTariffCreator = async function() {
+    const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+    let seasonOpts = '<option value="">Brak sezonu</option>', passOpts = '';
+    try {
+        const [resS, resP] = await Promise.all([
+            fetch('/api/taryfy/sezony', { headers: { 'Authorization': 'Bearer ' + token } }).catch(()=>null),
+            fetch('/api/taryfy/typy', { headers: { 'Authorization': 'Bearer ' + token } }).catch(()=>null)
+        ]);
+        if(resS && resS.ok) {
+            const seasons = await resS.json();
+            seasons.forEach(s => { seasonOpts += `<option value="${s.name}">${s.name}</option>`; });
+        } else { seasonOpts += '<option value="Wysoki Sezon">Wysoki Sezon</option><option value="Niski Sezon">Niski Sezon</option>'; }
+        
+        if(resP && resP.ok) {
+            const passTypes = await resP.json();
+            passTypes.forEach(p => { passOpts += `<option value="${p.name}">${p.name}</option>`; });
+        } else { passOpts += '<option value="Czasowy (4h)">Czasowy (4h)</option><option value="Całodniowy">Całodniowy</option><option value="Punktowy">Punktowy</option>'; }
+    } catch(e){}
+
+    const content = `
+        <form onsubmit="handleTariffBulk(event)">
+            <div class="form-group">
+                <label>Nazwa Taryfy (Grupy) (np. Karnet 4h)</label>
+                <input type="text" id="tb-name" class="form-control" required>
+            </div>
+            <div style="display: flex; gap: 16px;">
+                <div class="form-group" style="flex:1;">
+                    <label>Sezon</label>
+                    <select id="tb-season" class="form-control">${seasonOpts}</select>
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>Typ Karnetu</label>
+                    <select id="tb-pass" class="form-control">${passOpts}</select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Limit Puli (Opcjonalnie)</label>
+                <input type="number" id="tb-limit" class="form-control">
+            </div>
+            <hr style="border:0; border-top: 1px solid var(--border-color); margin: 16px 0;">
+            <h4 style="margin-bottom: 12px;">Cennik (Dodaj Ulgi)</h4>
+            <div id="discounts-container" style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; gap: 8px; align-items: center;" class="discount-row">
+                    <input type="text" class="form-control d-type" value="Normalny" required placeholder="Rodzaj (np. Normalny)">
+                    <input type="number" step="0.01" class="form-control d-price" required placeholder="Cena (PLN)">
+                </div>
+            </div>
+            <button type="button" class="btn-secondary" style="margin-top: 8px; font-size: 13px; padding: 4px 8px;" onclick="addDiscountRow()">+ Dodaj kolejną ulgę</button>
+
+            <div class="modal-footer" style="margin-top: 24px;">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Anuluj</button>
+                <button type="submit" class="btn-primary">Utwórz Taryfy</button>
+            </div>
+        </form>
+    `;
+    openModal('Kreator Taryf', content);
+};
+
+window.addDiscountRow = function() {
+    const div = document.createElement('div');
+    div.style = "display: flex; gap: 8px; align-items: center;";
+    div.className = "discount-row";
+    div.innerHTML = `
+        <input type="text" class="form-control d-type" required placeholder="Rodzaj (np. Ulgowy, Senior)">
+        <input type="number" step="0.01" class="form-control d-price" required placeholder="Cena (PLN)">
+        <button type="button" class="btn-secondary" style="padding: 4px; color: var(--danger); border-color: var(--danger);" onclick="this.parentElement.remove()">X</button>
+    `;
+    document.getElementById('discounts-container').appendChild(div);
+};
+
+window.handleTariffBulk = async function(event) {
+    event.preventDefault();
+    const rows = document.querySelectorAll('.discount-row');
+    const discounts = [];
+    rows.forEach(r => {
+        discounts.push({
+            discountType: r.querySelector('.d-type').value,
+            price: parseFloat(r.querySelector('.d-price').value)
+        });
+    });
+
+    const payload = {
+        name: document.getElementById('tb-name').value,
+        season: document.getElementById('tb-season').value || null,
+        passType: document.getElementById('tb-pass').value || null,
+        poolLimit: document.getElementById('tb-limit').value ? parseInt(document.getElementById('tb-limit').value) : null,
+        discounts: discounts
+    };
+
+    try {
+        const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+        const res = await fetch('/api/taryfy/bulk', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if(res.ok) {
+            showToast('Taryfy zostały wygenerowane.', 'success');
+            closeModal();
+            if(window.fetchTariffs) window.fetchTariffs();
+        } else showToast('Błąd tworzenia taryf.', 'error');
+    } catch(e) { showToast('Błąd.', 'error'); }
+};
+
+window.deleteTariff = async function(id) {
+    if(!confirm('Czy na pewno chcesz usunąć tę taryfę?')) return;
+    try {
+        const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+        const res = await fetch('/api/taryfy/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }});
+        if(res.ok) {
+            showToast('Taryfa usunięta.', 'success');
+            if(window.fetchTariffs) window.fetchTariffs();
+        } else {
+            const txt = await res.text();
+            showToast(txt || 'Błąd.', 'error');
+        }
+    } catch(e){}
+};
+
+// --- FAZA 4: Użytkownicy i uprawnienia ---
+window.loadUsersModule = async function(container, token) {
+    container.innerHTML = `
+        <div class="module-content">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div>
+                        <h3>Zarządzanie Personelem (Kasjerzy / Admini)</h3>
+                        <p style="color: var(--text-muted); margin-top: 8px;">Tworzenie i zarządzanie kontami pracowników.</p>
+                    </div>
+                    <button class="btn-primary" onclick="showUserForm()">Dodaj Pracownika</button>
+                </div>
+                <div id="users-container">
+                    <table class="data-table" id="users-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 12px; color: var(--text-muted);">ID</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Login</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Rola</th>
+                                <th style="padding: 12px; color: var(--text-muted);">Aktywne</th>
+                                <th style="padding: 12px; color: var(--text-muted); text-align: right;">Akcje</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+
+    window.fetchUsers = async () => {
+        try {
+            const res = await fetch('/api/users/all', { headers: { 'Authorization': 'Bearer ' + token } });
+            if(res.ok) {
+                const data = await res.json();
+                const tbody = document.querySelector('#users-table tbody');
+                tbody.innerHTML = '';
+                
+                // Filtrujemy tylko admin i kasjer dla uproszczenia (narciarze mogą być odfiltrowani na backendzie, ale tutaj zrobimy to dodatkowo)
+                const staff = data.filter(u => u.role === 'admin' || u.role === 'kasjer');
+                
+                staff.forEach(u => {
+                    const tr = document.createElement('tr');
+                    tr.style.borderBottom = '1px solid var(--border-color)';
+                    
+                    const roleColor = u.role === 'admin' ? '#ef4444' : '#3b82f6';
+                    
+                    tr.innerHTML = `
+                        <td style="padding: 12px;">${u.id}</td>
+                        <td style="padding: 12px; font-weight: 500;">${u.login}</td>
+                        <td style="padding: 12px;">
+                            <span style="font-size: 11px; padding: 2px 6px; border-radius: 12px; background-color: ${roleColor}22; color: ${roleColor};">
+                                ${u.role.toUpperCase()}
+                            </span>
+                        </td>
+                        <td style="padding: 12px;">${u.isActive ? 'Tak' : 'Nie'}</td>
+                        <td style="padding: 12px; text-align: right;">
+                            <button class="action-btn edit" onclick="showUserForm(${u.id}, '${u.login}', '${u.role}', ${u.isActive})" title="Edytuj">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                            <button class="action-btn delete" onclick="deleteUser(${u.id}, '${u.role}')" title="Usuń / Zablokuj">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        } catch(e){}
+    };
+    fetchUsers();
+};
+
+window.showUserForm = function(id = null, login = '', role = 'kasjer', isActive = true) {
+    const isEdit = id !== null;
+    const content = `
+        <form onsubmit="handleUserSubmit(event, ${id})">
+            <div class="form-group">
+                <label>Login / E-mail</label>
+                <input type="text" id="u-login" class="form-control" required value="${login}">
+            </div>
+            <div class="form-group">
+                <label>Hasło ${isEdit ? '(Zostaw puste by nie zmieniać)' : ''}</label>
+                <input type="password" id="u-pass" class="form-control" ${isEdit ? '' : 'required'}>
+            </div>
+            <div class="form-group">
+                <label>Rola</label>
+                <select id="u-role" class="form-control" ${isEdit ? 'disabled' : ''}>
+                    <option value="kasjer" ${role === 'kasjer' ? 'selected' : ''}>Kasjer</option>
+                    <option value="admin" ${role === 'admin' ? 'selected' : ''}>Administrator</option>
+                </select>
+                ${isEdit ? `<input type="hidden" id="u-role-hidden" value="${role}">` : ''}
+            </div>
+            <div class="form-group">
+                <label>Konto aktywne</label>
+                <select id="u-active" class="form-control">
+                    <option value="true" ${isActive ? 'selected' : ''}>Tak</option>
+                    <option value="false" ${!isActive ? 'selected' : ''}>Nie</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Anuluj</button>
+                <button type="submit" class="btn-primary">Zapisz</button>
+            </div>
+        </form>
+    `;
+    openModal(isEdit ? 'Edytuj Pracownika' : 'Dodaj Pracownika', content);
+};
+
+window.handleUserSubmit = async function(event, id) {
+    event.preventDefault();
+    const isEdit = id !== null;
+    const roleField = isEdit ? document.getElementById('u-role-hidden').value : document.getElementById('u-role').value;
+    
+    const payload = {
+        login: document.getElementById('u-login').value,
+        password: document.getElementById('u-pass').value || null,
+        role: roleField,
+        isActive: document.getElementById('u-active').value === 'true'
+    };
+
+    const method = isEdit ? 'PUT' : 'POST';
+    const url = isEdit ? '/api/users/' + id : '/api/users';
+
+    try {
+        const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+        const res = await fetch(url, {
+            method: method,
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if(res.ok) {
+            showToast('Zapisano pomyślnie.', 'success');
+            closeModal();
+            if(window.fetchUsers) window.fetchUsers();
+        } else showToast('Błąd zapisywania.', 'error');
+    } catch(e) { showToast('Błąd.', 'error'); }
+};
+
+window.deleteUser = async function(id, role) {
+    if(!confirm('Czy na pewno chcesz usunąć to konto? Jeżeli posiada historię transakcji, zostanie tylko zablokowane.')) return;
+    try {
+        const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+        const res = await fetch(`/api/users/${id}?role=${role}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }});
+        if(res.ok || res.status === 204) {
+            showToast('Operacja wykonana pomyślnie.', 'success');
+            if(window.fetchUsers) window.fetchUsers();
+        } else showToast('Błąd podczas usuwania.', 'error');
+    } catch(e){}
+};

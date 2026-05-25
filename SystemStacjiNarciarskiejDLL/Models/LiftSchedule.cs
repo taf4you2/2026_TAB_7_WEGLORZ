@@ -23,4 +23,8 @@ public class LiftSchedule
 
     [Column("closing_time")]
     public TimeSpan? ClosingTime { get; set; }
+
+    [Column("season_id")]
+    public int? SeasonId { get; set; }
+    public virtual DictSeason? Season { get; set; }
 }

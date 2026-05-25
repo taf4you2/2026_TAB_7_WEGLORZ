@@ -60,6 +60,100 @@ public class StatystykiController(SkiResortDbContext db) : ControllerBase
 
         return Ok(scansPerLift);
     }
+
+    [HttpGet("obciazenie-godzinowe")]
+    public async Task<IActionResult> GetHourlyTraffic([FromQuery] DateTime? date)
+    {
+        var targetDate = (date ?? DateTime.UtcNow).Date;
+        var nextDate = targetDate.AddDays(1);
+
+        var scans = await db.GateScans
+            .Include(gs => gs.Gate)
+                .ThenInclude(g => g!.Lift)
+            .Where(gs => gs.ScanTime >= targetDate && gs.ScanTime < nextDate && gs.ScanTime != null)
+            .GroupBy(gs => new { LiftName = gs.Gate!.Lift!.Name, Hour = gs.ScanTime!.Value.Hour })
+            .Select(g => new
+            {
+                LiftName = g.Key.LiftName ?? "Nieznany",
+                Hour = g.Key.Hour,
+                Count = g.Count()
+            })
+            .ToListAsync();
+
+        var grouped = scans.GroupBy(s => s.LiftName).Select(g => new {
+            LiftName = g.Key,
+            Data = Enumerable.Range(0, 24).Select(h => g.FirstOrDefault(x => x.Hour == h)?.Count ?? 0).ToArray()
+        });
+
+        return Ok(grouped);
+    }
+
+    [HttpGet("przychody-trend")]
+    public async Task<IActionResult> GetRevenueTrend([FromQuery] string period = "day")
+    {
+        var now = DateTime.UtcNow;
+        DateTime fromDate = now.Date.AddDays(-30); // Domyślnie ostatnie 30 dni
+        
+        if (period == "week") fromDate = now.Date.AddDays(-7*12);
+        else if (period == "month") fromDate = now.Date.AddMonths(-12);
+
+        var transactions = await db.Transactions
+            .Where(t => t.TransactionDate >= fromDate && t.Amount > 0)
+            .ToListAsync();
+
+        var grouped = transactions
+            .Where(t => t.TransactionDate.HasValue)
+            .GroupBy(t => {
+                var d = t.TransactionDate!.Value;
+                if (period == "month") return new DateTime(d.Year, d.Month, 1).ToString("yyyy-MM");
+                if (period == "week") return d.Date.AddDays(-(int)d.DayOfWeek).ToString("yyyy-MM-dd");
+                return d.ToString("yyyy-MM-dd");
+            })
+            .OrderBy(g => g.Key)
+            .Select(g => new {
+                DateLabel = g.Key,
+                Revenue = g.Sum(x => x.Amount)
+            });
+
+        return Ok(grouped);
+    }
+
+    [HttpGet("kanaly-sprzedazy")]
+    public async Task<IActionResult> GetSalesChannels()
+    {
+        var nowUtc = DateTime.UtcNow;
+        var startOfMonth = new DateTime(nowUtc.Year, nowUtc.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        
+        var transactions = await db.Transactions
+            .Where(t => t.TransactionDate >= startOfMonth && t.Amount > 0)
+            .ToListAsync();
+
+        var posSales = transactions.Where(t => t.CashierId != null).Sum(t => t.Amount);
+        var onlineSales = transactions.Where(t => t.ReservationId != null && t.CashierId == null).Sum(t => t.Amount);
+
+        return Ok(new { PosSales = posSales, OnlineSales = onlineSales });
+    }
+
+    [HttpGet("popularnosc-karnetow")]
+    public async Task<IActionResult> GetPassPopularity()
+    {
+        var nowUtc = DateTime.UtcNow;
+        var startOfMonth = new DateTime(nowUtc.Year, nowUtc.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        var passes = await db.SkiPasses
+            .Include(sp => sp.Tariff)
+            .Where(sp => sp.ValidFrom >= startOfMonth || sp.ValidTo >= startOfMonth)
+            .GroupBy(sp => sp.Tariff!.Name)
+            .Select(g => new {
+                TariffName = g.Key ?? "Inny",
+                Count = g.Count()
+            })
+            .OrderByDescending(x => x.Count)
+            .Take(5)
+            .ToListAsync();
+
+        return Ok(passes);
+    }
 }
 
 public record DashboardDto(

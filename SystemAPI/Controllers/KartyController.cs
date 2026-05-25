@@ -228,6 +228,66 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
             card.BlockReason
         );
     }
+
+    // POST /api/karty/partia
+    [HttpPost("partia")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> CreateCardBatch([FromBody] CardBatchRequest req)
+    {
+        var freeStatus = await db.DictCardStatuses.FirstOrDefaultAsync(s => s.Name == "wolna");
+        var cardsToInsert = new List<Card>();
+
+        for (int i = 0; i < req.Count; i++)
+        {
+            var cardId = $"{req.Prefix}{(req.StartNumber + i).ToString(new string('0', req.NumberLength))}";
+            cardsToInsert.Add(new Card
+            {
+                Id = cardId,
+                StatusId = freeStatus?.Id,
+                DepositPaid = false,
+                PhysicalCondition = "nowa",
+                AddedToPoolAt = DateTime.UtcNow
+            });
+        }
+
+        var generatedIds = cardsToInsert.Select(c => c.Id).ToList();
+        var existing = await db.Cards.Where(c => generatedIds.Contains(c.Id)).Select(c => c.Id).ToListAsync();
+        cardsToInsert.RemoveAll(c => existing.Contains(c.Id));
+
+        if (cardsToInsert.Any())
+        {
+            db.Cards.AddRange(cardsToInsert);
+            await db.SaveChangesAsync();
+        }
+
+        return Ok(new { GeneratedCount = cardsToInsert.Count, SkippedCount = req.Count - cardsToInsert.Count });
+    }
+
+    // PUT /api/karty/partia/zablokuj
+    [HttpPut("partia/zablokuj")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> BlockCardBatch([FromBody] BlockBatchRequest req)
+    {
+        var blockedStatus = await db.DictCardStatuses.FirstOrDefaultAsync(s => s.Name == "zastrzezony");
+        var cards = await db.Cards.Where(c => c.Id.StartsWith(req.Prefix)).ToListAsync();
+        
+        var toBlock = cards.Where(c => 
+        {
+            var numPart = c.Id.Substring(req.Prefix.Length);
+            if (int.TryParse(numPart, out int num))
+                return num >= req.StartNumber && num <= req.EndNumber;
+            return false;
+        }).ToList();
+
+        foreach(var card in toBlock)
+        {
+            card.StatusId = blockedStatus?.Id;
+            card.BlockReason = req.Reason;
+        }
+
+        await db.SaveChangesAsync();
+        return Ok(new { BlockedCount = toBlock.Count });
+    }
 }
 
 public record CardDto(
@@ -243,6 +303,8 @@ public record CardDto(
 
 public record IssueCardRequest(string Id);
 public record BlockCardRequest(string Reason);
+public record CardBatchRequest(string Prefix, int StartNumber, int NumberLength, int Count);
+public record BlockBatchRequest(string Prefix, int StartNumber, int EndNumber, string Reason);
 
 public record CardIssueVerificationDto(
     bool CanIssue,

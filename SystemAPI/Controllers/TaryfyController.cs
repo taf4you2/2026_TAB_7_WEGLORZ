@@ -30,7 +30,8 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
             t.PassType?.Name,
             t.Price,
             t.RideCount,
-            t.PoolLimit
+            t.PoolLimit,
+            t.DiscountType
         ));
 
         return Ok(result);
@@ -57,13 +58,49 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
             Price = req.Price,
             PoolLimit = req.PoolLimit,
             SeasonId = seasonId,
-            PassTypeId = passTypeId
+            PassTypeId = passTypeId,
+            DiscountType = req.DiscountType
         };
 
         db.Tariffs.Add(tariff);
         await db.SaveChangesAsync();
 
         return Ok(new { id = tariff.Id });
+    }
+
+    // POST /api/taryfy/bulk
+    [HttpPost("bulk")]
+    [Authorize(Roles = "admin,kasjer")]
+    public async Task<IActionResult> CreateBulk([FromBody] TariffBulkCreateRequest req)
+    {
+        var seasonId = await db.DictSeasons
+            .Where(s => s.Name == req.Season)
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync();
+
+        var passTypeId = await db.DictPassTypes
+            .Where(p => p.Name == req.PassType)
+            .Select(p => (int?)p.Id)
+            .FirstOrDefaultAsync();
+
+        var newTariffs = new List<Tariff>();
+        foreach (var item in req.Discounts)
+        {
+            newTariffs.Add(new Tariff
+            {
+                Name = req.Name,
+                DiscountType = item.DiscountType,
+                Price = item.Price,
+                PoolLimit = req.PoolLimit,
+                SeasonId = seasonId,
+                PassTypeId = passTypeId
+            });
+        }
+
+        db.Tariffs.AddRange(newTariffs);
+        await db.SaveChangesAsync();
+
+        return Ok();
     }
 
     // PUT /api/taryfy/{id}
@@ -87,6 +124,7 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
         tariff.Name = req.Name;
         tariff.Price = req.Price;
         tariff.PoolLimit = req.PoolLimit;
+        tariff.DiscountType = req.DiscountType;
         
         if (req.Season != null) tariff.SeasonId = seasonId;
         if (req.PassType != null) tariff.PassTypeId = passTypeId;
@@ -123,7 +161,8 @@ public record TariffDto(
     string? PassType,
     decimal? Price,
     int? RideCount,
-    int? PoolLimit
+    int? PoolLimit,
+    string? DiscountType
 );
 
 public record TariffModifyRequest(
@@ -131,5 +170,19 @@ public record TariffModifyRequest(
     string? Season,
     string? PassType,
     decimal? Price,
-    int? PoolLimit
+    int? PoolLimit,
+    string? DiscountType
+);
+
+public record TariffBulkCreateRequest(
+    string Name,
+    string? Season,
+    string? PassType,
+    int? PoolLimit,
+    List<DiscountPriceDto> Discounts
+);
+
+public record DiscountPriceDto(
+    string DiscountType,
+    decimal Price
 );

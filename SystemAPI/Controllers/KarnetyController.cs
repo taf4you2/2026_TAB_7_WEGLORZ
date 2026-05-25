@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -391,12 +391,57 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         sp.RemainingRides,
         sp.BlockReason
     );
+
+    // POST /api/karnety/specjalne
+    [HttpPost("specjalne")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> CreateSpecialPass([FromBody] SpecialPassRequest req)
+    {
+        var card = await db.Cards.FindAsync(req.CardId);
+        if (card == null) return BadRequest("Karta nie istnieje.");
+
+        var tariff = await db.Tariffs.FindAsync(req.TariffId);
+        if (tariff == null) return BadRequest("Taryfa nie istnieje.");
+
+        var activeStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "aktywny");
+        var opType = await db.DictOperationTypes.FirstOrDefaultAsync(o => o.Name == "wydanie_specjalne") ?? await db.DictOperationTypes.FirstOrDefaultAsync();
+
+        var pass = new SkiPass
+        {
+            CardId = req.CardId,
+            TariffId = req.TariffId,
+            StatusId = activeStatus?.Id,
+            ValidFrom = req.ValidFrom ?? DateTime.UtcNow,
+            ValidTo = req.ValidTo ?? DateTime.UtcNow.AddYears(1), // Domyślnie rok dla VIP
+            InitialRides = tariff.RideCount,
+            RemainingRides = tariff.RideCount,
+            BlockReason = "Specjalne: " + req.Reason
+        };
+        db.SkiPasses.Add(pass);
+
+        var cashierId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var transaction = new Transaction
+        {
+            CashierId = cashierId,
+            OperationTypeId = opType?.Id,
+            Amount = 0,
+            TransactionDate = DateTime.UtcNow
+        };
+        db.Transactions.Add(transaction);
+
+        var zajetaId = await db.DictCardStatuses.FirstOrDefaultAsync(s => s.Name == "zajeta");
+        if (zajetaId != null) card.StatusId = zajetaId.Id;
+        
+        await db.SaveChangesAsync();
+        return Ok(ToDto(pass));
+    }
 }
 
 public record ActivatePassRequest(string reservationNumber, string cardRFID);
 public record CreatePassRequest(string CardId, int TariffId, DateTime ValidFrom, DateTime ValidTo, int? UserId);
 public record BlockPassRequest(string Reason);
 public record ReturnPassRequest(string Reason, bool ReturnCard);
+public record SpecialPassRequest(string CardId, int TariffId, string Reason, DateTime? ValidFrom, DateTime? ValidTo);
 
 public record PassDto(
     int Id,

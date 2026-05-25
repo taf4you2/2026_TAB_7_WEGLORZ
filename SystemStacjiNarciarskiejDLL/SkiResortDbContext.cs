@@ -15,6 +15,8 @@ public class SkiResortDbContext : DbContext
     public DbSet<DictOperationType> DictOperationTypes { get; set; } = null!;
     public DbSet<DictSeason> DictSeasons { get; set; } = null!;
     public DbSet<DictTrailDifficulty> DictTrailDifficulties { get; set; } = null!;
+    public DbSet<DictLiftStatus> DictLiftStatuses { get; set; } = null!;
+    public DbSet<DictTrailStatus> DictTrailStatuses { get; set; } = null!;
     public DbSet<DictReservationStatus> DictReservationStatuses { get; set; } = null!;
     public DbSet<DictVerificationResult> DictVerificationResults { get; set; } = null!;
     public DbSet<DictReportType> DictReportTypes { get; set; } = null!;

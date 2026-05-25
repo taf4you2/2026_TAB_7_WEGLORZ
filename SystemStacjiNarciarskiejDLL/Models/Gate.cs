@@ -21,5 +21,9 @@ public class Gate
     [Column("is_active")]
     public bool? IsActive { get; set; }
 
+    [Column("last_heartbeat")]
+    public DateTime? LastHeartbeat { get; set; }
+
     public virtual ICollection<GateScan> GateScans { get; set; } = new List<GateScan>();
 }
+

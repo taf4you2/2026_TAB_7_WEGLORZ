@@ -32,5 +32,8 @@ public class Tariff
     [Column("pool_limit")]
     public int? PoolLimit { get; set; }
 
+    [Column("discount_type")]
+    public string? DiscountType { get; set; }
+
     public virtual ICollection<SkiPass> SkiPasses { get; set; } = new List<SkiPass>();
 }

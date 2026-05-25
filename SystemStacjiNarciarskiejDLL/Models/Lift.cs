@@ -21,6 +21,16 @@ public class Lift
     [Column("length")]
     public decimal? Length { get; set; }
 
+    [Column("capacity")]
+    public int? Capacity { get; set; }
+
+    [Column("type")]
+    public string? Type { get; set; }
+
+    [Column("status_id")]
+    public int? StatusId { get; set; }
+    public virtual DictLiftStatus? Status { get; set; }
+
     [Column("planner_id")]
     public int? PlannerId { get; set; }
 

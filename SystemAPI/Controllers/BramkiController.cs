@@ -27,7 +27,8 @@ public class BramkiController(SkiResortDbContext db) : ControllerBase
             g.Name,
             g.IsActive ?? false,
             g.LiftId,
-            g.Lift?.Name
+            g.Lift?.Name,
+            g.LastHeartbeat.HasValue && (DateTime.UtcNow - g.LastHeartbeat.Value).TotalMinutes < 2
         ));
 
         return Ok(result);
@@ -92,6 +93,20 @@ public class BramkiController(SkiResortDbContext db) : ControllerBase
 
         return NoContent();
     }
+
+    // POST /api/bramki/{id}/heartbeat
+    [HttpPost("{id}/heartbeat")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Heartbeat(int id)
+    {
+        var gate = await db.Gates.FindAsync(id);
+        if (gate == null) return NotFound();
+
+        gate.LastHeartbeat = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        return Ok();
+    }
 }
 
 public record GateDto(
@@ -99,7 +114,8 @@ public record GateDto(
     string? Name,
     bool IsActive,
     int? LiftId,
-    string? LiftName
+    string? LiftName,
+    bool IsOnline
 );
 
 public record GateModifyRequest(

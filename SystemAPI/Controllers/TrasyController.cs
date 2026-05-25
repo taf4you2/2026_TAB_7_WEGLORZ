@@ -4,12 +4,15 @@ using Microsoft.EntityFrameworkCore;
 using SystemStacjiNarciarskiejDLL;
 using SystemStacjiNarciarskiejDLL.Models;
 
+using Microsoft.AspNetCore.SignalR;
+using SystemAPI.Hubs;
+
 namespace SystemAPI.Controllers;
 
 [Authorize]
 [ApiController]
 [Route("api/trasy")]
-public class TrasyController(SkiResortDbContext db) : ControllerBase
+public class TrasyController(SkiResortDbContext db, IHubContext<InfrastructureHub> hub) : ControllerBase
 {
     // GET /api/trasy
     [HttpGet]
@@ -17,6 +20,7 @@ public class TrasyController(SkiResortDbContext db) : ControllerBase
     {
         var trasy = await db.Trails
             .Include(t => t.Difficulty)
+            .Include(t => t.Status)
             .OrderBy(t => t.Name)
             .ToListAsync();
 
@@ -25,7 +29,11 @@ public class TrasyController(SkiResortDbContext db) : ControllerBase
             t.Name,
             t.Location,
             t.Length,
-            t.Difficulty?.Name
+            t.Difficulty?.Name,
+            t.SnowCondition,
+            t.PreparationStatus,
+            t.Status?.Name,
+            t.StatusId
         ));
 
         return Ok(result);
@@ -56,7 +64,9 @@ public class TrasyController(SkiResortDbContext db) : ControllerBase
             Name = req.Name,
             Location = req.Location,
             Length = req.Length,
-            DifficultyId = difficultyId
+            DifficultyId = difficultyId,
+            SnowCondition = req.SnowCondition,
+            PreparationStatus = req.PreparationStatus
         };
 
         db.Trails.Add(trail);
@@ -82,6 +92,8 @@ public class TrasyController(SkiResortDbContext db) : ControllerBase
         trail.Location = req.Location;
         trail.Length = req.Length;
         trail.DifficultyId = difficultyId;
+        trail.SnowCondition = req.SnowCondition;
+        trail.PreparationStatus = req.PreparationStatus;
 
         await db.SaveChangesAsync();
 
@@ -109,6 +121,21 @@ public class TrasyController(SkiResortDbContext db) : ControllerBase
 
         return NoContent();
     }
+
+    // PUT /api/trasy/{id}/status
+    [HttpPut("{id}/status")]
+    [Authorize(Roles = "admin,kasjer")]
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateTrailStatusRequest req)
+    {
+        var trail = await db.Trails.FindAsync(id);
+        if (trail == null) return NotFound();
+
+        trail.StatusId = req.StatusId;
+        await db.SaveChangesAsync();
+
+        await hub.Clients.All.SendAsync("TrailStatusUpdated", id, req.StatusId);
+        return Ok();
+    }
 }
 
 public record TrailDto(
@@ -116,12 +143,20 @@ public record TrailDto(
     string Name,
     string? Location,
     decimal? Length,
-    string? Difficulty
+    string? Difficulty,
+    string? SnowCondition,
+    string? PreparationStatus,
+    string? StatusName,
+    int? StatusId
 );
 
 public record TrailModifyRequest(
     string Name,
     string? Location,
     decimal? Length,
-    string? Difficulty
+    string? Difficulty,
+    string? SnowCondition,
+    string? PreparationStatus
 );
+
+public record UpdateTrailStatusRequest(int? StatusId);

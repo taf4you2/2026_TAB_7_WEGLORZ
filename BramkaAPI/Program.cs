@@ -1,9 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using SystemStacjiNarciarskiejDLL;
+using BramkaAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddHttpClient();
+builder.Services.AddHostedService<SyncBackgroundService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var dbPassword = builder.Configuration["DbPassword"];

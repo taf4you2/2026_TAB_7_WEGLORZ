@@ -1,4 +1,4 @@
-import { apiFetch } from './core.js';
+import { apiFetch, showToast, token } from './core.js';
 
 export async function loadSales() {
     const comp = await apiFetch('/api/statystyki/sprzedaz-porownanie');
@@ -19,7 +19,33 @@ export async function loadSales() {
                 <td>${new Date(c.startTime).toLocaleTimeString()}</td>
                 <td>-</td>
                 <td><span class="badge badge-active">ZMIANA</span></td>
+                <td>
+                    <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; color:var(--danger);" onclick="closeShift(${c.cashierId}, '${c.login}')">Zamknij dniowke</button>
+                </td>
             </tr>
-        `).join('');
+        `).join('') || '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">Brak aktywnych kasjerow.</td></tr>';
     }
 }
+
+export async function closeShift(id, login) {
+    if (!confirm(`Czy na pewno chcesz ROZLICZYC I ZAMKNAC dniowke kasjera: ${login}?`)) return;
+
+    try {
+        const res = await fetch(`/api/raporty/zamknij-kasjera/${id}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            showToast(`Zmiana zamknieta. Utarg: ${data.revenue} zl`, 'success');
+            loadSales();
+        } else {
+            const err = await res.json().catch(() => ({}));
+            showToast(err.message || 'Blad zamykania zmiany', 'error');
+        }
+    } catch (e) {
+        showToast('Blad polaczenia', 'error');
+    }
+}
+

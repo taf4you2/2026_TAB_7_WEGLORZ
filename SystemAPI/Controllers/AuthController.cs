@@ -46,7 +46,7 @@ public class AuthController(SkiResortDbContext db, IConfiguration config) : Cont
             if (user == null || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
                 return Unauthorized(new { message = "Nieprawidłowy e-mail lub hasło." });
 
-            return Ok(new LoginResponse(user.Id, "narciarz", GenerateToken(user.Id, "narciarz", user.Email)));
+            return Ok(new LoginResponse(user.Id, "narciarz", GenerateToken(user.Id, "narciarz", user.Email ?? "narciarz")));
         }
 
         return BadRequest(new { message = "Nieznana rola." });
@@ -75,7 +75,7 @@ public class AuthController(SkiResortDbContext db, IConfiguration config) : Cont
         db.Users.Add(user);
         await db.SaveChangesAsync();
 
-        return Ok(new LoginResponse(user.Id, "narciarz", GenerateToken(user.Id, "narciarz", user.Email)));
+        return Ok(new LoginResponse(user.Id, "narciarz", GenerateToken(user.Id, "narciarz", user.Email ?? "narciarz")));
     }
 
     // POST /api/auth/logout

@@ -12,7 +12,10 @@
         <nav id="sidebar-nav">
             <div class="nav-item active" onclick="showSection('dashboard', this)">Dashboard</div>
             <div class="nav-item" onclick="showSection('infra', this)">Infrastruktura</div>
+            <div class="nav-item" onclick="showSection('tariffs', this)">Cennik i Taryfy</div>
+            <div class="nav-item" onclick="showSection('cards', this)">Karty RFID</div>
             <div class="nav-item" onclick="showSection('sales', this)">Sprzedaz i Kasy</div>
+            <div class="nav-item" onclick="showSection('reports', this)">Raporty</div>
             <div class="nav-item" onclick="showSection('staff', this)">Pracownicy</div>
             <div class="nav-item" onclick="showSection('customers', this)">Klienci</div>
         </nav>
@@ -28,17 +31,16 @@
         </header>
 
         <div class="content">
+            <!-- DASHBOARD -->
             <div id="sec-dashboard" class="section active">
                 <h1>Dashboard</h1>
                 <p class="subtitle">Podglad stanu stacji narciarskiej</p>
-                
                 <div class="stats-grid">
                     <div class="stat-card"><div class="stat-label">Bilety dzis</div><div id="stat-tickets" class="stat-value">0</div></div>
                     <div class="stat-card"><div class="stat-label">Aktywne karnety</div><div id="stat-passes" class="stat-value">0</div></div>
                     <div class="stat-card"><div class="stat-label">Przychod dzis</div><div id="stat-revenue" class="stat-value">0 zl</div></div>
                     <div class="stat-card"><div class="stat-label">Zwroty</div><div id="stat-returns" class="stat-value">0</div></div>
                 </div>
-
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
                     <div class="card">
                         <div class="card-header"><h3>Ruch dzisiaj (godzinowo)</h3></div>
@@ -53,18 +55,17 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="card">
                     <div class="card-header"><h3>Oblozenie wyciagow (15 min)</h3></div>
                     <div class="card-body" id="realtime-occupancy-list">Laduje...</div>
                 </div>
-
                 <div class="card">
                     <div class="card-header"><h3>Ostatnie bledy na bramkach</h3></div>
                     <div class="card-body" id="failed-scans-list" style="padding: 0;">Laduje...</div>
                 </div>
             </div>
 
+            <!-- INFRASTRUCTURE -->
             <div id="sec-infra" class="section">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 24px;">
                     <h1>Infrastruktura</h1>
@@ -76,6 +77,34 @@
                 <div id="infra-list">Laduje...</div>
             </div>
 
+            <!-- TARIFFS -->
+            <div id="sec-tariffs" class="section">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 24px;">
+                    <h1>Cennik i Taryfy</h1>
+                    <button class="btn btn-primary" onclick="openTariffModal()">+ Nowa taryfa</button>
+                </div>
+                <div class="card"><div class="card-body">
+                    <table><thead><tr><th>Nazwa</th><th>Sezon</th><th>Typ</th><th>Cena</th><th>Limit</th><th>Akcje</th></tr></thead>
+                    <tbody id="tariffs-tbody"></tbody></table>
+                </div></div>
+            </div>
+
+            <!-- CARDS -->
+            <div id="sec-cards" class="section">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 24px;">
+                    <h1>Karty RFID</h1>
+                    <div style="display: flex; gap: 12px;">
+                        <input type="text" id="card-search" placeholder="Szukaj RFID..." style="padding: 8px 12px; background: var(--panel-dark); border: 1px solid var(--border); border-radius: 8px; color: white;">
+                        <button class="btn btn-primary" onclick="openCardModal()">+ Dodaj karte</button>
+                    </div>
+                </div>
+                <div class="card"><div class="card-body">
+                    <table><thead><tr><th>RFID</th><th>Status</th><th>Wlasciciel</th><th>Karnet</th><th>Kaucja</th><th>Akcje</th></tr></thead>
+                    <tbody id="cards-tbody"></tbody></table>
+                </div></div>
+            </div>
+
+            <!-- SALES -->
             <div id="sec-sales" class="section">
                 <h1>Sprzedaz i Kasy</h1>
                 <p class="subtitle">Analiza kanalow i aktywni pracownicy</p>
@@ -86,6 +115,52 @@
                 </div></div>
             </div>
 
+            <!-- REPORTS -->
+            <div id="sec-reports" class="section">
+                <h1>Raporty Zarzadcze</h1>
+                <p class="subtitle">Analityka finansowa i operacyjna stacji</p>
+                <div style="display:flex; gap:12px; margin-bottom:24px;">
+                    <button class="btn btn-outline" onclick="showReportTab('shift')">Rozliczenia Kas</button>
+                    <button class="btn btn-outline" onclick="showReportTab('sales')">Sprzedaz Ogolna</button>
+                    <button class="btn btn-outline" onclick="showReportTab('infra')">Przepustowosc</button>
+                    <button class="btn btn-outline" onclick="showReportTab('history')">Historia Raportow</button>
+                </div>
+                <div id="report-tab-shift" class="report-tab">
+                    <div class="card"><div class="card-header"><h3>Historia dniowek kasowych</h3></div>
+                    <div class="card-body">
+                        <table><thead><tr><th>ID</th><th>Kasjer</th><th>Otwarcie</th><th>Zamkniecie</th><th>Przychod</th><th>Karty</th></tr></thead>
+                        <tbody id="reports-shift-tbody"></tbody></table>
+                    </div></div>
+                </div>
+                <div id="report-tab-sales" class="report-tab" style="display:none;">
+                    <div class="card" style="margin-bottom:24px;"><div class="card-body">
+                        <div style="display:flex; align-items:flex-end; gap:12px;">
+                            <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Od</label><input type="date" id="report-sales-from" style="width:100%; padding:10px; background:var(--bg-dark); border:1px solid var(--border); border-radius:8px; color:white;"></div>
+                            <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Do</label><input type="date" id="report-sales-to" style="width:100%; padding:10px; background:var(--bg-dark); border:1px solid var(--border); border-radius:8px; color:white;"></div>
+                            <button class="btn btn-primary" onclick="generateGeneralReport()">Generuj</button>
+                        </div>
+                    </div></div>
+                    <div id="sales-report-result"></div>
+                </div>
+                <div id="report-tab-infra" class="report-tab" style="display:none;">
+                    <div class="card" style="margin-bottom:24px;"><div class="card-body">
+                        <div style="display:flex; align-items:flex-end; gap:12px;">
+                            <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Data</label><input type="date" id="report-infra-date" style="width:100%; padding:10px; background:var(--bg-dark); border:1px solid var(--border); border-radius:8px; color:white;"></div>
+                            <button class="btn btn-primary" onclick="loadThroughputReport()">Analizuj</button>
+                        </div>
+                    </div></div>
+                    <div id="infra-report-result"></div>
+                </div>
+                <div id="report-tab-history" class="report-tab" style="display:none;">
+                    <div class="card"><div class="card-header"><h3>Logi wygenerowanych raportow</h3></div>
+                    <div class="card-body">
+                        <table><thead><tr><th>ID</th><th>Administrator</th><th>Typ</th><th>Parametry</th><th>Data</th></tr></thead>
+                        <tbody id="reports-history-tbody"></tbody></table>
+                    </div></div>
+                </div>
+            </div>
+
+            <!-- STAFF -->
             <div id="sec-staff" class="section">
                 <div style="display: flex; justify-content: space-between;">
                     <h1>Pracownicy</h1>
@@ -97,6 +172,7 @@
                 </div></div>
             </div>
 
+            <!-- CUSTOMERS -->
             <div id="sec-customers" class="section">
                 <h1>Baza Klientow</h1>
                 <div class="card"><div class="card-body">
@@ -148,6 +224,32 @@
         </div>
     </div>
 
+    <div id="modal-overlay-tariff" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; place-items: center;">
+        <div class="card" style="width: 400px; margin-bottom: 0;">
+            <div class="card-header"><h3 id="modal-tariff-title">Taryfa</h3></div>
+            <div class="card-body"><form id="tariff-form">
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Nazwa</label><input type="text" id="tariff-name" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required></div>
+                <div style="display:flex; gap:12px; margin-bottom:12px;">
+                    <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Cena (zl)</label><input type="number" id="tariff-price" step="0.01" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required></div>
+                    <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Limit punktow</label><input type="number" id="tariff-pool" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"></div>
+                </div>
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Sezon</label><select id="tariff-season" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"><option value="wysoki">Wysoki</option><option value="niski">Niski</option></select></div>
+                <div style="margin-bottom: 20px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Typ karnetu</label><select id="tariff-type" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"><option value="czasowy">Czasowy</option><option value="punktowy">Punktowy</option></select></div>
+                <div style="display: flex; gap: 12px;"><button type="button" class="btn btn-outline" style="flex:1" onclick="closeTariffModal()">Anuluj</button><button type="submit" class="btn btn-primary" style="flex:1">Zapisz</button></div>
+            </form></div>
+        </div>
+    </div>
+
+    <div id="modal-overlay-card" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; place-items: center;">
+        <div class="card" style="width: 400px; margin-bottom: 0;">
+            <div class="card-header"><h3>Dodaj nowa karte RFID</h3></div>
+            <div class="card-body"><form id="card-form">
+                <div style="margin-bottom: 20px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">ID Karty (RFID)</label><input type="text" id="card-rfid" placeholder="np. A1:B2:C3:D4" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required></div>
+                <div style="display: flex; gap: 12px;"><button type="button" class="btn btn-outline" style="flex:1" onclick="closeCardModal()">Anuluj</button><button type="submit" class="btn btn-primary" style="flex:1">Dodaj</button></div>
+            </form></div>
+        </div>
+    </div>
+
     <div id="modal-overlay-history" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; place-items: center;">
         <div class="card" style="width: 600px; max-height: 80vh; display: flex; flex-direction: column;">
             <div class="card-header"><h3 id="modal-history-title">Historia</h3></div>
@@ -157,7 +259,6 @@
     </div>
 
     <div id="toast"></div>
-
     <script type="module" src="js/admin.js"></script>
 </body>
 </html>

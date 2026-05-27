@@ -27,7 +27,7 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
             t.Id,
             t.Name,
             season = t.Season?.Name,
-            t.Price,
+            t.Price ,
             t.RideCount
         }));
     }

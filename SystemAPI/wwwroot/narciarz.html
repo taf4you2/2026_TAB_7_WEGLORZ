@@ -480,906 +480,1086 @@
 <!-- ====== TREŚĆ ====== -->
 <div class="content-wrapper">
 
-  <!-- ======== MOJE KARNETY ======== -->
-  <div class="section active" id="sec-karnety">
-    <div class="section-header">
-      <h2>Moje karnety</h2>
-      <p>Historia i aktywne karnety na Twoje konto</p>
-    </div>
+    <!-- ======== MOJE KARNETY ======== -->
+    <!--
+    <div class="section active" id="sec-karnety">
+      <div class="section-header">
+        <h2>Moje karnety</h2>
+        <p>Historia i aktywne karnety na Twoje konto</p>
+      </div>
 
-    <div class="card" style="margin-bottom:16px">
-      <div class="card-body" style="display:flex;gap:12px;align-items:flex-end">
-        <div class="form-group" style="margin-bottom:0;flex:1">
-          <label class="form-label">Numer karty RFID</label>
-          <input class="form-input" type="text" id="narciarz-rfid" placeholder="np. A3:F2:11:CC" style="margin-bottom:0">
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-body" style="display:flex;gap:12px;align-items:flex-end">
+          <div class="form-group" style="margin-bottom:0;flex:1">
+            <label class="form-label">Numer karty RFID</label>
+            <input class="form-input" type="text" id="narciarz-rfid" placeholder="np. A3:F2:11:CC" style="margin-bottom:0">
+          </div>
+          <button class="btn btn-primary" onclick="zaladujMojeDane()">Załaduj</button>
         </div>
-        <button class="btn btn-primary" onclick="zaladujMojeDane()">Załaduj</button>
       </div>
-    </div>
 
-    <div id="karnety-passes" class="passes-grid">
-      <div style="color:var(--text-muted);padding:16px">Ładowanie karnetów…</div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div><h3>Szczegóły aktywnego karnetu</h3></div>
+      <div id="karnety-passes" class="passes-grid">
+        <div style="color:var(--text-muted);padding:16px">Ładowanie karnetów…</div>
       </div>
-      <div class="card-body" id="karnety-detail-body">
-        <div style="color:var(--text-muted)">Brak aktywnego karnetu.</div>
-      </div>
-    </div>
 
-    <div class="card" style="margin-top:20px">
-      <div class="card-header">
-        <div><h3>Rezerwacje oczekujące na odbiór</h3></div>
-      </div>
-      <div class="card-body" id="rezerwacje-lista">
-        <div style="color:var(--text-muted)">Ładowanie…</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======== ROZKŁAD WYCIĄGÓW ======== -->
-  <div class="section" id="sec-rozklad">
-    <div class="section-header">
-      <h2>Rozkład wyciągów</h2>
-      <p id="rozklad-subtitle">Aktualny status</p>
-    </div>
-
-    <div class="weather-bar">
-      <div class="weather-item">🌡️ <strong>−3°C</strong></div>
-      <div class="weather-sep"></div>
-      <div class="weather-item">🌨️ <strong>Opady śniegu</strong></div>
-      <div class="weather-sep"></div>
-      <div class="weather-item">💨 Wiatr <strong>12 km/h</strong></div>
-      <div class="weather-sep"></div>
-      <div class="weather-item">👁️ Widoczność <strong>dobra</strong></div>
-      <div class="weather-sep"></div>
-      <div class="weather-item">❄️ Pokrywa <strong>85 cm</strong></div>
-      <div class="weather-sep"></div>
-      <div class="weather-item">
-        <span style="background:var(--success-light);color:var(--success);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600" id="rozklad-lift-counter">
-          — wyciągów czynnych
-        </span>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div><h3>Wyciągi — godziny pracy i status</h3></div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Wyciąg</th>
-            <th>Obsługiwane trasy</th>
-            <th>Trudność</th>
-            <th>Godziny pracy</th>
-            <th>Czas oczekiwania</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td colspan="6" style="color:var(--text-muted);padding:16px">Ładowanie…</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="card">
-      <div class="card-header"><div><h3>Mapa tras i poziomy trudności</h3></div></div>
-      <div class="card-body">
-        <div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:16px">
-          <div style="display:flex; align-items:center; gap:8px; font-size:13px">
-            <span class="diff-dot diff-green" style="width:16px;height:16px"></span> Trasy zielone (łatwe): E, F, G, I
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; font-size:13px">
-            <span class="diff-dot diff-blue" style="width:16px;height:16px"></span> Trasy niebieskie (średnie): A, B, H
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; font-size:13px">
-            <span class="diff-dot diff-red" style="width:16px;height:16px"></span> Trasy czerwone (trudne): C, D
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; font-size:13px">
-            <span class="diff-dot diff-black" style="width:16px;height:16px"></span> Trasy czarne (ekstremalne): D (sekcja dolna)
-          </div>
+      <div class="card">
+        <div class="card-header">
+          <div><h3>Szczegóły aktywnego karnetu</h3></div>
         </div>
-        <div style="
+        <div class="card-body" id="karnety-detail-body">
+          <div style="color:var(--text-muted)">Brak aktywnego karnetu.</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <div class="card-header">
+          <div><h3>Rezerwacje oczekujące na odbiór</h3></div>
+        </div>
+        <div class="card-body" id="rezerwacje-lista">
+          <div style="color:var(--text-muted)">Ładowanie…</div>
+        </div>
+      </div>
+    </div>
+      -->
+    <!-- ======== MOJE KARNETY ======== -->
+    <div class="section active" id="sec-karnety">
+        <div class="section-header">
+            <h2>Moje karnety</h2>
+            <p>Historia i aktywne karnety na Twoje konto</p>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+            <div class="card-body" style="display:flex;gap:12px;align-items:flex-end">
+                <div class="form-group" style="margin-bottom:0;flex:1">
+                    <label class="form-label">Numer karty RFID</label>
+                    <select class="form-input" id="narciarz-rfid" style="margin-bottom:0">
+                        <option value="">-- wybierz kartę --</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="zaladujMojeDane()">Załaduj</button>
+            </div>
+        </div>
+
+        <div id="karnety-passes" class="passes-grid">
+            <div style="color:var(--text-muted);padding:16px">Ładowanie karnetów…</div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div><h3>Szczegóły aktywnego karnetu</h3></div>
+            </div>
+            <div class="card-body" id="karnety-detail-body">
+                <div style="color:var(--text-muted)">Brak aktywnego karnetu.</div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top:20px">
+            <div class="card-header">
+                <div><h3>Rezerwacje oczekujące na odbiór</h3></div>
+            </div>
+            <div class="card-body" id="rezerwacje-lista">
+                <div style="color:var(--text-muted)">Ładowanie…</div>
+            </div>
+        </div>
+    </div>
+
+        <!-- ======== ROZKŁAD WYCIĄGÓW ======== -->
+        <div class="section" id="sec-rozklad">
+            <div class="section-header">
+                <h2>Rozkład wyciągów</h2>
+                <p id="rozklad-subtitle">Aktualny status</p>
+            </div>
+
+            <div class="weather-bar">
+                <div class="weather-item">🌡️ <strong>−3°C</strong></div>
+                <div class="weather-sep"></div>
+                <div class="weather-item">🌨️ <strong>Opady śniegu</strong></div>
+                <div class="weather-sep"></div>
+                <div class="weather-item">💨 Wiatr <strong>12 km/h</strong></div>
+                <div class="weather-sep"></div>
+                <div class="weather-item">👁️ Widoczność <strong>dobra</strong></div>
+                <div class="weather-sep"></div>
+                <div class="weather-item">❄️ Pokrywa <strong>85 cm</strong></div>
+                <div class="weather-sep"></div>
+                <div class="weather-item">
+                    <span style="background:var(--success-light);color:var(--success);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600" id="rozklad-lift-counter">
+                        — wyciągów czynnych
+                    </span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div><h3>Wyciągi — godziny pracy i status</h3></div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Wyciąg</th>
+                            <th>Obsługiwane trasy</th>
+                            <th>Trudność</th>
+                            <th>Godziny pracy</th>
+                            <th>Czas oczekiwania</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="6" style="color:var(--text-muted);padding:16px">Ładowanie…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><div><h3>Mapa tras i poziomy trudności</h3></div></div>
+                <div class="card-body">
+                    <div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:16px">
+                        <div style="display:flex; align-items:center; gap:8px; font-size:13px">
+                            <span class="diff-dot diff-green" style="width:16px;height:16px"></span> Trasy zielone (łatwe): E, F, G, I
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; font-size:13px">
+                            <span class="diff-dot diff-blue" style="width:16px;height:16px"></span> Trasy niebieskie (średnie): A, B, H
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; font-size:13px">
+                            <span class="diff-dot diff-red" style="width:16px;height:16px"></span> Trasy czerwone (trudne): C, D
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; font-size:13px">
+                            <span class="diff-dot diff-black" style="width:16px;height:16px"></span> Trasy czarne (ekstremalne): D (sekcja dolna)
+                        </div>
+                    </div>
+                    <div style="
           background: linear-gradient(160deg, #90CAF9 0%, #E3F2FD 100%);
           border-radius: 8px; height: 200px;
           display: flex; align-items: center; justify-content: center;
           border: 1px dashed #90CAF9; color: #1565C0; font-size:14px; font-weight:600;
         ">
-          🗺️ Tu będzie interaktywna mapa stoku (komponent graficzny)
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======== HISTORIA PRZEJAZDÓW ======== -->
-  <div class="section" id="sec-historia">
-    <div class="section-header">
-      <h2>Historia przejazdów</h2>
-      <p>Logi skanowania bramek</p>
-    </div>
-
-    <div class="card" style="margin-bottom:16px">
-      <div class="card-body" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
-        <div class="form-group" style="margin-bottom:0;flex:1;min-width:160px">
-          <label class="form-label">Karta RFID</label>
-          <input class="form-input" type="text" id="historia-rfid" placeholder="np. A3:F2:11:CC" style="margin-bottom:0">
-        </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Data (puste = wszystkie)</label>
-          <input class="form-input" type="date" id="historia-date" style="margin-bottom:0">
-        </div>
-        <button class="btn btn-primary" onclick="zaladujHistorie()">Załaduj</button>
-      </div>
-    </div>
-
-    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px" id="historia-stats"></div>
-
-    <div class="card">
-      <div class="card-header">
-        <div id="historia-today-header">
-          <h3>Dzisiaj</h3>
-          <p>—</p>
-        </div>
-        <button class="btn btn-outline btn-sm">🖨️ Drukuj raport przejazdów (UC10)</button>
-      </div>
-      <div class="card-body">
-        <div class="timeline" id="historia-timeline">
-          <div style="color:var(--text-muted);padding:8px">Podaj kartę RFID i kliknij Załaduj.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======== ZWRÓĆ KARNET ======== -->
-  <div class="section" id="sec-zwrot">
-    <div class="section-header">
-      <h2>Zwróć karnet</h2>
-      <p>UC11 · Zwrot karnetu z częściowym zwrotem środków</p>
-    </div>
-
-    <div class="card" style="margin-bottom:16px">
-      <div class="card-body" style="display:flex;gap:12px;align-items:flex-end">
-        <div class="form-group" style="margin-bottom:0;flex:1">
-          <label class="form-label">Numer karty RFID</label>
-          <input class="form-input" type="text" id="zwrot-rfid" placeholder="np. A3:F2:11:CC" style="margin-bottom:0">
-        </div>
-        <button class="btn btn-primary" onclick="zaladujZwrot()">Załaduj karnety</button>
-      </div>
-    </div>
-
-    <div id="zwrot-result" style="display:none;margin-bottom:16px"></div>
-
-    <div class="alert alert-info">
-      ℹ️ Zwrot jest liczony proporcjonalnie do liczby niewykorzystanych dni. Opłata manipulacyjna: 10 zł. Kaucja za kartę (20 zł) zostaje zwrócona po oddaniu karty.
-    </div>
-
-    <div class="card">
-      <div class="card-header"><h3>Wybierz karnet do zwrotu</h3></div>
-      <div class="card-body">
-        <div style="display:grid; gap:10px" id="zwrot-karnety-lista">
-          <div style="color:var(--text-muted);font-size:13px">Podaj numer karty RFID powyżej, aby załadować karnety.</div>
-        </div>
-      </div>
-    </div>
-
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px">
-      <div class="card" style="margin-bottom:0">
-        <div class="card-header"><h3>Szczegóły zwrotu</h3></div>
-        <div class="card-body" id="zwrot-preview-body">
-          <div style="color:var(--text-muted);font-size:13px">Wybierz karnet, aby zobaczyć symulację zwrotu.</div>
-        </div>
-      </div>
-
-      <div class="card" style="margin-bottom:0">
-        <div class="card-header"><h3>Wypełnij wniosek</h3></div>
-        <div class="card-body">
-          <div class="form-group">
-            <label class="form-label">Powód zwrotu</label>
-            <select class="form-select" id="zwrot-reason-select" onchange="syncZwrotReason()">
-              <option value="">-- Wybierz powód --</option>
-              <option value="Kontuzja / choroba">Kontuzja / choroba</option>
-              <option value="Zmiana planów">Zmiana planów</option>
-              <option value="Warunki pogodowe">Warunki pogodowe</option>
-              <option value="Inny powód">Inny powód</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Dodatkowe uwagi (opcjonalnie)</label>
-            <textarea class="form-input" id="zwrot-reason" rows="3" style="resize:vertical" placeholder="Opisz sytuację..."></textarea>
-          </div>
-          <div class="form-group">
-            <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; font-size:13px">
-              <input type="checkbox" id="zwrot-return-card" style="margin-top:2px; accent-color:var(--primary)" onchange="odswiezPodglad()">
-              <span>Zwracam kartę RFID — kaucja 20 zł zostanie doliczona do zwrotu</span>
-            </label>
-          </div>
-          <div style="display:flex; gap:10px; margin-top:8px">
-            <button class="btn btn-danger" id="zwrot-btn" onclick="zlozWniosek()">↩️ Złóż wniosek o zwrot</button>
-            <button class="btn btn-outline" onclick="document.getElementById('zwrot-karnety-lista').querySelectorAll('input[type=radio]').forEach(r=>r.checked=false);selectedPassId=null;">Anuluj</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======== KUP KARNET (UC2) ======== -->
-  <div class="section" id="sec-zakup">
-    <div class="section-header">
-      <h2>Kup karnet online</h2>
-      <p>UC2 · Rezerwacja i zakup online — karnet do odbioru przy kasie</p>
-    </div>
-
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px">
-
-      <!-- KROK 1: wybór taryfy -->
-      <div class="card" style="margin-bottom:0">
-        <div class="card-header"><h3>1. Wybierz typ karnetu</h3></div>
-        <div class="card-body">
-          <div id="zakup-taryfy-lista" style="display:grid;gap:10px">
-            <div style="color:var(--text-muted)">Ładowanie…</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- KROK 2: daty + podsumowanie + płatność -->
-      <div style="display:flex;flex-direction:column;gap:20px">
-        <div class="card" style="margin-bottom:0">
-          <div class="card-header"><h3>2. Wybierz daty</h3></div>
-          <div class="card-body">
-            <div class="form-group">
-              <label class="form-label">Data rozpoczęcia</label>
-              <input class="form-input" type="date" id="zakup-from">
+                        🗺️ Tu będzie interaktywna mapa stoku (komponent graficzny)
+                    </div>
+                </div>
             </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label class="form-label">Data zakończenia</label>
-              <input class="form-input" type="date" id="zakup-to">
+        </div>
+
+        <!-- ======== HISTORIA PRZEJAZDÓW ======== -->
+        <div class="section" id="sec-historia">
+            <div class="section-header">
+                <h2>Historia przejazdów</h2>
+                <p>Logi skanowania bramek</p>
             </div>
-          </div>
-        </div>
 
-        <div class="card" style="margin-bottom:0">
-          <div class="card-header"><h3>3. Podsumowanie i płatność</h3></div>
-          <div class="card-body">
-            <div id="zakup-summary" style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
-              Wybierz karnet i daty, aby zobaczyć podsumowanie.
+            <div class="card" style="margin-bottom:16px">
+                <div class="card-body" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+                    <div class="form-group" style="margin-bottom:0;flex:1;min-width:160px">
+                        <label class="form-label">Karta RFID</label>
+                        <select class="form-input" id="historia-rfid" style="margin-bottom:0">
+                            <option value="">-- wybierz kartę --</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0">
+                        <label class="form-label">Data (puste = wszystkie)</label>
+                        <input class="form-input" type="date" id="historia-date" style="margin-bottom:0">
+                    </div>
+                    <button class="btn btn-primary" onclick="zaladujHistorie()">Załaduj</button>
+                </div>
             </div>
-            <button class="btn btn-primary" id="zakup-btn" onclick="zlozZamowienie()" style="width:100%" disabled>
-              💳 Zapłać i zarezerwuj
-            </button>
-            <div id="zakup-result" style="display:none;margin-top:14px"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
-</div><!-- /content-wrapper -->
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px" id="historia-stats"></div>
 
-<script>
-  function showSection(id, tabEl) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelector('#sec-' + id).classList.add('active');
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    if (tabEl) tabEl.classList.add('active');
-    if (id === 'rozklad') loadWyciagi();
-    if (id === 'karnety') { if (myRfid) zaladujKarnety(); zaladujRezerwacje(); }
-    if (id === 'historia' && myRfid) zaladujHistorie();
-    if (id === 'zwrot'   && myRfid) zaladujZwrot();
-    if (id === 'zakup') zaladujTaryfy();
-  }
-
-  // ========== AUTH GUARD ==========
-  const token = localStorage.getItem('token');
-  if (!token || localStorage.getItem('role') !== 'narciarz') {
-    window.location.replace('login.html');
-  }
-
-  function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('role');
-    window.location.href = 'login.html';
-  }
-
-  // ========== API ==========
-  const API = '';
-
-  async function apiFetch(path) {
-    try {
-      const res = await fetch(API + path, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error(res.status);
-      return await res.json();
-    } catch (e) {
-      console.warn('API error:', path, e.message);
-      return null;
-    }
-  }
-
-  function statusBadge(status) {
-    switch (status) {
-      case 'czynny':          return '<span class="lift-status-dot dot-open"></span><span class="badge badge-success">Czynny</span>';
-      case 'przed_otwarciem': return '<span class="lift-status-dot dot-delay"></span><span class="badge badge-warning">Przed otwarciem</span>';
-      case 'po_zamknieciu':   return '<span class="lift-status-dot dot-closed"></span><span class="badge badge-danger">Zamknięty</span>';
-      default:                return '<span class="lift-status-dot dot-closed"></span><span class="badge badge-danger">Nieczynny</span>';
-    }
-  }
-
-  function fmtTime(ts) {
-    if (!ts) return '—';
-    // ts może być "HH:MM:SS" lub ISO
-    return ts.substring(0, 5);
-  }
-
-  // ========== NARCIARZ — wspólny stan ==========
-  let myRfid = '';
-  let selectedPassId = null;
-
-  function zaladujMojeDane() {
-    const rfid = document.getElementById('narciarz-rfid')?.value?.trim();
-    if (!rfid) return;
-    myRfid = rfid;
-    // synchronizuj pola rfid w innych sekcjach
-    const hrfid = document.getElementById('historia-rfid');
-    const zrfid = document.getElementById('zwrot-rfid');
-    if (hrfid) hrfid.value = rfid;
-    if (zrfid) zrfid.value = rfid;
-    zaladujKarnety();
-  }
-
-  // ========== KARNETY ==========
-  async function zaladujKarnety() {
-    const rfid = myRfid || document.getElementById('narciarz-rfid')?.value?.trim();
-    if (!rfid) return;
-    myRfid = rfid;
-
-    const data = await apiFetch(`/api/karnety?cardId=${encodeURIComponent(rfid)}`);
-    const grid   = document.getElementById('karnety-passes');
-    const detail = document.getElementById('karnety-detail-body');
-    if (!grid) return;
-
-    if (!data || data.length === 0) {
-      grid.innerHTML = '<div style="color:var(--text-muted);padding:16px">Nie znaleziono karnetów dla tej karty.</div>';
-      if (detail) detail.innerHTML = '<div style="color:var(--text-muted)">Brak aktywnego karnetu.</div>';
-      return;
-    }
-
-    const today = new Date();
-
-    grid.innerHTML = data.map(p => {
-      const from = p.validFrom ? new Date(p.validFrom) : null;
-      const to   = p.validTo   ? new Date(p.validTo)   : null;
-      const totalDays = (from && to) ? Math.max(1, Math.round((to - from) / 86400000)) : 0;
-      const usedDays  = from ? Math.max(0, Math.round((today - from) / 86400000)) : 0;
-      const leftDays  = Math.max(0, totalDays - usedDays);
-      const pct = totalDays > 0 ? Math.min(100, Math.round((usedDays / totalDays) * 100)) : 0;
-
-      const isActive  = p.status === 'aktywny'    && from && to && from <= today && today <= to;
-      const isFuture  = p.status === 'aktywny'    && from && from > today;
-      const isExpired = !isActive && !isFuture;
-
-      const badgeHtml = isActive  ? '<span class="badge-active">AKTYWNY</span>'
-                      : isFuture  ? '<span style="background:rgba(33,150,243,0.15);color:#1565C0;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700">PRZYSZŁY</span>'
-                      : '<span class="badge-expired">WYGASŁY</span>';
-
-      const leftLabel = isActive ? `⏰ ${leftDays} dni pozostało`
-                      : isFuture ? `🗓️ Aktywuje się ${from.toLocaleDateString('pl-PL')}`
-                      : '✓ Wygasły';
-      const leftClass = isActive ? 'ok' : isExpired ? 'ended' : 'ok';
-
-      return `<div class="pass-tile">
-        <div class="pass-tile-top${isExpired ? ' expired' : ''}">
-          <div class="pass-tile-header">
-            <div>
-              <div class="pass-tile-name">${p.tariff ?? '—'}</div>
-              <div class="pass-tile-type">${p.passType ?? ''} · ${p.cardId}</div>
+            <div class="card">
+                <div class="card-header">
+                    <div id="historia-today-header">
+                        <h3>Dzisiaj</h3>
+                        <p>—</p>
+                    </div>
+                    <button class="btn btn-outline btn-sm">🖨️ Drukuj raport przejazdów (UC10)</button>
+                </div>
+                <div class="card-body">
+                    <div class="timeline" id="historia-timeline">
+                        <div style="color:var(--text-muted);padding:8px">Podaj kartę RFID i kliknij Załaduj.</div>
+                    </div>
+                </div>
             </div>
-            ${badgeHtml}
-          </div>
-          <div class="pass-tile-dates">
-            <div><div class="ptd-label">Od</div><div class="ptd-value">${from ? from.toLocaleDateString('pl-PL') : '—'}</div></div>
-            <div><div class="ptd-label">Do</div><div class="ptd-value">${to   ? to.toLocaleDateString('pl-PL')   : '—'}</div></div>
-          </div>
-          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
         </div>
-        <div class="pass-tile-bottom">
-          <span class="rfid-small">💳 ${p.cardId}</span>
-          <span class="days-left ${leftClass}">${leftLabel}</span>
+
+        <!-- ======== ZWRÓĆ KARNET ======== -->
+        <div class="section" id="sec-zwrot">
+            <div class="section-header">
+                <h2>Zwróć karnet</h2>
+                <p>UC11 · Zwrot karnetu z częściowym zwrotem środków</p>
+            </div>
+
+            <div class="card" style="margin-bottom:16px">
+                <div class="card-body" style="display:flex;gap:12px;align-items:flex-end">
+                    <div class="form-group" style="margin-bottom:0;flex:1">
+                        <label class="form-label">Numer karty RFID</label>
+                        <select class="form-input" id="zwrot-rfid" style="margin-bottom:0">
+                            <option value="">-- wybierz kartę --</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="zaladujZwrot()">Załaduj karnety</button>
+                </div>
+            </div>
+
+            <div id="zwrot-result" style="display:none;margin-bottom:16px"></div>
+
+            <div class="alert alert-info">
+                ℹ️ Zwrot jest liczony proporcjonalnie do liczby niewykorzystanych dni. Opłata manipulacyjna: 10 zł. Kaucja za kartę (20 zł) zostaje zwrócona po oddaniu karty.
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3>Wybierz karnet do zwrotu</h3></div>
+                <div class="card-body">
+                    <div style="display:grid; gap:10px" id="zwrot-karnety-lista">
+                        <div style="color:var(--text-muted);font-size:13px">Podaj numer karty RFID powyżej, aby załadować karnety.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px">
+                <div class="card" style="margin-bottom:0">
+                    <div class="card-header"><h3>Szczegóły zwrotu</h3></div>
+                    <div class="card-body" id="zwrot-preview-body">
+                        <div style="color:var(--text-muted);font-size:13px">Wybierz karnet, aby zobaczyć symulację zwrotu.</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom:0">
+                    <div class="card-header"><h3>Wypełnij wniosek</h3></div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label">Powód zwrotu</label>
+                            <select class="form-select" id="zwrot-reason-select" onchange="syncZwrotReason()">
+                                <option value="">-- Wybierz powód --</option>
+                                <option value="Kontuzja / choroba">Kontuzja / choroba</option>
+                                <option value="Zmiana planów">Zmiana planów</option>
+                                <option value="Warunki pogodowe">Warunki pogodowe</option>
+                                <option value="Inny powód">Inny powód</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Dodatkowe uwagi (opcjonalnie)</label>
+                            <textarea class="form-input" id="zwrot-reason" rows="3" style="resize:vertical" placeholder="Opisz sytuację..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; font-size:13px">
+                                <input type="checkbox" id="zwrot-return-card" style="margin-top:2px; accent-color:var(--primary)" onchange="odswiezPodglad()">
+                                <span>Zwracam kartę RFID — kaucja 20 zł zostanie doliczona do zwrotu</span>
+                            </label>
+                        </div>
+                        <div style="display:flex; gap:10px; margin-top:8px">
+                            <button class="btn btn-danger" id="zwrot-btn" onclick="zlozWniosek()">↩️ Złóż wniosek o zwrot</button>
+                            <button class="btn btn-outline" onclick="document.getElementById('zwrot-karnety-lista').querySelectorAll('input[type=radio]').forEach(r=>r.checked=false);selectedPassId=null;">Anuluj</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>`;
-    }).join('');
 
-    // Szczegóły — pierwszy aktywny
-    const active = data.find(p => p.status === 'aktywny');
-    if (detail && active) {
-      const from = active.validFrom ? new Date(active.validFrom) : null;
-      const to   = active.validTo   ? new Date(active.validTo)   : null;
-      const totalDays = (from && to) ? Math.max(1, Math.round((to - from) / 86400000)) : 0;
-      const usedDays  = from ? Math.max(0, Math.round((today - from) / 86400000)) : 0;
-      const leftDays  = Math.max(0, totalDays - usedDays);
+        <!-- ======== KUP KARNET (UC2) ======== -->
+        <div class="section" id="sec-zakup">
+            <div class="section-header">
+                <h2>Kup karnet online</h2>
+                <p>UC2 · Rezerwacja i zakup online — karnet do odbioru przy kasie</p>
+            </div>
 
-      detail.innerHTML = `<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; text-align:center">
-        <div style="padding:16px;background:var(--primary-light);border-radius:8px">
-          <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Taryfa</div>
-          <div style="font-size:16px;font-weight:700">${active.tariff ?? '—'}</div>
-          <div style="font-size:12px;color:var(--text-muted)">${active.passType ?? ''}</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px">
+
+                <!-- KROK 1: wybór taryfy -->
+                <div class="card" style="margin-bottom:0">
+                    <div class="card-header"><h3>1. Wybierz typ karnetu</h3></div>
+                    <div class="card-body">
+                        <div id="zakup-taryfy-lista" style="display:grid;gap:10px">
+                            <div style="color:var(--text-muted)">Ładowanie…</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KROK 2: daty + podsumowanie + płatność -->
+                <div style="display:flex;flex-direction:column;gap:20px">
+                    <div class="card" style="margin-bottom:0">
+                        <div class="card-header"><h3>2. Wybierz daty</h3></div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">Data rozpoczęcia</label>
+                                <input class="form-input" type="date" id="zakup-from">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0">
+                                <label class="form-label">Data zakończenia</label>
+                                <input class="form-input" type="date" id="zakup-to">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-bottom:0">
+                        <div class="card-header"><h3>3. Podsumowanie i płatność</h3></div>
+                        <div class="card-body">
+                            <div id="zakup-summary" style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
+                                Wybierz karnet i daty, aby zobaczyć podsumowanie.
+                            </div>
+                            <button class="btn btn-primary" id="zakup-btn" onclick="zlozZamowienie()" style="width:100%" disabled>
+                                💳 Zapłać i zarezerwuj
+                            </button>
+                            <div id="zakup-result" style="display:none;margin-top:14px"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div style="padding:16px;background:#E8F5E9;border-radius:8px">
-          <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Dni całkowite</div>
-          <div style="font-size:28px;font-weight:700;color:var(--success)">${totalDays}</div>
-        </div>
-        <div style="padding:16px;background:#FFF9C4;border-radius:8px">
-          <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Dni pozostało</div>
-          <div style="font-size:28px;font-weight:700;color:var(--warning)">${leftDays}</div>
-          <div style="font-size:12px;color:var(--text-muted)">do ${to ? to.toLocaleDateString('pl-PL') : '—'}</div>
-        </div>
-        <div style="padding:16px;background:#ECEFF1;border-radius:8px">
-          <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Status</div>
-          <div style="font-size:16px;font-weight:700">${active.status ?? '—'}</div>
-        </div>
-      </div>`;
-    } else if (detail) {
-      detail.innerHTML = '<div style="color:var(--text-muted)">Brak aktywnego karnetu.</div>';
-    }
-  }
 
-  // ========== HISTORIA ==========
-  async function zaladujHistorie() {
-    const rfid = document.getElementById('historia-rfid')?.value?.trim() || myRfid;
-    if (!rfid) return;
-    myRfid = rfid;
+    </div><!-- /content-wrapper -->
 
-    const dateVal = document.getElementById('historia-date')?.value;
-    const url = `/api/raporty/przejazdy?cardId=${encodeURIComponent(rfid)}${dateVal ? '&date=' + dateVal : ''}`;
-
-    const data = await apiFetch(url);
-    const statsEl    = document.getElementById('historia-stats');
-    const headerEl   = document.getElementById('historia-today-header');
-    const timelineEl = document.getElementById('historia-timeline');
-    if (!timelineEl) return;
-
-    if (!data || data.length === 0) {
-      if (statsEl) statsEl.innerHTML = '';
-      if (headerEl) headerEl.innerHTML = '<h3>Brak przejazdów</h3><p>—</p>';
-      timelineEl.innerHTML = '<div style="color:var(--text-muted);padding:8px">Brak skanów w wybranym okresie.</div>';
-      return;
-    }
-
-    // Statystyki
-    const today = dateVal || new Date().toISOString().split('T')[0];
-    const todayScans = data.filter(s => s.scanTime && s.scanTime.startsWith(today));
-    // Ulubiony wyciąg
-    const liftCounts = {};
-    data.forEach(s => { if (s.liftName) liftCounts[s.liftName] = (liftCounts[s.liftName] || 0) + 1; });
-    const topLift = Object.entries(liftCounts).sort((a, b) => b[1] - a[1])[0];
-
-    if (statsEl) {
-      statsEl.innerHTML = `
-        <div class="card" style="margin-bottom:0">
-          <div class="card-body" style="text-align:center">
-            <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Przejazdy w wybranym oknie</div>
-            <div style="font-size:32px;font-weight:700;color:var(--primary)">${data.length}</div>
-          </div>
-        </div>
-        <div class="card" style="margin-bottom:0">
-          <div class="card-body" style="text-align:center">
-            <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Przejazdy dziś</div>
-            <div style="font-size:32px;font-weight:700;color:var(--primary)">${todayScans.length}</div>
-          </div>
-        </div>
-        <div class="card" style="margin-bottom:0">
-          <div class="card-body" style="text-align:center">
-            <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Ulubiony wyciąg</div>
-            <div style="font-size:16px;font-weight:700">${topLift ? topLift[0] : '—'}</div>
-            <div style="font-size:12px;color:var(--text-muted)">${topLift ? topLift[1] + ' przejazdów' : ''}</div>
-          </div>
-        </div>`;
-    }
-
-    if (headerEl) {
-      const label = dateVal ? new Date(dateVal).toLocaleDateString('pl-PL') : 'Wszystkie przejazdy';
-      headerEl.innerHTML = `<h3>${label}</h3><p>${data.length} wjazdów</p>`;
-    }
-
-    timelineEl.innerHTML = data.map(s => {
-      const time = s.scanTime ? new Date(s.scanTime).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '—';
-      const ok   = s.result === 'pozytywna' || s.result === 'ok' || s.result === null;
-      return `<div class="timeline-item">
-        <span class="scan-icon ${ok ? 'scan-ok' : 'scan-err'}">${ok ? '✅' : '❌'}</span>
-        <div class="tl-right">
-          <div class="tl-event">Wjazd · ${s.liftName ?? '—'}</div>
-          <div class="tl-detail">Bramka: ${s.gateName ?? '—'} · Wynik: ${s.result ?? 'OK'}</div>
-        </div>
-        <span class="tl-time">${time}</span>
-      </div>`;
-    }).join('');
-  }
-
-  // ========== ZWROT ==========
-  async function zaladujZwrot() {
-    const rfid = document.getElementById('zwrot-rfid')?.value?.trim() || myRfid;
-    if (!rfid) return;
-    myRfid = rfid;
-
-    const data = await apiFetch(`/api/karnety?cardId=${encodeURIComponent(rfid)}`);
-    const listaEl = document.getElementById('zwrot-karnety-lista');
-    if (!listaEl) return;
-
-    const aktywne = data ? data.filter(p => p.status === 'aktywny' || p.status === 'aktywny_przyszly') : [];
-    if (aktywne.length === 0) {
-      listaEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Brak karnetów możliwych do zwrotu dla tej karty.</div>';
-      return;
-    }
-
-    listaEl.innerHTML = aktywne.map((p, i) => {
-      const from = p.validFrom ? new Date(p.validFrom).toLocaleDateString('pl-PL') : '—';
-      const to   = p.validTo   ? new Date(p.validTo).toLocaleDateString('pl-PL')   : '—';
-      return `<label style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px solid var(--border);border-radius:8px;cursor:pointer" id="zwrot-label-${p.id}">
-        <input type="radio" name="karnet-zwrot" style="accent-color:var(--primary)" value="${p.id}" onchange="wybierzKarnet(${p.id})">
-        <div>
-          <div style="font-weight:600">${p.tariff ?? '—'}</div>
-          <div style="font-size:12px;color:var(--text-muted)">${from} – ${to} · ${p.status} · ${p.cardId}</div>
-        </div>
-        <div style="margin-left:auto;text-align:right">
-          <span class="badge badge-success">${p.status}</span>
-        </div>
-      </label>`;
-    }).join('');
-  }
-
-  async function wybierzKarnet(passId) {
-    selectedPassId = passId;
-    // Podświetl wybraną labelkę
-    document.querySelectorAll('#zwrot-karnety-lista label').forEach(l => l.style.borderColor = 'var(--border)');
-    const lbl = document.getElementById(`zwrot-label-${passId}`);
-    if (lbl) lbl.style.borderColor = 'var(--primary)';
-
-    await odswiezPodglad();
-  }
-
-  async function odswiezPodglad() {
-    if (!selectedPassId) return;
-    const returnCard = document.getElementById('zwrot-return-card')?.checked ?? false;
-    const data = await apiFetch(`/api/karnety/${selectedPassId}/symulacja-zwrotu?returnCard=${returnCard}`);
-    const previewEl = document.getElementById('zwrot-preview-body');
-    if (!previewEl || !data) return;
-
-    previewEl.innerHTML = `<div style="display:grid;gap:10px">
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--text-muted)">Cena karnetu</span><span style="font-weight:600">${data.grossAmount.toFixed(2)} zł</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--text-muted)">Dni wykupione</span><span>${data.totalDays} dni</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--text-muted)">Dni wykorzystane</span><span>${data.usedDays} dni</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--text-muted)">Kwota za niewykorzystane dni</span><span style="font-weight:600;color:var(--success)">${data.refundForUnusedDays.toFixed(2)} zł</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--text-muted)">Opłata manipulacyjna</span><span style="color:var(--danger)">−${data.manipulationFee.toFixed(2)} zł</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--text-muted)">Kaucja za kartę</span><span style="color:var(--success)">+${data.depositReturn.toFixed(2)} zł</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:12px 0;font-size:18px;font-weight:700">
-        <span>RAZEM ZWROT</span><span style="color:var(--success)">${data.totalRefund.toFixed(2)} zł</span>
-      </div>
-    </div>`;
-  }
-
-  async function zlozWniosek() {
-    if (!selectedPassId) { alert('⚠️ Wybierz karnet do zwrotu.'); return; }
-    const reason     = document.getElementById('zwrot-reason')?.value?.trim() || 'Brak podanego powodu';
-    const returnCard = document.getElementById('zwrot-return-card')?.checked ?? false;
-    const resultEl   = document.getElementById('zwrot-result');
-    const btn        = document.getElementById('zwrot-btn');
-
-    btn.disabled = true; btn.textContent = '⏳ Wysyłanie…';
-    try {
-      const res = await fetch(`${API}/api/karnety/${selectedPassId}/zwrot`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ reason, returnCard })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (resultEl) {
-          resultEl.innerHTML = `<div class="alert alert-success">✅ Wniosek o zwrot złożony. Kwota zwrotu: <strong>${data.totalRefund.toFixed(2)} zł</strong>. Kasjer przetworzy zwrot przy kasie.</div>`;
-          resultEl.style.display = 'block';
+    <script>
+        function showSection(id, tabEl) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelector('#sec-' + id).classList.add('active');
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            if (tabEl) tabEl.classList.add('active');
+            if (id === 'rozklad') loadWyciagi();
+            if (id === 'karnety') { if (myRfid) zaladujKarnety(); zaladujRezerwacje(); }
+            if (id === 'historia' && myRfid) zaladujHistorie();
+            if (id === 'zwrot' && myRfid) zaladujZwrot();
+            if (id === 'zakup') zaladujTaryfy();
         }
-        selectedPassId = null;
-        zaladujZwrot();
-      } else {
-        const err = await res.json().catch(() => ({}));
-        if (resultEl) {
-          resultEl.innerHTML = `<div class="alert alert-warning">❌ Błąd: ${err.message ?? res.status}</div>`;
-          resultEl.style.display = 'block';
+
+        // ========== AUTH GUARD ==========
+        const token = localStorage.getItem('token');
+        if (!token || localStorage.getItem('role') !== 'narciarz') {
+            window.location.replace('login.html');
         }
-      }
-    } catch (e) {
-      if (resultEl) { resultEl.innerHTML = `<div class="alert alert-warning">❌ Brak połączenia z API</div>`; resultEl.style.display = 'block'; }
-    } finally {
-      btn.disabled = false; btn.textContent = '↩️ Złóż wniosek o zwrot';
-    }
-  }
 
-  async function loadWyciagi() {
-    const data = await apiFetch('/api/wyciagi');
-    if (!data) return;
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('role');
+            window.location.href = 'login.html';
+        }
 
-    const tbody = document.querySelector('#sec-rozklad tbody');
-    if (!tbody) return;
+        // ========== API ==========
+        const API = '';
 
-    tbody.innerHTML = data.map(l => {
-      const trasy = l.trails.map(t => t.name).join(', ') || '—';
-      const godz  = (l.opensAt && l.closesAt) ? `${fmtTime(l.opensAt)} – ${fmtTime(l.closesAt)}` : '—';
-      return `<tr class="lift-row">
-        <td>${l.name}</td>
-        <td>${trasy}</td>
-        <td>—</td>
-        <td>${godz}</td>
-        <td>—</td>
-        <td>${statusBadge(l.status)}</td>
-      </tr>`;
-    }).join('');
+        async function apiFetch(path) {
+            try {
+                const res = await fetch(API + path, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error(res.status);
+                return await res.json();
+            } catch (e) {
+                console.warn('API error:', path, e.message);
+                return null;
+            }
+        }
 
-    const activeCount = data.filter(l => l.status === 'czynny').length;
-    const counterText = `${activeCount}/${data.length} wyciągów czynnych`;
+        function statusBadge(status) {
+            switch (status) {
+                case 'czynny': return '<span class="lift-status-dot dot-open"></span><span class="badge badge-success">Czynny</span>';
+                case 'przed_otwarciem': return '<span class="lift-status-dot dot-delay"></span><span class="badge badge-warning">Przed otwarciem</span>';
+                case 'po_zamknieciu': return '<span class="lift-status-dot dot-closed"></span><span class="badge badge-danger">Zamknięty</span>';
+                default: return '<span class="lift-status-dot dot-closed"></span><span class="badge badge-danger">Nieczynny</span>';
+            }
+        }
 
-    const heroCounter = document.getElementById('hero-lift-counter');
-    if (heroCounter) heroCounter.textContent = `⛷️ ${counterText}`;
+        function fmtTime(ts) {
+            if (!ts) return '—';
+            // ts może być "HH:MM:SS" lub ISO
+            return ts.substring(0, 5);
+        }
 
-    const rozkladCounter = document.getElementById('rozklad-lift-counter');
-    if (rozkladCounter) rozkladCounter.textContent = counterText;
+        // ========== NARCIARZ — wspólny stan ==========
+        let myRfid = '';
+        let selectedPassId = null;
 
-    const now = new Date();
-    const subtitle = document.getElementById('rozklad-subtitle');
-    if (subtitle) subtitle.textContent = `Aktualny status · ${now.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })} · Aktualizacja: ${now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}`;
-  }
+        //function zaladujMojeDane() {
+        //    const rfid = document.getElementById('narciarz-rfid')?.value?.trim();
+        //    if (!rfid) return;
+        //    myRfid = rfid;
+        //    // synchronizuj pola rfid w innych sekcjach
+        //    const hrfid = document.getElementById('historia-rfid');
+        //    const zrfid = document.getElementById('zwrot-rfid');
+        //    if (hrfid) hrfid.value = rfid;
+        //    if (zrfid) zrfid.value = rfid;
+        //    zaladujKarnety();
+        //}
 
-  // ========== REZERWACJE ==========
-  async function zaladujRezerwacje() {
-    const el = document.getElementById('rezerwacje-lista');
-    if (!el) return;
 
-    const data = await apiFetch('/api/users/me/rezerwacje');
-    if (!data) { el.innerHTML = '<div style="color:var(--text-muted)">Błąd ładowania rezerwacji.</div>'; return; }
 
-    const oczekujace = data.filter(r =>
-      r.passes.some(p => p.status === 'oczekuje_na_odbior')
-    );
+        function zaladujMojeDane() {
+            const sel = document.getElementById('narciarz-rfid');
+            const rfid = sel?.value?.trim();
+            if (!rfid) {
+                alert('Wybierz kartę z listy');
+                return;
+            }
+            myRfid = rfid;
+            // synchronizuj wybór w innych sekcjach
+            const hrfid = document.getElementById('historia-rfid');
+            const zrfid = document.getElementById('zwrot-rfid');
+            if (hrfid) hrfid.value = rfid;
+            if (zrfid) zrfid.value = rfid;
+            zaladujKarnety();
+        }
 
-    if (oczekujace.length === 0) {
-      el.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Brak rezerwacji oczekujących na odbiór.</div>';
-      return;
-    }
 
-    el.innerHTML = oczekujace.map(r => {
-      const passesHtml = r.passes
-        .filter(p => p.status === 'oczekuje_na_odbior')
-        .map(p => {
-          const from = p.validFrom ? new Date(p.validFrom).toLocaleDateString('pl-PL') : '—';
-          const to   = p.validTo   ? new Date(p.validTo).toLocaleDateString('pl-PL')   : '—';
-          return `<div style="font-size:13px;color:var(--text-muted);margin-top:4px">
-            📋 ${p.tariff ?? '—'} · ${from} – ${to} · <strong>${p.price?.toFixed(2) ?? '—'} zł</strong>
+
+
+
+
+
+
+        function wypelnijListeKart(cardIds) {
+            const ids = ['narciarz-rfid', 'historia-rfid', 'zwrot-rfid'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el || el.tagName !== 'SELECT') return;
+                // wyczyść stare opcje
+                el.innerHTML = '';
+
+                if (!cardIds || cardIds.length === 0) {
+                    // brak kart — pole zablokowane, komunikat
+                    const opt = document.createElement('option');
+                    opt.value = '';
+                    opt.textContent = 'Brak przypisanych kart';
+                    el.appendChild(opt);
+                    el.disabled = true;
+                    el.style.cursor = 'not-allowed';
+                    el.style.background = '#F5F5F5';
+                    el.style.color = 'var(--text-muted)';
+                    return;
+                }
+
+                if (cardIds.length === 1) {
+                    // jedna karta — od razu wybrana, pole zablokowane
+                    const opt = document.createElement('option');
+                    opt.value = cardIds[0];
+                    opt.textContent = cardIds[0];
+                    el.appendChild(opt);
+                    el.value = cardIds[0];
+                    el.disabled = true;
+                    el.style.cursor = 'not-allowed';
+                    el.style.background = '#F5F5F5';
+                    el.style.color = 'var(--text)';
+                    return;
+                }
+
+                // więcej niż jedna karta — placeholder + opcje, pole aktywne
+                el.disabled = false;
+                el.style.cursor = '';
+                el.style.background = '';
+                el.style.color = '';
+
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = '-- wybierz kartę --';
+                el.appendChild(placeholder);
+
+                cardIds.forEach(cid => {
+                    const opt = document.createElement('option');
+                    opt.value = cid;
+                    opt.textContent = cid;
+                    el.appendChild(opt);
+                });
+            });
+        }
+
+
+
+
+
+
+
+        // ========== KARNETY ==========
+        async function zaladujKarnety() {
+            const rfid = myRfid || document.getElementById('narciarz-rfid')?.value?.trim();
+            if (!rfid) return;
+            myRfid = rfid;
+
+            const data = await apiFetch(`/api/karnety?cardId=${encodeURIComponent(rfid)}`);
+            const grid = document.getElementById('karnety-passes');
+            const detail = document.getElementById('karnety-detail-body');
+            if (!grid) return;
+
+            if (!data || data.length === 0) {
+                grid.innerHTML = '<div style="color:var(--text-muted);padding:16px">Nie znaleziono karnetów dla tej karty.</div>';
+                if (detail) detail.innerHTML = '<div style="color:var(--text-muted)">Brak aktywnego karnetu.</div>';
+                return;
+            }
+
+            const today = new Date();
+
+            grid.innerHTML = data.map(p => {
+                const from = p.validFrom ? new Date(p.validFrom) : null;
+                const to = p.validTo ? new Date(p.validTo) : null;
+                const totalDays = (from && to) ? Math.max(1, Math.round((to - from) / 86400000)) : 0;
+                const usedDays = from ? Math.max(0, Math.round((today - from) / 86400000)) : 0;
+                const leftDays = Math.max(0, totalDays - usedDays);
+                const pct = totalDays > 0 ? Math.min(100, Math.round((usedDays / totalDays) * 100)) : 0;
+
+                const isActive = p.status === 'aktywny' && from && to && from <= today && today <= to;
+                const isFuture = p.status === 'aktywny' && from && from > today;
+                const isExpired = !isActive && !isFuture;
+
+                const badgeHtml = isActive ? '<span class="badge-active">AKTYWNY</span>'
+                    : isFuture ? '<span style="background:rgba(33,150,243,0.15);color:#1565C0;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700">PRZYSZŁY</span>'
+                        : '<span class="badge-expired">WYGASŁY</span>';
+
+                const leftLabel = isActive ? `⏰ ${leftDays} dni pozostało`
+                    : isFuture ? `🗓️ Aktywuje się ${from.toLocaleDateString('pl-PL')}`
+                        : '✓ Wygasły';
+                const leftClass = isActive ? 'ok' : isExpired ? 'ended' : 'ok';
+
+                return `<div class="pass-tile">
+            <div class="pass-tile-top${isExpired ? ' expired' : ''}">
+              <div class="pass-tile-header">
+                <div>
+                  <div class="pass-tile-name">${p.tariff ?? '—'}</div>
+                  <div class="pass-tile-type">${p.passType ?? ''} · ${p.cardId}</div>
+                </div>
+                ${badgeHtml}
+              </div>
+              <div class="pass-tile-dates">
+                <div><div class="ptd-label">Od</div><div class="ptd-value">${from ? from.toLocaleDateString('pl-PL') : '—'}</div></div>
+                <div><div class="ptd-label">Do</div><div class="ptd-value">${to ? to.toLocaleDateString('pl-PL') : '—'}</div></div>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+            </div>
+            <div class="pass-tile-bottom">
+              <span class="rfid-small">💳 ${p.cardId}</span>
+              <span class="days-left ${leftClass}">${leftLabel}</span>
+            </div>
           </div>`;
-        }).join('');
+            }).join('');
 
-      const date = r.reservationDate ? new Date(r.reservationDate).toLocaleDateString('pl-PL') : '—';
+            // Szczegóły — pierwszy aktywny
+            const active = data.find(p => p.status === 'aktywny');
+            if (detail && active) {
+                const from = active.validFrom ? new Date(active.validFrom) : null;
+                const to = active.validTo ? new Date(active.validTo) : null;
+                const totalDays = (from && to) ? Math.max(1, Math.round((to - from) / 86400000)) : 0;
+                const usedDays = from ? Math.max(0, Math.round((today - from) / 86400000)) : 0;
+                const leftDays = Math.max(0, totalDays - usedDays);
 
-      return `<div style="padding:14px 16px;border:2px solid #FFA000;border-radius:8px;background:#FFFDE7;margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div style="font-weight:700">📦 ${r.reservationNumber}</div>
-            <div style="font-size:12px;color:var(--text-muted)">Złożona: ${date}</div>
-            ${passesHtml}
+                detail.innerHTML = `<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; text-align:center">
+            <div style="padding:16px;background:var(--primary-light);border-radius:8px">
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Taryfa</div>
+              <div style="font-size:16px;font-weight:700">${active.tariff ?? '—'}</div>
+              <div style="font-size:12px;color:var(--text-muted)">${active.passType ?? ''}</div>
+            </div>
+            <div style="padding:16px;background:#E8F5E9;border-radius:8px">
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Dni całkowite</div>
+              <div style="font-size:28px;font-weight:700;color:var(--success)">${totalDays}</div>
+            </div>
+            <div style="padding:16px;background:#FFF9C4;border-radius:8px">
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Dni pozostało</div>
+              <div style="font-size:28px;font-weight:700;color:var(--warning)">${leftDays}</div>
+              <div style="font-size:12px;color:var(--text-muted)">do ${to ? to.toLocaleDateString('pl-PL') : '—'}</div>
+            </div>
+            <div style="padding:16px;background:#ECEFF1;border-radius:8px">
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Status</div>
+              <div style="font-size:16px;font-weight:700">${active.status ?? '—'}</div>
+            </div>
+          </div>`;
+            } else if (detail) {
+                detail.innerHTML = '<div style="color:var(--text-muted)">Brak aktywnego karnetu.</div>';
+            }
+        }
+
+        // ========== HISTORIA ==========
+        async function zaladujHistorie() {
+            const rfid = document.getElementById('historia-rfid')?.value?.trim() || myRfid;
+            if (!rfid) return;
+            myRfid = rfid;
+
+            const dateVal = document.getElementById('historia-date')?.value;
+            const url = `/api/raporty/przejazdy?cardId=${encodeURIComponent(rfid)}${dateVal ? '&date=' + dateVal : ''}`;
+
+            const data = await apiFetch(url);
+            const statsEl = document.getElementById('historia-stats');
+            const headerEl = document.getElementById('historia-today-header');
+            const timelineEl = document.getElementById('historia-timeline');
+            if (!timelineEl) return;
+
+            if (!data || data.length === 0) {
+                if (statsEl) statsEl.innerHTML = '';
+                if (headerEl) headerEl.innerHTML = '<h3>Brak przejazdów</h3><p>—</p>';
+                timelineEl.innerHTML = '<div style="color:var(--text-muted);padding:8px">Brak skanów w wybranym okresie.</div>';
+                return;
+            }
+
+            // Statystyki
+            const today = dateVal || new Date().toISOString().split('T')[0];
+            const todayScans = data.filter(s => s.scanTime && s.scanTime.startsWith(today));
+            // Ulubiony wyciąg
+            const liftCounts = {};
+            data.forEach(s => { if (s.liftName) liftCounts[s.liftName] = (liftCounts[s.liftName] || 0) + 1; });
+            const topLift = Object.entries(liftCounts).sort((a, b) => b[1] - a[1])[0];
+
+            if (statsEl) {
+                statsEl.innerHTML = `
+            <div class="card" style="margin-bottom:0">
+              <div class="card-body" style="text-align:center">
+                <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Przejazdy w wybranym oknie</div>
+                <div style="font-size:32px;font-weight:700;color:var(--primary)">${data.length}</div>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom:0">
+              <div class="card-body" style="text-align:center">
+                <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Przejazdy dziś</div>
+                <div style="font-size:32px;font-weight:700;color:var(--primary)">${todayScans.length}</div>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom:0">
+              <div class="card-body" style="text-align:center">
+                <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Ulubiony wyciąg</div>
+                <div style="font-size:16px;font-weight:700">${topLift ? topLift[0] : '—'}</div>
+                <div style="font-size:12px;color:var(--text-muted)">${topLift ? topLift[1] + ' przejazdów' : ''}</div>
+              </div>
+            </div>`;
+            }
+
+            if (headerEl) {
+                const label = dateVal ? new Date(dateVal).toLocaleDateString('pl-PL') : 'Wszystkie przejazdy';
+                headerEl.innerHTML = `<h3>${label}</h3><p>${data.length} wjazdów</p>`;
+            }
+
+            timelineEl.innerHTML = data.map(s => {
+                const time = s.scanTime ? new Date(s.scanTime).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '—';
+                const ok = s.result === 'pozytywna' || s.result === 'ok' || s.result === null;
+                return `<div class="timeline-item">
+            <span class="scan-icon ${ok ? 'scan-ok' : 'scan-err'}">${ok ? '✅' : '❌'}</span>
+            <div class="tl-right">
+              <div class="tl-event">Wjazd · ${s.liftName ?? '—'}</div>
+              <div class="tl-detail">Bramka: ${s.gateName ?? '—'} · Wynik: ${s.result ?? 'OK'}</div>
+            </div>
+            <span class="tl-time">${time}</span>
+          </div>`;
+            }).join('');
+        }
+
+        // ========== ZWROT ==========
+        async function zaladujZwrot() {
+            const rfid = document.getElementById('zwrot-rfid')?.value?.trim() || myRfid;
+            if (!rfid) return;
+            myRfid = rfid;
+
+            const data = await apiFetch(`/api/karnety?cardId=${encodeURIComponent(rfid)}`);
+            const listaEl = document.getElementById('zwrot-karnety-lista');
+            if (!listaEl) return;
+
+            const aktywne = data ? data.filter(p => p.status === 'aktywny' || p.status === 'aktywny_przyszly') : [];
+            if (aktywne.length === 0) {
+                listaEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Brak karnetów możliwych do zwrotu dla tej karty.</div>';
+                return;
+            }
+
+            listaEl.innerHTML = aktywne.map((p, i) => {
+                const from = p.validFrom ? new Date(p.validFrom).toLocaleDateString('pl-PL') : '—';
+                const to = p.validTo ? new Date(p.validTo).toLocaleDateString('pl-PL') : '—';
+                return `<label style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px solid var(--border);border-radius:8px;cursor:pointer" id="zwrot-label-${p.id}">
+            <input type="radio" name="karnet-zwrot" style="accent-color:var(--primary)" value="${p.id}" onchange="wybierzKarnet(${p.id})">
+            <div>
+              <div style="font-weight:600">${p.tariff ?? '—'}</div>
+              <div style="font-size:12px;color:var(--text-muted)">${from} – ${to} · ${p.status} · ${p.cardId}</div>
+            </div>
+            <div style="margin-left:auto;text-align:right">
+              <span class="badge badge-success">${p.status}</span>
+            </div>
+          </label>`;
+            }).join('');
+        }
+
+        async function wybierzKarnet(passId) {
+            selectedPassId = passId;
+            // Podświetl wybraną labelkę
+            document.querySelectorAll('#zwrot-karnety-lista label').forEach(l => l.style.borderColor = 'var(--border)');
+            const lbl = document.getElementById(`zwrot-label-${passId}`);
+            if (lbl) lbl.style.borderColor = 'var(--primary)';
+
+            await odswiezPodglad();
+        }
+
+        async function odswiezPodglad() {
+            if (!selectedPassId) return;
+            const returnCard = document.getElementById('zwrot-return-card')?.checked ?? false;
+            const data = await apiFetch(`/api/karnety/${selectedPassId}/symulacja-zwrotu?returnCard=${returnCard}`);
+            const previewEl = document.getElementById('zwrot-preview-body');
+            if (!previewEl || !data) return;
+
+            previewEl.innerHTML = `<div style="display:grid;gap:10px">
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-muted)">Cena karnetu</span><span style="font-weight:600">${data.grossAmount.toFixed(2)} zł</span>
           </div>
-          <span style="background:#FFA000;color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap">DO ODBIORU</span>
-        </div>
-        <div style="margin-top:10px;font-size:12px;color:#795548">
-          ℹ️ Odbierz karnet przy kasie, podając numer rezerwacji. Kasjer przypisze kartę RFID.
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  // ========== ZAKUP ONLINE (UC2) ==========
-  let selectedTariffId = null;
-  let selectedTariffName = '';
-  let selectedTariffPrice = 0;
-
-  async function zaladujTaryfy() {
-    const data = await apiFetch('/api/zakup/taryfy');
-    const lista = document.getElementById('zakup-taryfy-lista');
-    if (!lista) return;
-    if (!data || data.length === 0) {
-      lista.innerHTML = '<div style="color:var(--text-muted)">Brak dostępnych karnetów.</div>';
-      return;
-    }
-    lista.innerHTML = data.map(t => `
-      <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px solid var(--border);border-radius:8px;cursor:pointer" id="taryfa-label-${t.id}">
-        <input type="radio" name="taryfa-zakup" style="accent-color:var(--primary)" value="${t.id}" onchange="wybierzTaryfe(${t.id},'${t.name}',${t.price})">
-        <div style="flex:1">
-          <div style="font-weight:600">${t.name}</div>
-          <div style="font-size:12px;color:var(--text-muted)">${t.season ?? ''}</div>
-        </div>
-        <div style="font-weight:700;color:var(--primary)">${t.price?.toFixed(2)} zł</div>
-      </label>`).join('');
-
-    // Ustaw domyślne daty
-    const today = new Date();
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-    const fmtDate = d => d.toISOString().split('T')[0];
-    document.getElementById('zakup-from').value = fmtDate(today);
-    document.getElementById('zakup-to').value   = fmtDate(tomorrow);
-    document.getElementById('zakup-from').addEventListener('change', aktualizujPodsumowanie);
-    document.getElementById('zakup-to').addEventListener('change', aktualizujPodsumowanie);
-  }
-
-  function wybierzTaryfe(id, name, price) {
-    selectedTariffId    = id;
-    selectedTariffName  = name;
-    selectedTariffPrice = price;
-    document.querySelectorAll('#zakup-taryfy-lista label').forEach(l => l.style.borderColor = 'var(--border)');
-    const lbl = document.getElementById(`taryfa-label-${id}`);
-    if (lbl) lbl.style.borderColor = 'var(--primary)';
-    aktualizujPodsumowanie();
-  }
-
-  function aktualizujPodsumowanie() {
-    const fromVal = document.getElementById('zakup-from')?.value;
-    const toVal   = document.getElementById('zakup-to')?.value;
-    const summary = document.getElementById('zakup-summary');
-    const btn     = document.getElementById('zakup-btn');
-    if (!summary) return;
-
-    if (!selectedTariffId || !fromVal || !toVal) {
-      summary.innerHTML = '<span style="color:var(--text-muted)">Wybierz karnet i daty.</span>';
-      if (btn) btn.disabled = true;
-      return;
-    }
-
-    const from = new Date(fromVal);
-    const to   = new Date(toVal);
-    if (from >= to) {
-      summary.innerHTML = '<span style="color:var(--danger)">Data końca musi być późniejsza niż data początku.</span>';
-      if (btn) btn.disabled = true;
-      return;
-    }
-
-    const days = Math.round((to - from) / 86400000);
-    summary.innerHTML = `
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Karnet</span><span style="font-weight:600">${selectedTariffName}</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Od</span><span>${from.toLocaleDateString('pl-PL')}</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Do</span><span>${to.toLocaleDateString('pl-PL')}</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Liczba dni</span><span>${days}</span></div>
-        <hr style="border:none;border-top:1px solid var(--border)">
-        <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700"><span>Do zapłaty</span><span style="color:var(--primary)">${selectedTariffPrice?.toFixed(2)} zł</span></div>
-      </div>`;
-    if (btn) btn.disabled = false;
-  }
-
-  async function zlozZamowienie() {
-    const fromVal = document.getElementById('zakup-from')?.value;
-    const toVal   = document.getElementById('zakup-to')?.value;
-    const result  = document.getElementById('zakup-result');
-    const btn     = document.getElementById('zakup-btn');
-    if (!selectedTariffId || !fromVal || !toVal) return;
-
-    btn.disabled = true; btn.textContent = '⏳ Przetwarzanie płatności…';
-    try {
-      const res = await fetch('/api/zakup/online', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ tariffId: selectedTariffId, validFrom: fromVal, validTo: toVal })
-      });
-      const data = await res.json().catch(() => ({}));
-
-      if (res.ok) {
-        result.innerHTML = `<div style="padding:16px;background:var(--success-light);border-left:4px solid var(--success);border-radius:4px">
-          <div style="font-weight:700;font-size:16px;color:var(--success);margin-bottom:8px">✅ Rezerwacja przyjęta!</div>
-          <div style="display:flex;flex-direction:column;gap:4px;font-size:13px">
-            <div><strong>Nr rezerwacji:</strong> <code style="background:#fff;padding:2px 6px;border-radius:4px">${data.reservationNumber}</code></div>
-            <div><strong>Karnet:</strong> ${data.tariff}</div>
-            <div><strong>Ważny:</strong> ${new Date(data.validFrom).toLocaleDateString('pl-PL')} – ${new Date(data.validTo).toLocaleDateString('pl-PL')}</div>
-            <div><strong>Kwota:</strong> ${data.price?.toFixed(2)} zł</div>
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-muted)">Dni wykupione</span><span>${data.totalDays} dni</span>
           </div>
-          <div style="margin-top:10px;font-size:12px;color:#555">${data.message}</div>
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-muted)">Dni wykorzystane</span><span>${data.usedDays} dni</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-muted)">Kwota za niewykorzystane dni</span><span style="font-weight:600;color:var(--success)">${data.refundForUnusedDays.toFixed(2)} zł</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-muted)">Opłata manipulacyjna</span><span style="color:var(--danger)">−${data.manipulationFee.toFixed(2)} zł</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-muted)">Kaucja za kartę</span><span style="color:var(--success)">+${data.depositReturn.toFixed(2)} zł</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:12px 0;font-size:18px;font-weight:700">
+            <span>RAZEM ZWROT</span><span style="color:var(--success)">${data.totalRefund.toFixed(2)} zł</span>
+          </div>
         </div>`;
-        result.style.display = 'block';
-        selectedTariffId = null;
-        selectedTariffName = '';
-        document.querySelectorAll('input[name="taryfa-zakup"]').forEach(r => r.checked = false);
-        document.querySelectorAll('#zakup-taryfy-lista label').forEach(l => l.style.borderColor = 'var(--border)');
-        document.getElementById('zakup-summary').innerHTML = '<span style="color:var(--text-muted)">Wybierz karnet i daty.</span>';
-      } else {
-        result.innerHTML = `<div style="padding:12px;background:var(--danger-light);border-left:4px solid var(--danger);border-radius:4px;color:var(--danger)">❌ ${data.message ?? 'Błąd podczas składania zamówienia.'}</div>`;
-        result.style.display = 'block';
-      }
-    } catch (e) {
-      result.innerHTML = `<div style="padding:12px;background:var(--danger-light);border-left:4px solid var(--danger);border-radius:4px;color:var(--danger)">❌ Brak połączenia z API.</div>`;
-      result.style.display = 'block';
-    } finally {
-      btn.disabled = false; btn.textContent = '💳 Zapłać i zarezerwuj';
-    }
-  }
+        }
 
-  function syncZwrotReason() {
-    const sel = document.getElementById('zwrot-reason-select');
-    const txt = document.getElementById('zwrot-reason');
-    if (sel && txt && sel.value) txt.value = sel.value;
-  }
+        async function zlozWniosek() {
+            if (!selectedPassId) { alert('⚠️ Wybierz karnet do zwrotu.'); return; }
+            const reason = document.getElementById('zwrot-reason')?.value?.trim() || 'Brak podanego powodu';
+            const returnCard = document.getElementById('zwrot-return-card')?.checked ?? false;
+            const resultEl = document.getElementById('zwrot-result');
+            const btn = document.getElementById('zwrot-btn');
 
-  async function init() {
-    loadWyciagi();
+            btn.disabled = true; btn.textContent = '⏳ Wysyłanie…';
+            try {
+                const res = await fetch(`${API}/api/karnety/${selectedPassId}/zwrot`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ reason, returnCard })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (resultEl) {
+                        resultEl.innerHTML = `<div class="alert alert-success">✅ Wniosek o zwrot złożony. Kwota zwrotu: <strong>${data.totalRefund.toFixed(2)} zł</strong>. Kasjer przetworzy zwrot przy kasie.</div>`;
+                        resultEl.style.display = 'block';
+                    }
+                    selectedPassId = null;
+                    zaladujZwrot();
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    if (resultEl) {
+                        resultEl.innerHTML = `<div class="alert alert-warning">❌ Błąd: ${err.message ?? res.status}</div>`;
+                        resultEl.style.display = 'block';
+                    }
+                }
+            } catch (e) {
+                if (resultEl) { resultEl.innerHTML = `<div class="alert alert-warning">❌ Brak połączenia z API</div>`; resultEl.style.display = 'block'; }
+            } finally {
+                btn.disabled = false; btn.textContent = '↩️ Złóż wniosek o zwrot';
+            }
+        }
 
-    const me = await apiFetch('/api/users/me');
-    if (!me) return;
+        async function loadWyciagi() {
+            const data = await apiFetch('/api/wyciagi');
+            if (!data) return;
 
-    // Navbar
-    const email = me.email ?? '';
-    const label = document.getElementById('user-label');
-    if (label) label.textContent = email;
-    const avatar = document.getElementById('user-avatar');
-    if (avatar) avatar.textContent = email.slice(0, 2).toUpperCase();
+            const tbody = document.querySelector('#sec-rozklad tbody');
+            if (!tbody) return;
 
-    // Hero powitanie
-    const greeting = document.getElementById('hero-greeting');
-    if (greeting) greeting.textContent = `Dzień dobry, ${email.split('@')[0]} 👋`;
+            tbody.innerHTML = data.map(l => {
+                const trasy = l.trails.map(t => t.name).join(', ') || '—';
+                const godz = (l.opensAt && l.closesAt) ? `${fmtTime(l.opensAt)} – ${fmtTime(l.closesAt)}` : '—';
+                return `<tr class="lift-row">
+            <td>${l.name}</td>
+            <td>${trasy}</td>
+            <td>—</td>
+            <td>${godz}</td>
+            <td>—</td>
+            <td>${statusBadge(l.status)}</td>
+          </tr>`;
+            }).join('');
 
-    if (!me.cardIds || me.cardIds.length === 0) return;
+            const activeCount = data.filter(l => l.status === 'czynny').length;
+            const counterText = `${activeCount}/${data.length} wyciągów czynnych`;
 
-    myRfid = me.cardIds[0];
-    ['narciarz-rfid', 'historia-rfid', 'zwrot-rfid'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = myRfid;
-    });
+            const heroCounter = document.getElementById('hero-lift-counter');
+            if (heroCounter) heroCounter.textContent = `⛷️ ${counterText}`;
 
-    const passes = await apiFetch(`/api/karnety?cardId=${encodeURIComponent(myRfid)}`);
-    if (passes) renderHeroPass(passes);
-    zaladujKarnety();
-    zaladujRezerwacje();
-  }
+            const rozkladCounter = document.getElementById('rozklad-lift-counter');
+            if (rozkladCounter) rozkladCounter.textContent = counterText;
 
-  function renderHeroPass(passes) {
-    const today = new Date();
-    const active = passes.find(p => {
-      if (p.status !== 'aktywny') return false;
-      const from = p.validFrom ? new Date(p.validFrom) : null;
-      const to   = p.validTo   ? new Date(p.validTo)   : null;
-      return from && to && from <= today && today <= to;
-    }) || passes.find(p => p.status === 'aktywny') || passes[0];
+            const now = new Date();
+            const subtitle = document.getElementById('rozklad-subtitle');
+            if (subtitle) subtitle.textContent = `Aktualny status · ${now.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })} · Aktualizacja: ${now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}`;
+        }
 
-    if (!active) return;
+        // ========== REZERWACJE ==========
+        async function zaladujRezerwacje() {
+            const el = document.getElementById('rezerwacje-lista');
+            if (!el) return;
 
-    const from = active.validFrom ? new Date(active.validFrom) : null;
-    const to   = active.validTo   ? new Date(active.validTo)   : null;
-    const totalDays = (from && to) ? Math.max(1, Math.round((to - from) / 86400000)) : 0;
-    const usedDays  = from ? Math.max(0, Math.round((today - from) / 86400000)) : 0;
-    const leftDays  = Math.max(0, totalDays - usedDays);
-    const pct = totalDays > 0 ? Math.min(100, Math.round((usedDays / totalDays) * 100)) : 0;
+            const data = await apiFetch('/api/users/me/rezerwacje');
+            if (!data) { el.innerHTML = '<div style="color:var(--text-muted)">Błąd ładowania rezerwacji.</div>'; return; }
 
-    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    setText('hero-pass-name', active.tariff ?? '—');
-    setText('hero-pass-type', active.passType ?? '—');
-    setText('hero-pass-badge', active.status?.toUpperCase() ?? '—');
-    setText('hero-pass-from', from ? from.toLocaleDateString('pl-PL') : '—');
-    setText('hero-pass-to',   to   ? to.toLocaleDateString('pl-PL')   : '—');
-    setText('hero-pass-left', `${leftDays} dni`);
-    setText('hero-pass-rfid', `💳 ${active.cardId}`);
-    const prog = document.getElementById('hero-pass-progress');
-    if (prog) prog.style.width = `${pct}%`;
-  }
+            const oczekujace = data.filter(r =>
+                r.passes.some(p => p.status === 'oczekuje_na_odbior')
+            );
 
-  init();
-</script>
+            if (oczekujace.length === 0) {
+                el.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Brak rezerwacji oczekujących na odbiór.</div>';
+                return;
+            }
+
+            el.innerHTML = oczekujace.map(r => {
+                const passesHtml = r.passes
+                    .filter(p => p.status === 'oczekuje_na_odbior')
+                    .map(p => {
+                        const from = p.validFrom ? new Date(p.validFrom).toLocaleDateString('pl-PL') : '—';
+                        const to = p.validTo ? new Date(p.validTo).toLocaleDateString('pl-PL') : '—';
+                        return `<div style="font-size:13px;color:var(--text-muted);margin-top:4px">
+                📋 ${p.tariff ?? '—'} · ${from} – ${to} · <strong>${p.price?.toFixed(2) ?? '—'} zł</strong>
+              </div>`;
+                    }).join('');
+
+                const date = r.reservationDate ? new Date(r.reservationDate).toLocaleDateString('pl-PL') : '—';
+
+                return `<div style="padding:14px 16px;border:2px solid #FFA000;border-radius:8px;background:#FFFDE7;margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-weight:700">📦 ${r.reservationNumber}</div>
+                <div style="font-size:12px;color:var(--text-muted)">Złożona: ${date}</div>
+                ${passesHtml}
+              </div>
+              <span style="background:#FFA000;color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap">DO ODBIORU</span>
+            </div>
+            <div style="margin-top:10px;font-size:12px;color:#795548">
+              ℹ️ Odbierz karnet przy kasie, podając numer rezerwacji. Kasjer przypisze kartę RFID.
+            </div>
+          </div>`;
+            }).join('');
+        }
+
+        // ========== ZAKUP ONLINE (UC2) ==========
+        let selectedTariffId = null;
+        let selectedTariffName = '';
+        let selectedTariffPrice = 0;
+
+        async function zaladujTaryfy() {
+            const data = await apiFetch('/api/zakup/taryfy');
+            const lista = document.getElementById('zakup-taryfy-lista');
+            if (!lista) return;
+            if (!data || data.length === 0) {
+                lista.innerHTML = '<div style="color:var(--text-muted)">Brak dostępnych karnetów.</div>';
+                return;
+            }
+            lista.innerHTML = data.map(t => `
+          <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px solid var(--border);border-radius:8px;cursor:pointer" id="taryfa-label-${t.id}">
+            <input type="radio" name="taryfa-zakup" style="accent-color:var(--primary)" value="${t.id}" onchange="wybierzTaryfe(${t.id},'${t.name}',${t.price})">
+            <div style="flex:1">
+              <div style="font-weight:600">${t.name}</div>
+              <div style="font-size:12px;color:var(--text-muted)">${t.season ?? ''}</div>
+            </div>
+            <div style="font-weight:700;color:var(--primary)">${t.price?.toFixed(2)} zł</div>
+          </label>`).join('');
+
+            // Ustaw domyślne daty
+            const today = new Date();
+            const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+            const fmtDate = d => d.toISOString().split('T')[0];
+            document.getElementById('zakup-from').value = fmtDate(today);
+            document.getElementById('zakup-to').value = fmtDate(tomorrow);
+            document.getElementById('zakup-from').addEventListener('change', aktualizujPodsumowanie);
+            document.getElementById('zakup-to').addEventListener('change', aktualizujPodsumowanie);
+        }
+
+        function wybierzTaryfe(id, name, price) {
+            selectedTariffId = id;
+            selectedTariffName = name;
+            selectedTariffPrice = price;
+            document.querySelectorAll('#zakup-taryfy-lista label').forEach(l => l.style.borderColor = 'var(--border)');
+            const lbl = document.getElementById(`taryfa-label-${id}`);
+            if (lbl) lbl.style.borderColor = 'var(--primary)';
+            aktualizujPodsumowanie();
+        }
+
+        function aktualizujPodsumowanie() {
+            const fromVal = document.getElementById('zakup-from')?.value;
+            const toVal = document.getElementById('zakup-to')?.value;
+            const summary = document.getElementById('zakup-summary');
+            const btn = document.getElementById('zakup-btn');
+            if (!summary) return;
+
+            if (!selectedTariffId || !fromVal || !toVal) {
+                summary.innerHTML = '<span style="color:var(--text-muted)">Wybierz karnet i daty.</span>';
+                if (btn) btn.disabled = true;
+                return;
+            }
+
+            const from = new Date(fromVal);
+            const to = new Date(toVal);
+            if (from >= to) {
+                summary.innerHTML = '<span style="color:var(--danger)">Data końca musi być późniejsza niż data początku.</span>';
+                if (btn) btn.disabled = true;
+                return;
+            }
+
+            const days = Math.round((to - from) / 86400000);
+            summary.innerHTML = `
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Karnet</span><span style="font-weight:600">${selectedTariffName}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Od</span><span>${from.toLocaleDateString('pl-PL')}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Do</span><span>${to.toLocaleDateString('pl-PL')}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Liczba dni</span><span>${days}</span></div>
+            <hr style="border:none;border-top:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700"><span>Do zapłaty</span><span style="color:var(--primary)">${selectedTariffPrice?.toFixed(2)} zł</span></div>
+          </div>`;
+            if (btn) btn.disabled = false;
+        }
+
+        async function zlozZamowienie() {
+            const fromVal = document.getElementById('zakup-from')?.value;
+            const toVal = document.getElementById('zakup-to')?.value;
+            const result = document.getElementById('zakup-result');
+            const btn = document.getElementById('zakup-btn');
+            if (!selectedTariffId || !fromVal || !toVal) return;
+
+            btn.disabled = true; btn.textContent = '⏳ Przetwarzanie płatności…';
+            try {
+                const res = await fetch('/api/zakup/online', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ tariffId: selectedTariffId, validFrom: fromVal, validTo: toVal })
+                });
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok) {
+                    result.innerHTML = `<div style="padding:16px;background:var(--success-light);border-left:4px solid var(--success);border-radius:4px">
+              <div style="font-weight:700;font-size:16px;color:var(--success);margin-bottom:8px">✅ Rezerwacja przyjęta!</div>
+              <div style="display:flex;flex-direction:column;gap:4px;font-size:13px">
+                <div><strong>Nr rezerwacji:</strong> <code style="background:#fff;padding:2px 6px;border-radius:4px">${data.reservationNumber}</code></div>
+                <div><strong>Karnet:</strong> ${data.tariff}</div>
+                <div><strong>Ważny:</strong> ${new Date(data.validFrom).toLocaleDateString('pl-PL')} – ${new Date(data.validTo).toLocaleDateString('pl-PL')}</div>
+                <div><strong>Kwota:</strong> ${data.price?.toFixed(2)} zł</div>
+              </div>
+              <div style="margin-top:10px;font-size:12px;color:#555">${data.message}</div>
+            </div>`;
+                    result.style.display = 'block';
+                    selectedTariffId = null;
+                    selectedTariffName = '';
+                    document.querySelectorAll('input[name="taryfa-zakup"]').forEach(r => r.checked = false);
+                    document.querySelectorAll('#zakup-taryfy-lista label').forEach(l => l.style.borderColor = 'var(--border)');
+                    document.getElementById('zakup-summary').innerHTML = '<span style="color:var(--text-muted)">Wybierz karnet i daty.</span>';
+                } else {
+                    result.innerHTML = `<div style="padding:12px;background:var(--danger-light);border-left:4px solid var(--danger);border-radius:4px;color:var(--danger)">❌ ${data.message ?? 'Błąd podczas składania zamówienia.'}</div>`;
+                    result.style.display = 'block';
+                }
+            } catch (e) {
+                result.innerHTML = `<div style="padding:12px;background:var(--danger-light);border-left:4px solid var(--danger);border-radius:4px;color:var(--danger)">❌ Brak połączenia z API.</div>`;
+                result.style.display = 'block';
+            } finally {
+                btn.disabled = false; btn.textContent = '💳 Zapłać i zarezerwuj';
+            }
+        }
+
+        function syncZwrotReason() {
+            const sel = document.getElementById('zwrot-reason-select');
+            const txt = document.getElementById('zwrot-reason');
+            if (sel && txt && sel.value) txt.value = sel.value;
+        }
+
+        //async function init() {
+        //    loadWyciagi();
+
+        //    const me = await apiFetch('/api/users/me');
+        //    if (!me) return;
+
+        //    // Navbar
+        //    const email = me.email ?? '';
+        //    const label = document.getElementById('user-label');
+        //    if (label) label.textContent = email;
+        //    const avatar = document.getElementById('user-avatar');
+        //    if (avatar) avatar.textContent = email.slice(0, 2).toUpperCase();
+
+        //    // Hero powitanie
+        //    const greeting = document.getElementById('hero-greeting');
+        //    if (greeting) greeting.textContent = `Dzień dobry, ${email.split('@')[0]} 👋`;
+
+        //    if (!me.cardIds || me.cardIds.length === 0) return;
+
+        //    myRfid = me.cardIds[0];
+        //    ['narciarz-rfid', 'historia-rfid', 'zwrot-rfid'].forEach(id => {
+        //        const el = document.getElementById(id);
+        //        if (el) el.value = myRfid;
+        //    });
+
+        //    const passes = await apiFetch(`/api/karnety?cardId=${encodeURIComponent(myRfid)}`);
+        //    if (passes) renderHeroPass(passes);
+        //    zaladujKarnety();
+        //    zaladujRezerwacje();
+        //}
+
+
+
+        async function init() {
+            loadWyciagi();
+            const me = await apiFetch('/api/users/me');
+            if (!me) return;
+
+            // Navbar
+            const email = me.email ?? '';
+            const label = document.getElementById('user-label');
+            if (label) label.textContent = email;
+            const avatar = document.getElementById('user-avatar');
+            if (avatar) avatar.textContent = email.slice(0, 2).toUpperCase();
+
+            // Hero powitanie
+            const greeting = document.getElementById('hero-greeting');
+            if (greeting) greeting.textContent = `Dzień dobry, ${email.split('@')[0]} 👋`;
+
+            if (!me.cardIds || me.cardIds.length === 0) {
+                // brak kart — zablokuj selecty z komunikatem
+                wypelnijListeKart([]);
+                return;
+            }
+
+            // wypełnij listy kart wszystkimi kartami użytkownika
+            wypelnijListeKart(me.cardIds);
+
+            // domyślnie wybierz pierwszą
+            myRfid = me.cardIds[0];
+            ['narciarz-rfid', 'historia-rfid', 'zwrot-rfid'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = myRfid;
+            });
+
+            const passes = await apiFetch(`/api/karnety?cardId=${encodeURIComponent(myRfid)}`);
+            if (passes) renderHeroPass(passes);
+            zaladujKarnety();
+            zaladujRezerwacje();
+        }
+
+
+
+
+
+
+
+
+
+        function renderHeroPass(passes) {
+            const today = new Date();
+            const active = passes.find(p => {
+                if (p.status !== 'aktywny') return false;
+                const from = p.validFrom ? new Date(p.validFrom) : null;
+                const to = p.validTo ? new Date(p.validTo) : null;
+                return from && to && from <= today && today <= to;
+            }) || passes.find(p => p.status === 'aktywny') || passes[0];
+
+            if (!active) return;
+
+            const from = active.validFrom ? new Date(active.validFrom) : null;
+            const to = active.validTo ? new Date(active.validTo) : null;
+            const totalDays = (from && to) ? Math.max(1, Math.round((to - from) / 86400000)) : 0;
+            const usedDays = from ? Math.max(0, Math.round((today - from) / 86400000)) : 0;
+            const leftDays = Math.max(0, totalDays - usedDays);
+            const pct = totalDays > 0 ? Math.min(100, Math.round((usedDays / totalDays) * 100)) : 0;
+
+            const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+            setText('hero-pass-name', active.tariff ?? '—');
+            setText('hero-pass-type', active.passType ?? '—');
+            setText('hero-pass-badge', active.status?.toUpperCase() ?? '—');
+            setText('hero-pass-from', from ? from.toLocaleDateString('pl-PL') : '—');
+            setText('hero-pass-to', to ? to.toLocaleDateString('pl-PL') : '—');
+            setText('hero-pass-left', `${leftDays} dni`);
+            setText('hero-pass-rfid', `💳 ${active.cardId}`);
+            const prog = document.getElementById('hero-pass-progress');
+            if (prog) prog.style.width = `${pct}%`;
+        }
+
+        init();
+    </script>
 </body>
 </html>

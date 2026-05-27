@@ -32,7 +32,7 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
             .Where(id => id != null)
             .Distinct()
             .ToList();
-
+        
         return Ok(new { userId = user.Id, email = user.Email, cardIds });
     }
 

@@ -50,31 +50,45 @@ namespace BramkaAPI.Controllers
         [HttpGet("sprawdz-karte/{id}")]
         public async Task<IActionResult> SprawdzKarte(string id)
         {
-            var karta = await _context.Cards.FirstOrDefaultAsync(c => c.Id == id);
+            var karta = await _context.Cards
+                .Include(c => c.Status)
+                .Include(c => c.SkiPasses)
+                .FirstOrDefaultAsync(c => c.Id == id);
 
             if (karta == null)
             {
                 return NotFound(new { Wiadomosc = "Karta o podanym ID nie istnieje." });
             }
 
-            if (karta.StatusId == 1)
+            if (karta.Status?.Name == "zablokowana")
             {
-                return Ok(new { Aktywna = true, Wiadomosc = "Karta jest aktywna. Dostęp przyznany." });
+                return Ok(new { Aktywna = false, Wiadomosc = "Karta jest zablokowana. Odmowa dostępu." });
             }
 
-            return Ok(new { Aktywna = false, Wiadomosc = "Karta jest nieaktywna. Odmowa dostępu." });
+            var now = DateTime.UtcNow;
+            bool hasValidPass = karta.SkiPasses.Any(sp => sp.ValidFrom <= now && sp.ValidTo >= now && sp.StatusId == 1); // 1 = aktywny wg DB
+
+            if (hasValidPass)
+            {
+                return Ok(new { Aktywna = true, Wiadomosc = "Karta posiada ważny karnet. Dostęp przyznany." });
+            }
+
+            return Ok(new { Aktywna = false, Wiadomosc = "Karta nie posiada ważnego karnetu. Odmowa dostępu." });
         }
 
         [HttpGet("aktywne-karty")]
         public async Task<IActionResult> PobierzAktywneKarty()
         {
+            var now = DateTime.UtcNow;
             var karty = await _context.Cards
-                .Where(c => c.StatusId == 1)
+                .Include(c => c.Status)
+                .Include(c => c.SkiPasses)
+                .Where(c => c.Status != null && c.Status.Name != "zablokowana" && c.SkiPasses.Any(sp => sp.ValidFrom <= now && sp.ValidTo >= now && sp.StatusId == 1))
                 .Select(c => new
                 {
                     Id = c.Id,
-                    CzyAktywna = c.StatusId == 1,
-                    WaznaDo = c.SkiPasses.Any() ? c.SkiPasses.Max(sp => sp.ValidTo) : null
+                    CzyAktywna = true,
+                    WaznaDo = c.SkiPasses.Where(sp => sp.ValidFrom <= now && sp.ValidTo >= now && sp.StatusId == 1).Max(sp => sp.ValidTo)
                 })
                 .ToListAsync();
 

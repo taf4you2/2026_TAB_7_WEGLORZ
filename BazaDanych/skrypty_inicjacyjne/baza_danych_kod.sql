@@ -172,6 +172,7 @@ CREATE TABLE "gate_scan" (
   "id" integer PRIMARY KEY,
   "card_id" varchar,
   "gate_id" integer,
+  "pass_type_id" integer,
   "scan_time" timestamp,
   "time_blocked_until" timestamp,
   "verification_result_id" integer
@@ -248,3 +249,5 @@ ALTER TABLE "gate_scan" ADD FOREIGN KEY ("gate_id") REFERENCES "gate" ("id") DEF
 ALTER TABLE "admin_report" ADD FOREIGN KEY ("admin_id") REFERENCES "administrator" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "admin_report" ADD FOREIGN KEY ("report_type_id") REFERENCES "dict_report_type" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE "gate_scan" ADD FOREIGN KEY ("pass_type_id") REFERENCES "dict_pass_type" ("id") DEFERRABLE INITIALLY IMMEDIATE;

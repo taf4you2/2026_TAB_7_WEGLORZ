@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -18,6 +18,7 @@ namespace Bramka
             InicjalizujBazeLokalna();
             await SynchronizujBazeLokalnaAsync();
             UruchomSynchronizacjeWTle();
+            UruchomWysylkeOdbicWTle();
 
             while (true)
             {
@@ -53,6 +54,8 @@ namespace Bramka
 
             if (karta != null)
             {
+                db.OdbiciaLokalne.Add(new OdbicieLokalne { CardId = cardId, GateId = 1, ScanTime = DateTime.Now, VerificationResultId = karta.CzyAktywna ? 1 : 2 });
+                await db.SaveChangesAsync();
                 WyswietlStatusKarty(karta.CzyAktywna, false);
                 return;
             }
@@ -89,6 +92,7 @@ namespace Bramka
                     }
 
                     db.KartyLokalne.Add(new KartaLokalna { Id = cardId, CzyAktywna = czyAktywna });
+                    db.OdbiciaLokalne.Add(new OdbicieLokalne { CardId = cardId, GateId = 1, ScanTime = DateTime.Now, VerificationResultId = czyAktywna ? 1 : 2 });
                     await db.SaveChangesAsync();
 
                     Console.WriteLine("[Serwer API] Karta zsynchronizowana pomyślnie.");
@@ -96,6 +100,9 @@ namespace Bramka
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
+                    db.OdbiciaLokalne.Add(new OdbicieLokalne { CardId = cardId, GateId = 1, ScanTime = DateTime.Now, VerificationResultId = 2 });
+                    await db.SaveChangesAsync();
+
                     Console.WriteLine();
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine(">>> ODMÓWIONO DOSTĘPU (Karta nie istnieje w systemie) <<<");
@@ -103,11 +110,16 @@ namespace Bramka
                 }
                 else
                 {
+                    db.OdbiciaLokalne.Add(new OdbicieLokalne { CardId = cardId, GateId = 1, ScanTime = DateTime.Now, VerificationResultId = 2 });
+                    await db.SaveChangesAsync();
                     Console.WriteLine($"\nNieoczekiwany błąd serwera: {response.StatusCode}");
                 }
             }
             catch (HttpRequestException e)
             {
+                db.OdbiciaLokalne.Add(new OdbicieLokalne { CardId = cardId, GateId = 1, ScanTime = DateTime.Now, VerificationResultId = 2 });
+                await db.SaveChangesAsync();
+
                 Console.ForegroundColor = ConsoleColor.DarkYellow;
                 Console.WriteLine($"\nBłąd połączenia z serwerem API: {e.Message}");
                 Console.WriteLine("Bramka w trybie offline nie może zweryfikować nowej karty!");
@@ -269,6 +281,55 @@ namespace Bramka
                 }
             }
             catch (Exception ex){ // zastanawiam sie jaka obsluge bledow dodac
+            }
+        }
+
+        static void UruchomWysylkeOdbicWTle()
+        {
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+                    await WyslijZalegleOdbiciaAsync();
+                }
+            });
+        }
+
+        static async Task WyslijZalegleOdbiciaAsync()
+        {
+            try
+            {
+                using var db = new BramkaDbContext();
+                var nieZsynchronizowane = db.OdbiciaLokalne.ToList();
+
+                if (!nieZsynchronizowane.Any())
+                    return;
+
+                var payload = nieZsynchronizowane.Select(o => new
+                {
+                    cardId = o.CardId,
+                    gateId = o.GateId,
+                    scanTime = o.ScanTime,
+                    verificationResultId = o.VerificationResultId,
+                    passTypeId = o.PassTypeId
+                }).ToList();
+
+                string json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+                string url = "http://localhost:49226/api/GateScanSync";
+                HttpResponseMessage response = await client.PostAsync(url, content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    db.OdbiciaLokalne.RemoveRange(nieZsynchronizowane);
+                    await db.SaveChangesAsync();
+                }
+            }
+            catch (Exception)
+            {
+                // Ignoruj błędy, w następnej pętli spróbuje ponownie
             }
         }
     }

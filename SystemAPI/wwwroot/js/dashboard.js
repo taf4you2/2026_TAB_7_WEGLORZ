@@ -11,13 +11,32 @@ export async function loadDashboard() {
 
     const traffic = await apiFetch('/api/statystyki/ruch-godzinowy');
     if (traffic) {
-        const max = Math.max(...traffic.map(t => t.count), 1);
-        document.getElementById('hourly-traffic-chart').innerHTML = traffic.map(t => `
-            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
-                <div style="width:100%; background:var(--primary); border-radius:4px 4px 0 0; height:${(t.count / max) * 100}px; min-height:2px;"></div>
-                <span style="font-size:9px; color:var(--text-muted);">${t.hour}h</span>
-            </div>
-        `).join('');
+        const ctx = document.getElementById('hourly-traffic-chart').getContext('2d');
+        if (window.hourlyChart) window.hourlyChart.destroy();
+        window.hourlyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: traffic.map(t => t.hour + ':00'),
+                datasets: [{
+                    label: 'Skanowania bramek',
+                    data: traffic.map(t => t.count),
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#9ca3af' } },
+                    x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                }
+            }
+        });
     }
 
     const cardStats = await apiFetch('/api/statystyki/statusy-kart');
@@ -43,14 +62,20 @@ export async function loadDashboard() {
         `).join('');
     }
 
-    const failed = await apiFetch('/api/statystyki/nieudane-odbicia');
-    if (failed) {
-        document.getElementById('failed-scans-list').innerHTML = failed.map(f => `
-            <div class="failed-scan">
-                <span style="font-family:monospace;">${f.cardId}</span>
-                <span>${f.gateName}</span>
-                <span style="color:var(--danger); font-weight:600;">${f.result}</span>
-                <span style="color:var(--text-muted);">${new Date(f.scanTime).toLocaleTimeString()}</span>
+    if (window.feedInterval) clearInterval(window.feedInterval);
+    loadFeed();
+    window.feedInterval = setInterval(loadFeed, 10000);
+}
+
+async function loadFeed() {
+    const feed = await apiFetch('/api/statystyki/activity-feed');
+    if (feed && document.getElementById('activity-feed-list')) {
+        document.getElementById('activity-feed-list').innerHTML = feed.map(f => `
+            <div class="failed-scan" style="border-left: 3px solid ${f.status === 'ok' ? '#10b981' : '#ef4444'}; padding-left: 12px; margin-bottom: 8px;">
+                <span style="font-family:monospace; display:inline-block; width:130px;">${f.cardRfid}</span>
+                <span style="flex:1;">${f.location}</span>
+                <span style="color:${f.status === 'ok' ? '#10b981' : '#ef4444'}; font-weight:600; width:120px; text-align:right;">${f.status === 'ok' ? 'ZATWIERDZONO' : (f.reason || 'BŁĄD')}</span>
+                <span style="color:var(--text-muted); width:70px; text-align:right;">${new Date(f.timestamp).toLocaleTimeString()}</span>
             </div>
         `).join('');
     }

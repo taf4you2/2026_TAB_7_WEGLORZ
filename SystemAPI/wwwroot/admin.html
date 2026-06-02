@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Administratora - SkiAdmin</title>
     <link rel="stylesheet" href="css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <aside>
@@ -44,8 +45,8 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
                     <div class="card">
                         <div class="card-header"><h3>Ruch dzisiaj (godzinowo)</h3></div>
-                        <div class="card-body" id="hourly-traffic-chart" style="display: flex; align-items: flex-end; gap: 4px; height: 150px; padding-top: 20px;">
-                            Laduje dane...
+                        <div class="card-body" style="height: 250px; padding-top: 20px;">
+                            <canvas id="hourly-traffic-chart"></canvas>
                         </div>
                     </div>
                     <div class="card">
@@ -60,8 +61,8 @@
                     <div class="card-body" id="realtime-occupancy-list">Laduje...</div>
                 </div>
                 <div class="card">
-                    <div class="card-header"><h3>Ostatnie bledy na bramkach</h3></div>
-                    <div class="card-body" id="failed-scans-list" style="padding: 0;">Laduje...</div>
+                    <div class="card-header"><h3>Live Activity Feed</h3></div>
+                    <div class="card-body" id="activity-feed-list" style="padding: 0; max-height: 300px; overflow-y: auto;">Laduje...</div>
                 </div>
             </div>
 
@@ -108,7 +109,18 @@
             <div id="sec-sales" class="section">
                 <h1>Sprzedaz i Kasy</h1>
                 <p class="subtitle">Analiza kanalow i aktywni pracownicy</p>
-                <div class="card"><div class="card-body"><div id="sales-comp" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;"></div></div></div>
+                <div class="card"><div class="card-body">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                        <div>
+                            <h4 style="margin-bottom: 12px; color:var(--text-muted);">Kanaly sprzedazy (ostatnie 7 dni)</h4>
+                            <canvas id="sales-channels-chart" height="200"></canvas>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 12px; color:var(--text-muted);">Struktura sprzedazy taryf (ostatnie 30 dni)</h4>
+                            <canvas id="sales-structure-chart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div></div>
                 <div class="card"><div class="card-header"><h3>Aktywne zmiany</h3></div><div class="card-body">
                     <table><thead><tr><th>Pracownik</th><th>Start</th><th>Czas</th><th>Status</th></tr></thead>
                     <tbody id="active-cashiers-tbody"></tbody></table>

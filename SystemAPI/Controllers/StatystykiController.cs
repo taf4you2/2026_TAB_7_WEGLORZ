@@ -270,6 +270,35 @@ public class StatystykiController(SkiResortDbContext db) : ControllerBase
 
         return Ok(dto);
     }
+
+    // GET /api/statystyki/sales-structure
+    // Zwraca udzial procentowy taryf w przychodach
+    [Authorize(Roles = "admin")]
+    [HttpGet("sales-structure")]
+    public async Task<IActionResult> GetSalesStructure([FromQuery] int days = 30)
+    {
+        var startDate = DateTime.UtcNow.Date.AddDays(-days);
+
+        var passes = await db.SkiPasses
+            .Include(sp => sp.Tariff)
+            .Where(sp => sp.ValidFrom >= startDate && sp.Tariff != null)
+            .GroupBy(sp => sp.Tariff!.Name)
+            .Select(g => new
+            {
+                Name = g.Key,
+                Value = g.Sum(x => x.Tariff!.Price)
+            })
+            .ToListAsync();
+
+        var dto = new SalesStructureDto();
+        foreach (var p in passes)
+        {
+            dto.Labels.Add(p.Name ?? "Nieznana");
+            dto.Values.Add(p.Value ?? 0m);
+        }
+
+        return Ok(dto);
+    }
 }
 
 public record DashboardDto(

@@ -57,5 +57,11 @@ public class SkiResortDbContext : DbContext
             .HasOne(lt => lt.Trail)
             .WithMany(t => t.LiftTrails)
             .HasForeignKey(lt => lt.TrailId);
+
+        modelBuilder.Entity<GateScan>()
+            .HasIndex(gs => gs.ScanTime);
+
+        modelBuilder.Entity<Transaction>()
+            .HasIndex(t => t.TransactionDate);
     }
 }

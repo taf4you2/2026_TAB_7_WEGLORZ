@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SystemStacjiNarciarskiejDLL;
+using SystemStacjiNarciarskiejDLL.Models.DTOs.Admin;
 
 namespace SystemAPI.Controllers;
 
@@ -215,6 +216,59 @@ public class StatystykiController(SkiResortDbContext db) : ControllerBase
             .ToListAsync();
 
         return Ok(scansPerLift);
+    }
+
+    // GET /api/statystyki/activity-feed
+    // Zwraca listę ostatnich skanowań kart (dla podglądu "Live Activity Feed")
+    [Authorize(Roles = "admin")]
+    [HttpGet("activity-feed")]
+    public async Task<IActionResult> GetActivityFeed([FromQuery] int limit = 50)
+    {
+        var feed = await db.GateScans
+            .Include(gs => gs.Gate)
+                .ThenInclude(g => g!.Lift)
+            .Include(gs => gs.VerificationResult)
+            .OrderByDescending(gs => gs.ScanTime)
+            .Take(limit)
+            .Select(gs => new ActivityFeedDto
+            {
+                Id = gs.Id,
+                CardRfid = gs.CardId ?? "Nieznana",
+                Location = (gs.Gate != null ? gs.Gate.Name : "") + (gs.Gate != null && gs.Gate.Lift != null ? " - " + gs.Gate.Lift.Name : ""),
+                Timestamp = gs.ScanTime ?? DateTime.UtcNow,
+                Status = gs.VerificationResult != null ? gs.VerificationResult.Name : "Brak statusu",
+                Reason = gs.VerificationResult != null && gs.VerificationResult.Name != "ok" ? "Odmowa dostępu" : ""
+            })
+            .ToListAsync();
+
+        return Ok(feed);
+    }
+
+    // GET /api/statystyki/sales-chart
+    // Zwraca dane do wykresu sprzedaży w rozbiciu na dni
+    [Authorize(Roles = "admin")]
+    [HttpGet("sales-chart")]
+    public async Task<IActionResult> GetSalesChart([FromQuery] int days = 7)
+    {
+        var startDate = DateTime.UtcNow.Date.AddDays(-days + 1);
+
+        var transactions = await db.Transactions
+            .Where(t => t.TransactionDate >= startDate && t.Amount > 0)
+            .ToListAsync();
+
+        var dto = new SalesChartDto();
+
+        for (int i = 0; i < days; i++)
+        {
+            var date = startDate.AddDays(i);
+            dto.Labels.Add(date.ToString("yyyy-MM-dd"));
+            
+            var dailyTrans = transactions.Where(t => t.TransactionDate >= date && t.TransactionDate < date.AddDays(1)).ToList();
+            dto.OnsiteValues.Add(dailyTrans.Where(t => t.CashierId != null).Sum(t => t.Amount));
+            dto.OnlineValues.Add(dailyTrans.Where(t => t.CashierId == null).Sum(t => t.Amount));
+        }
+
+        return Ok(dto);
     }
 }
 

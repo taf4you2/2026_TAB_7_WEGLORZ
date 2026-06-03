@@ -91,11 +91,22 @@ namespace Bramka
                         czyAktywna = prop.GetBoolean();
                     }
 
-                    db.KartyLokalne.Add(new KartaLokalna { Id = cardId, CzyAktywna = czyAktywna });
+                    DateTime? waznaDo = null;
+                    if (root.TryGetProperty("waznaDo", out JsonElement dateProp) || root.TryGetProperty("WaznaDo", out dateProp))
+                    {
+                        if (dateProp.ValueKind != JsonValueKind.Null)
+                            waznaDo = dateProp.GetDateTime();
+                    }
+
+                    if (czyAktywna)
+                    {
+                        db.KartyLokalne.Add(new KartaLokalna { Id = cardId, CzyAktywna = czyAktywna, WaznaDo = waznaDo });
+                    }
+                    
                     db.OdbiciaLokalne.Add(new OdbicieLokalne { CardId = cardId, GateId = 1, ScanTime = DateTime.Now, VerificationResultId = czyAktywna ? 1 : 2 });
                     await db.SaveChangesAsync();
 
-                    Console.WriteLine("[Serwer API] Karta zsynchronizowana pomyślnie.");
+                    Console.WriteLine("[Serwer API] Karta zweryfikowana pomyślnie.");
                     WyswietlStatusKarty(czyAktywna, true);
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)

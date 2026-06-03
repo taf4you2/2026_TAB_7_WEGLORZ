@@ -60,17 +60,21 @@ namespace BramkaAPI.Controllers
                 return NotFound(new { Wiadomosc = "Karta o podanym ID nie istnieje." });
             }
 
-            if (karta.Status?.Name == "zablokowana")
+            if (karta.Status?.Name == "zastrzezony")
             {
-                return Ok(new { Aktywna = false, Wiadomosc = "Karta jest zablokowana. Odmowa dostępu." });
+                return Ok(new { Aktywna = false, Wiadomosc = "Karta jest zastrzeżona (zablokowana). Odmowa dostępu." });
             }
 
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             bool hasValidPass = karta.SkiPasses.Any(sp => sp.ValidFrom <= now && sp.ValidTo >= now && sp.StatusId == 1); // 1 = aktywny wg DB
 
             if (hasValidPass)
             {
-                return Ok(new { Aktywna = true, Wiadomosc = "Karta posiada ważny karnet. Dostęp przyznany." });
+                var waznaDo = karta.SkiPasses
+                    .Where(sp => sp.ValidFrom <= now && sp.ValidTo >= now && sp.StatusId == 1)
+                    .Max(sp => sp.ValidTo);
+
+                return Ok(new { Aktywna = true, WaznaDo = waznaDo, Wiadomosc = "Karta posiada ważny karnet. Dostęp przyznany." });
             }
 
             return Ok(new { Aktywna = false, Wiadomosc = "Karta nie posiada ważnego karnetu. Odmowa dostępu." });
@@ -79,11 +83,11 @@ namespace BramkaAPI.Controllers
         [HttpGet("aktywne-karty")]
         public async Task<IActionResult> PobierzAktywneKarty()
         {
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             var karty = await _context.Cards
                 .Include(c => c.Status)
                 .Include(c => c.SkiPasses)
-                .Where(c => c.Status != null && c.Status.Name != "zablokowana" && c.SkiPasses.Any(sp => sp.ValidFrom <= now && sp.ValidTo >= now && sp.StatusId == 1))
+                .Where(c => c.Status != null && c.Status.Name != "zastrzezony" && c.SkiPasses.Any(sp => sp.ValidFrom <= now && sp.ValidTo >= now && sp.StatusId == 1))
                 .Select(c => new
                 {
                     Id = c.Id,

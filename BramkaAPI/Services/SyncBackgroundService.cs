@@ -18,13 +18,14 @@ public class SyncBackgroundService : BackgroundService
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<SyncBackgroundService> _logger;
     private readonly HttpClient _httpClient;
-    private const string SystemApiUrl = "http://localhost:5000/api/gatescansync"; // Docelowo z konfiguracji
+    private readonly string _systemApiUrl;
 
-    public SyncBackgroundService(IServiceProvider serviceProvider, ILogger<SyncBackgroundService> logger, IHttpClientFactory httpClientFactory)
+    public SyncBackgroundService(IServiceProvider serviceProvider, ILogger<SyncBackgroundService> logger, IHttpClientFactory httpClientFactory, Microsoft.Extensions.Configuration.IConfiguration configuration)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient();
+        _systemApiUrl = configuration["SystemApiUrl"] ?? "http://system-api:8080/api/gatescansync";
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -72,7 +73,7 @@ public class SyncBackgroundService : BackgroundService
         }).ToList();
 
         // Wyślij do SystemAPI
-        var response = await _httpClient.PostAsJsonAsync(SystemApiUrl, dtos, stoppingToken);
+        var response = await _httpClient.PostAsJsonAsync(_systemApiUrl, dtos, stoppingToken);
 
         if (response.IsSuccessStatusCode)
         {

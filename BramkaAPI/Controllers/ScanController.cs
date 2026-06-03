@@ -46,10 +46,10 @@ public class ScanController : ControllerBase
             return Ok(response);
         }
 
-        if (card.StatusId != CARD_STATUS_ACTIVE)
+        if (card.StatusId == 3) // 3 = zastrzezony (zablokowany)
         {
-            response.Message = "Karta zablokowana lub nieaktywna";
-            response.ReasonCode = "CARD_INACTIVE";
+            response.Message = "Karta jest zastrzeżona. Odmowa dostępu.";
+            response.ReasonCode = "CARD_BLOCKED";
             await LogScan(req, scanTime, verificationResult, usedPassTypeId, null);
             return Ok(response);
         }

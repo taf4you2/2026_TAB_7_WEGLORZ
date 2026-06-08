@@ -142,7 +142,7 @@
                     <button class="btn btn-outline" onclick="showReportTab('history')">Historia Raportow</button>
                 </div>
                 <div id="report-tab-shift" class="report-tab">
-                    <div class="card"><div class="card-header"><h3>Historia dniowek kasowych</h3></div>
+                    <div class="card"><div class="card-header"><h3>Historia dniowek kasowych</h3><button class="btn btn-outline btn-sm" id="btn-export-shifts">Pobierz CSV</button></div>
                     <div class="card-body">
                         <table><thead><tr><th>ID</th><th>Kasjer</th><th>Otwarcie</th><th>Zamkniecie</th><th>Przychod</th><th>Karty</th></tr></thead>
                         <tbody id="reports-shift-tbody"></tbody></table>
@@ -154,6 +154,11 @@
                             <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Od</label><input type="date" id="report-sales-from" style="width:100%; padding:10px; background:var(--bg-dark); border:1px solid var(--border); border-radius:8px; color:white;"></div>
                             <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Do</label><input type="date" id="report-sales-to" style="width:100%; padding:10px; background:var(--bg-dark); border:1px solid var(--border); border-radius:8px; color:white;"></div>
                             <button class="btn btn-primary" onclick="generateGeneralReport()">Generuj</button>
+                        </div>
+                        <div style="display:flex; gap:8px; margin-top:12px;">
+                            <button class="btn btn-outline btn-sm" onclick="setSalesRange('today')">Dzis</button>
+                            <button class="btn btn-outline btn-sm" onclick="setSalesRange('week')">7 dni</button>
+                            <button class="btn btn-outline btn-sm" onclick="setSalesRange('month')">30 dni</button>
                         </div>
                     </div></div>
                     <div id="sales-report-result"></div>
@@ -168,7 +173,7 @@
                     <div id="infra-report-result"></div>
                 </div>
                 <div id="report-tab-history" class="report-tab" style="display:none;">
-                    <div class="card"><div class="card-header"><h3>Logi wygenerowanych raportow</h3></div>
+                    <div class="card"><div class="card-header"><h3>Logi wygenerowanych raportow</h3><button class="btn btn-outline btn-sm" id="btn-export-admin-history">Pobierz CSV</button></div>
                     <div class="card-body">
                         <table><thead><tr><th>ID</th><th>Administrator</th><th>Typ</th><th>Parametry</th><th>Data</th></tr></thead>
                         <tbody id="reports-history-tbody"></tbody></table>
@@ -267,7 +272,7 @@
     </div>
 
     <div id="modal-overlay-history" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; place-items: center;">
-        <div class="card" style="width: 600px; max-height: 80vh; display: flex; flex-direction: column;">
+        <div class="card" style="width: min(980px, calc(100vw - 32px)); max-height: 86vh; display: flex; flex-direction: column;">
             <div class="card-header"><h3 id="modal-history-title">Historia</h3></div>
             <div id="modal-history-content" class="card-body" style="overflow-y: auto; flex: 1;"></div>
             <div class="card-header" style="border-top: 1px solid var(--border); border-bottom:0; justify-content: flex-end;"><button class="btn btn-primary" onclick="closeHistoryModal()">Zamknij</button></div>

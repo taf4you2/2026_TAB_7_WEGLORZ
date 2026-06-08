@@ -234,40 +234,167 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
     [HttpGet("{id}/history")]
     public async Task<IActionResult> GetUserHistory(int id)
     {
+        var user = await db.Users.FindAsync(id);
+        if (user == null) return NotFound();
+
         var reservations = await db.Reservations
             .Include(r => r.Status)
             .Include(r => r.SkiPasses)
+                .ThenInclude(sp => sp.Status)
+            .Include(r => r.SkiPasses)
                 .ThenInclude(sp => sp.Tariff)
+                    .ThenInclude(t => t!.PassType)
             .Include(r => r.Transactions)
                 .ThenInclude(t => t.OperationType)
+            .Include(r => r.Transactions)
+                .ThenInclude(t => t.Cashier)
             .Where(r => r.UserId == id)
             .OrderByDescending(r => r.ReservationDate)
             .ToListAsync();
 
+        var cardIds = reservations
+            .SelectMany(r => r.SkiPasses)
+            .Select(sp => sp.CardId)
+            .Where(cardId => !string.IsNullOrWhiteSpace(cardId))
+            .Distinct()
+            .ToList();
+
+        var cards = await db.Cards
+            .Include(c => c.Status)
+            .Where(c => cardIds.Contains(c.Id))
+            .Select(c => new
+            {
+                c.Id,
+                Status = c.Status != null ? c.Status.Name : null,
+                c.DepositPaid,
+                c.PhysicalCondition,
+                c.BlockReason,
+                c.AddedToPoolAt
+            })
+            .ToListAsync();
+
+        var allScans = await db.GateScans
+            .Include(gs => gs.Gate)
+            .Include(gs => gs.VerificationResult)
+            .Where(gs => gs.CardId != null && cardIds.Contains(gs.CardId))
+            .OrderByDescending(gs => gs.ScanTime)
+            .Select(s => new
+            {
+                s.Id,
+                s.CardId,
+                Gate = s.Gate != null ? s.Gate.Name : null,
+                Result = s.VerificationResult != null ? s.VerificationResult.Name : null,
+                s.ScanTime,
+                s.TimeBlockedUntil
+            })
+            .ToListAsync();
+
+        var scans = allScans.Take(20).ToList();
+        var allPasses = reservations.SelectMany(r => r.SkiPasses).ToList();
+        var allTransactions = reservations.SelectMany(r => r.Transactions).ToList();
+        var now = DateTime.Now;
+        var acceptedScansCount = allScans.Count(s => s.Result == "ok");
+        var rejectedScansCount = allScans.Count - acceptedScansCount;
+
         var result = new
         {
+            Customer = new
+            {
+                user.Id,
+                user.Email,
+                user.CreatedAt
+            },
+            Summary = new
+            {
+                ReservationsCount = reservations.Count,
+                PassesCount = allPasses.Count,
+                ActivePassesCount = allPasses.Count(sp =>
+                    sp.Status != null
+                    && sp.Status.Name == "aktywny"
+                    && (sp.ValidFrom == null || sp.ValidFrom <= now)
+                    && (sp.ValidTo == null || sp.ValidTo >= now)
+                    && (sp.RemainingRides == null || sp.RemainingRides > 0)),
+                CardsCount = cardIds.Count,
+                ScansCount = allScans.Count,
+                AcceptedScansCount = acceptedScansCount,
+                RejectedScansCount = rejectedScansCount,
+                TotalSpent = allTransactions.Sum(t => t.Amount),
+                LastActivityAt = scans.Select(s => s.ScanTime).FirstOrDefault()
+                    ?? reservations.Select(r => r.ReservationDate).FirstOrDefault()
+            },
+            Cards = cards.Select(c => new
+            {
+                c.Id,
+                c.Status,
+                c.DepositPaid,
+                c.PhysicalCondition,
+                c.BlockReason,
+                c.AddedToPoolAt,
+                PassesCount = allPasses.Count(sp => sp.CardId == c.Id),
+                ActivePassesCount = allPasses.Count(sp =>
+                    sp.CardId == c.Id
+                    && sp.Status != null
+                    && sp.Status.Name == "aktywny"
+                    && (sp.ValidFrom == null || sp.ValidFrom <= now)
+                    && (sp.ValidTo == null || sp.ValidTo >= now)
+                    && (sp.RemainingRides == null || sp.RemainingRides > 0)),
+                ScansCount = allScans.Count(s => s.CardId == c.Id),
+                LastScanAt = allScans.Where(s => s.CardId == c.Id).Select(s => s.ScanTime).FirstOrDefault()
+            }),
+            TransactionStats = allTransactions
+                .GroupBy(t => t.OperationType?.Name ?? "brak_typu")
+                .Select(g => new
+                {
+                    OperationType = g.Key,
+                    Count = g.Count(),
+                    Amount = g.Sum(t => t.Amount)
+                }),
             Reservations = reservations.Select(r => new
             {
                 r.Id,
                 r.ReservationNumber,
                 r.ReservationDate,
                 Status = r.Status?.Name,
+                TotalAmount = r.Transactions.Sum(t => t.Amount),
                 Passes = r.SkiPasses.Select(sp => new
                 {
                     sp.Id,
                     sp.CardId,
+                    Status = sp.Status?.Name,
                     Tariff = sp.Tariff?.Name,
+                    PassType = sp.Tariff?.PassType?.Name,
+                    Price = sp.Tariff?.Price,
                     sp.ValidFrom,
-                    sp.ValidTo
+                    sp.ValidTo,
+                    sp.InitialRides,
+                    sp.RemainingRides,
+                    IsUsableAtGate = sp.Status != null
+                        && sp.Status.Name == "aktywny"
+                        && (sp.ValidFrom == null || sp.ValidFrom <= now)
+                        && (sp.ValidTo == null || sp.ValidTo >= now)
+                        && (sp.RemainingRides == null || sp.RemainingRides > 0),
+                    GateBlockReason = sp.Status == null
+                        ? "brak_statusu"
+                        : sp.Status.Name != "aktywny"
+                            ? $"status_{sp.Status.Name}"
+                            : sp.ValidFrom != null && sp.ValidFrom > now
+                                ? "jeszcze_niewazny"
+                                : sp.ValidTo != null && sp.ValidTo < now
+                                    ? "wygasl"
+                                    : sp.RemainingRides != null && sp.RemainingRides <= 0
+                                        ? "brak_przejazdow"
+                                        : null
                 }),
                 Transactions = r.Transactions.Select(t => new
                 {
                     t.Id,
                     OperationType = t.OperationType?.Name,
                     t.Amount,
-                    t.TransactionDate
+                    t.TransactionDate,
+                    Cashier = t.Cashier?.Login
                 })
-            })
+            }),
+            RecentScans = scans
         };
 
         return Ok(result);

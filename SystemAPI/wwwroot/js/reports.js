@@ -1,8 +1,12 @@
 import { apiFetch, showToast } from './core.js';
 
+let lastShiftReports = [];
+let lastAdminReportHistory = [];
+
 export async function loadShiftReports() {
     const data = await apiFetch('/api/raporty/zmiany');
     if (data) {
+        lastShiftReports = data;
         document.getElementById('reports-shift-tbody').innerHTML = data.map(r => `
             <tr>
                 <td>${r.id}</td>
@@ -13,12 +17,15 @@ export async function loadShiftReports() {
                 <td>${r.cardsIssuedCount || 0}</td>
             </tr>
         `).join('');
+        const exportButton = document.getElementById('btn-export-shifts');
+        if (exportButton) exportButton.onclick = exportShiftReportsCsv;
     }
 }
 
 export async function loadAdminReportHistory() {
     const data = await apiFetch('/api/raporty/historia-admin');
     if (data) {
+        lastAdminReportHistory = data;
         document.getElementById('reports-history-tbody').innerHTML = data.map(r => `
             <tr>
                 <td>${r.id}</td>
@@ -28,6 +35,8 @@ export async function loadAdminReportHistory() {
                 <td style="font-size:12px;">${new Date(r.generatedAt).toLocaleString()}</td>
             </tr>
         `).join('');
+        const exportButton = document.getElementById('btn-export-admin-history');
+        if (exportButton) exportButton.onclick = exportAdminReportHistoryCsv;
     }
 }
 
@@ -86,6 +95,61 @@ export function downloadCsv(filename, data) {
     document.body.removeChild(link);
 }
 
+function exportShiftReportsCsv() {
+    if (!lastShiftReports.length) {
+        showToast('Brak danych do eksportu', 'error');
+        return;
+    }
+
+    const rows = [
+        ['ID', 'Kasjer', 'Otwarcie', 'Zamkniecie', 'Przychod', 'Zwroty kaucji', 'Wydane karty']
+    ];
+    lastShiftReports.forEach(r => rows.push([
+        r.id,
+        r.cashierLogin,
+        r.startTime ? new Date(r.startTime).toLocaleString('pl-PL') : '',
+        r.endTime ? new Date(r.endTime).toLocaleString('pl-PL') : 'OTWARTA',
+        r.totalRevenue ?? 0,
+        r.totalDepositReturns ?? 0,
+        r.cardsIssuedCount ?? 0
+    ]));
+    downloadCsv('raport_zmian_kasowych.csv', rows);
+}
+
+function exportAdminReportHistoryCsv() {
+    if (!lastAdminReportHistory.length) {
+        showToast('Brak danych do eksportu', 'error');
+        return;
+    }
+
+    const rows = [
+        ['ID', 'Administrator', 'Typ', 'Parametry', 'Data wygenerowania']
+    ];
+    lastAdminReportHistory.forEach(r => rows.push([
+        r.id,
+        r.adminLogin,
+        formatReportType(r.reportType),
+        formatReportParams(r.reportParameters),
+        r.generatedAt ? new Date(r.generatedAt).toLocaleString('pl-PL') : ''
+    ]));
+    downloadCsv('historia_raportow_admin.csv', rows);
+}
+
+export function setSalesRange(range) {
+    const fromInput = document.getElementById('report-sales-from');
+    const toInput = document.getElementById('report-sales-to');
+    if (!fromInput || !toInput) return;
+
+    const today = new Date();
+    const from = new Date(today);
+    if (range === 'week') from.setDate(today.getDate() - 6);
+    if (range === 'month') from.setDate(today.getDate() - 29);
+
+    const toDateInput = value => value.toISOString().slice(0, 10);
+    fromInput.value = toDateInput(from);
+    toInput.value = toDateInput(today);
+}
+
 export async function generateGeneralReport() {
     const from = document.getElementById('report-sales-from').value;
     const to = document.getElementById('report-sales-to').value;
@@ -107,13 +171,24 @@ export async function generateGeneralReport() {
                 <div class="stat-card"><div class="stat-label">Online</div><div class="stat-value">${formatMoney(r.online.amount)}</div><div style="font-size:12px; color:var(--text-muted);">${r.online.count} transakcji</div></div>
             </div>
             <div class="card" style="margin-top:24px;">
-                <div class="card-header"><h3>Rozbicie operacji w kasach</h3></div>
+                <div class="card-header"><h3>Rozbicie operacji wedlug kanalow</h3></div>
                 <div class="card-body">
-                    ${r.onsite.byOperation.map(o => `
-                        <div style="display:flex; justify-content:space-between; margin-bottom:8px; border-bottom:1px solid var(--border); padding-bottom:4px;">
-                            <span>${escapeHtml(o.operation)} (${o.count})</span><span style="font-weight:700;">${formatMoney(o.amount)}</span>
-                        </div>
-                    `).join('') || '<span style="color:var(--text-muted);">Brak operacji kasowych w tym zakresie.</span>'}
+                    <table>
+                        <thead><tr><th>Kanal</th><th>Operacja</th><th>Liczba</th><th>Suma</th></tr></thead>
+                        <tbody>
+                            ${[
+                                ...r.onsite.byOperation.map(o => ({ channel: 'Kasa', ...o })),
+                                ...r.online.byOperation.map(o => ({ channel: 'Online', ...o }))
+                            ].map(o => `
+                                <tr>
+                                    <td><span class="badge badge-info">${o.channel}</span></td>
+                                    <td>${escapeHtml(o.operation)}</td>
+                                    <td>${o.count}</td>
+                                    <td style="font-weight:700;">${formatMoney(o.amount)}</td>
+                                </tr>
+                            `).join('') || '<tr><td colspan="4" style="color:var(--text-muted);">Brak operacji w tym zakresie.</td></tr>'}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         `;

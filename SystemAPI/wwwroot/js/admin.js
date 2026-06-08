@@ -5,7 +5,7 @@ import { loadTariffs, openTariffModal, closeTariffModal, handleTariffSubmit, del
 import { loadCards, openCardModal, closeCardModal, handleCardSubmit, blockCard, unblockCard, returnCard, deleteCard } from './cards.js';
 import { loadSales } from './sales.js';
 import { loadUsers, openUserModal, closeUserModal, handleUserSubmit, openHistoryModal, closeHistoryModal } from './users.js';
-import { loadShiftReports, loadAdminReportHistory, generateGeneralReport, loadThroughputReport } from './reports.js';
+import { loadShiftReports, loadAdminReportHistory, generateGeneralReport, loadThroughputReport, setSalesRange } from './reports.js';
 
 // Nawigacja
 function showSection(id, el) {
@@ -77,6 +77,7 @@ window.showSection = showSection;
 window.showReportTab = showReportTab;
 window.generateGeneralReport = generateGeneralReport;
 window.loadThroughputReport = loadThroughputReport;
+window.setSalesRange = setSalesRange;
 window.logout = logout;
 window.openUserModal = openUserModal;
 window.closeUserModal = closeUserModal;

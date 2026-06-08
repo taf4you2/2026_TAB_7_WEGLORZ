@@ -128,6 +128,163 @@ td { padding: 16px; border-top: 1px solid var(--border); font-size: 14px; }
 
 .failed-scan { padding: 12px; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; font-size: 13px; }
 
+.customer-history-row td {
+    padding: 0;
+    background: rgba(15, 23, 42, 0.72);
+}
+
+.customer-history-panel {
+    padding: 18px;
+    border-top: 1px solid var(--border);
+}
+
+.history-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.history-stat,
+.history-section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.history-stat {
+    padding: 14px;
+    min-width: 0;
+}
+
+.history-stat-label,
+.history-muted,
+.history-empty {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.history-stat-value {
+    margin-top: 6px;
+    font-size: 18px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.history-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 16px;
+}
+
+.history-chip {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--text-light);
+    font-family: Consolas, monospace;
+    font-size: 12px;
+}
+
+.history-section {
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.history-section-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.history-item-title {
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.history-subtitle {
+    padding: 14px 16px 8px;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.history-pass-list {
+    display: grid;
+    gap: 8px;
+    padding: 0 16px 8px;
+}
+
+.history-card-list {
+    display: grid;
+    gap: 10px;
+    padding: 16px;
+}
+
+.history-card-detail {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.8fr) minmax(260px, 1.6fr);
+    gap: 16px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.history-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 14px;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.history-detail-grid strong {
+    color: var(--text-light);
+}
+
+.history-pass {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) minmax(260px, 1.4fr);
+    gap: 16px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.history-pass-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-align: right;
+}
+
+.history-pass-meta strong {
+    color: var(--text-light);
+}
+
+.history-table th,
+.history-table td {
+    padding: 10px 16px;
+    font-size: 12px;
+}
+
+.history-empty {
+    padding: 12px 16px 16px;
+}
+
 .infra-lift { margin-bottom: 24px; }
 .infra-gates { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
 .infra-gate { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
@@ -139,6 +296,11 @@ td { padding: 16px; border-top: 1px solid var(--border); font-size: 14px; }
     aside { width: 100%; }
     main { min-height: 100vh; }
     .chart-grid { grid-template-columns: 1fr; }
+    .history-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .history-card-detail { grid-template-columns: 1fr; }
+    .history-detail-grid { grid-template-columns: 1fr; }
+    .history-pass { grid-template-columns: 1fr; }
+    .history-pass-meta { justify-content: flex-start; text-align: left; }
 }
 
 @media print {

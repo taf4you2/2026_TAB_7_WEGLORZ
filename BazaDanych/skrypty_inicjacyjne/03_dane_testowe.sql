@@ -193,13 +193,26 @@ INSERT INTO "card" (id, status_id, user_id, deposit_paid, block_reason, physical
 
 INSERT INTO "reservation" (id, reservation_number, user_id, reservation_date, status_id) VALUES
   (1, 'RES-20260430120000000', 4, NOW() - INTERVAL '3 days', 1),
-  (2, 'RES-20250115090000000', 4, NOW() - INTERVAL '110 days', 1);
+  (2, 'RES-20250115090000000', 4, NOW() - INTERVAL '110 days', 1),
+  (3, 'RES-20260608090000000', 1, NOW() - INTERVAL '1 day', 1),
+  (4, 'RES-20260608100000000', 2, NOW() - INTERVAL '2 hours', 1),
+  (5, 'RES-20260608110000000', 3, NOW(), 3),
+  (6, 'RES-20260608120000000', 4, NOW() - INTERVAL '4 days', 1);
 
 INSERT INTO "ski_pass" (id, card_id, tariff_id, reservation_id, status_id, valid_from, valid_to, initial_rides, remaining_rides) VALUES
-  (1, 'A3:F2:11:CC', 16, 1, 1, NOW() - INTERVAL '2 days', NOW() + INTERVAL '3 days', NULL, NULL),
-  (2, 'B7:AA:32:0E', 13, 2, 5, NOW() - INTERVAL '107 days', NOW() - INTERVAL '104 days', NULL, NULL);
+  (1, 'A3:F2:11:CC', 16, 1, 1, NOW() - INTERVAL '1 day', NOW() + INTERVAL '7 days', NULL, NULL),
+  (2, 'B7:AA:32:0E', 13, 2, 5, NOW() - INTERVAL '107 days', NOW() - INTERVAL '104 days', NULL, NULL),
+  -- Karty testowe dla bramki:
+  -- C1:DE:84:57 ma aktywny karnet punktowy z przejazdami i powinna zostac przepuszczona.
+  -- E9:CC:01:A3 ma aktywny karnet czasowy i powinna zostac przepuszczona.
+  -- F0:11:22:33 ma karnet aktywny, ale dopiero od jutra, wiec bramka powinna go odrzucic.
+  -- AA:BB:CC:DD ma karnet zablokowany, wiec bramka powinna go odrzucic.
+  (3, 'C1:DE:84:57', 1, 3, 1, NOW() - INTERVAL '1 day', NOW() + INTERVAL '14 days', 10, 10),
+  (4, 'E9:CC:01:A3', 10, 4, 1, NOW() - INTERVAL '2 hours', NOW() + INTERVAL '22 hours', NULL, NULL),
+  (5, 'F0:11:22:33', 12, 5, 1, NOW() + INTERVAL '1 day', NOW() + INTERVAL '2 days', NULL, NULL),
+  (6, 'AA:BB:CC:DD', 4, 6, 2, NOW() - INTERVAL '3 days', NOW() + INTERVAL '4 days', 20, 20);
 
-UPDATE "card" SET status_id = 2 WHERE id = 'A3:F2:11:CC';
+UPDATE "card" SET status_id = 2 WHERE id IN ('A3:F2:11:CC', 'C1:DE:84:57', 'E9:CC:01:A3', 'F0:11:22:33', 'AA:BB:CC:DD');
 
 INSERT INTO "transaction" (id, reservation_id, cashier_id, operation_type_id, amount, transaction_date) VALUES
   (1, 1, 1, 2, 459.00, NOW() - INTERVAL '3 days'),

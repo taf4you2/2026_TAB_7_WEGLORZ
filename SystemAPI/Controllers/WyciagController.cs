@@ -66,7 +66,7 @@ public class WyciagController(SkiResortDbContext db) : ControllerBase
 
     // POST /api/wyciagi
     [HttpPost]
-    [Authorize(Roles = "admin,kasjer")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Create([FromBody] LiftModifyRequest req)
     {
         var lift = new Lift { Name = req.Name };
@@ -91,7 +91,7 @@ public class WyciagController(SkiResortDbContext db) : ControllerBase
 
     // PUT /api/wyciagi/{id}
     [HttpPut("{id}")]
-    [Authorize(Roles = "admin,kasjer")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Update(int id, [FromBody] LiftModifyRequest req)
     {
         var lift = await db.Lifts.Include(l => l.Schedules).FirstOrDefaultAsync(l => l.Id == id);
@@ -126,7 +126,7 @@ public class WyciagController(SkiResortDbContext db) : ControllerBase
 
     // DELETE /api/wyciagi/{id}
     [HttpDelete("{id}")]
-    [Authorize(Roles = "admin,kasjer")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Delete(int id)
     {
         var lift = await db.Lifts.Include(l => l.Schedules).Include(l => l.Gates).Include(l => l.LiftTrails).FirstOrDefaultAsync(l => l.Id == id);

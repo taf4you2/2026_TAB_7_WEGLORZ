@@ -110,19 +110,23 @@
                 <h1>Sprzedaz i Kasy</h1>
                 <p class="subtitle">Analiza kanalow i aktywni pracownicy</p>
                 <div class="card"><div class="card-body">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-                        <div>
-                            <h4 style="margin-bottom: 12px; color:var(--text-muted);">Kanaly sprzedazy (ostatnie 7 dni)</h4>
-                            <canvas id="sales-channels-chart" height="200"></canvas>
+                    <div class="chart-grid">
+                        <div class="chart-panel">
+                            <h4>Kanaly sprzedazy (ostatnie 7 dni)</h4>
+                            <div class="chart-frame">
+                                <canvas id="sales-channels-chart"></canvas>
+                            </div>
                         </div>
-                        <div>
-                            <h4 style="margin-bottom: 12px; color:var(--text-muted);">Struktura sprzedazy taryf (ostatnie 30 dni)</h4>
-                            <canvas id="sales-structure-chart" height="200"></canvas>
+                        <div class="chart-panel">
+                            <h4>Struktura sprzedazy taryf (ostatnie 30 dni)</h4>
+                            <div class="chart-frame">
+                                <canvas id="sales-structure-chart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div></div>
                 <div class="card"><div class="card-header"><h3>Aktywne zmiany</h3></div><div class="card-body">
-                    <table><thead><tr><th>Pracownik</th><th>Start</th><th>Czas</th><th>Status</th></tr></thead>
+                    <table><thead><tr><th>Pracownik</th><th>Start</th><th>Czas</th><th>Status</th><th>Akcja</th></tr></thead>
                     <tbody id="active-cashiers-tbody"></tbody></table>
                 </div></div>
             </div>

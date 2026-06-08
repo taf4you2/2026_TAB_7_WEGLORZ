@@ -22,17 +22,61 @@ export async function loadAdminReportHistory() {
         document.getElementById('reports-history-tbody').innerHTML = data.map(r => `
             <tr>
                 <td>${r.id}</td>
-                <td>${r.adminLogin}</td>
-                <td><span class="badge badge-info">${r.reportType.toUpperCase()}</span></td>
-                <td style="font-size:12px; color:var(--text-muted);">${r.reportParameters || '-'}</td>
+                <td>${escapeHtml(r.adminLogin)}</td>
+                <td><span class="badge badge-info">${formatReportType(r.reportType)}</span></td>
+                <td style="font-size:12px; color:var(--text-muted);">${escapeHtml(formatReportParams(r.reportParameters))}</td>
                 <td style="font-size:12px;">${new Date(r.generatedAt).toLocaleString()}</td>
             </tr>
         `).join('');
     }
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function formatMoney(value) {
+    return `${Number(value || 0).toLocaleString()} zl`;
+}
+
+function formatReportType(type) {
+    const labels = {
+        sprzedaz_ogolna: 'SPRZEDAZ',
+        przepustowosc_wyciagow: 'PRZEPUSTOWOSC',
+        zarzadczy: 'ZARZADCZY',
+        zmiana: 'ZMIANA'
+    };
+    return labels[type] || String(type || 'NIEZNANY').toUpperCase();
+}
+
+function formatReportParams(params) {
+    if (!params) return '-';
+    return params
+        .split(';')
+        .filter(p => p && !p.startsWith('type='))
+        .join(', ') || '-';
+}
+
+function csvCell(value) {
+    const text = String(value ?? '');
+    return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function printThroughputReport() {
+    document.body.classList.add('print-throughput');
+    window.addEventListener('afterprint', () => {
+        document.body.classList.remove('print-throughput');
+    }, { once: true });
+    window.print();
+}
+
 export function downloadCsv(filename, data) {
-    const csvContent = "data:text/csv;charset=utf-8," + data.map(e => e.join(",")).join("\n");
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + data.map(row => row.map(csvCell).join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -56,18 +100,20 @@ export async function generateGeneralReport() {
                 <button class="btn btn-outline btn-sm" id="btn-export-sales">Pobierz CSV</button>
             </div>
             <div class="stats-grid">
-                <div class="stat-card"><div class="stat-label">Calkowity przychod</div><div class="stat-value">${r.totalRevenue.toLocaleString()} zl</div></div>
-                <div class="stat-card"><div class="stat-label">Sprzedaz w kasach</div><div class="stat-value">${r.onsite.amount.toLocaleString()} zl</div><div style="font-size:12px; color:var(--text-muted);">${r.onsite.count} transakcji</div></div>
-                <div class="stat-card"><div class="stat-label">Sprzedaz online</div><div class="stat-value">${r.online.amount.toLocaleString()} zl</div><div style="font-size:12px; color:var(--text-muted);">${r.online.count} transakcji</div></div>
+                <div class="stat-card"><div class="stat-label">Wynik netto</div><div class="stat-value">${formatMoney(r.totalRevenue)}</div><div style="font-size:12px; color:var(--text-muted);">${r.transactionCount} transakcji</div></div>
+                <div class="stat-card"><div class="stat-label">Sprzedaz brutto</div><div class="stat-value">${formatMoney(r.grossSalesAmount)}</div><div style="font-size:12px; color:var(--text-muted);">${r.grossSalesCount} sprzedazy</div></div>
+                <div class="stat-card"><div class="stat-label">Zwroty</div><div class="stat-value">${formatMoney(r.returnsAmount)}</div><div style="font-size:12px; color:var(--text-muted);">${r.returnsCount} zwrotow</div></div>
+                <div class="stat-card"><div class="stat-label">Kasy</div><div class="stat-value">${formatMoney(r.onsite.amount)}</div><div style="font-size:12px; color:var(--text-muted);">${r.onsite.count} transakcji</div></div>
+                <div class="stat-card"><div class="stat-label">Online</div><div class="stat-value">${formatMoney(r.online.amount)}</div><div style="font-size:12px; color:var(--text-muted);">${r.online.count} transakcji</div></div>
             </div>
             <div class="card" style="margin-top:24px;">
-                <div class="card-header"><h3>Rozbicie operacji stacjonarnych</h3></div>
+                <div class="card-header"><h3>Rozbicie operacji w kasach</h3></div>
                 <div class="card-body">
                     ${r.onsite.byOperation.map(o => `
                         <div style="display:flex; justify-content:space-between; margin-bottom:8px; border-bottom:1px solid var(--border); padding-bottom:4px;">
-                            <span>${o.operation}</span><span style="font-weight:700;">${o.amount.toLocaleString()} zl</span>
+                            <span>${escapeHtml(o.operation)} (${o.count})</span><span style="font-weight:700;">${formatMoney(o.amount)}</span>
                         </div>
-                    `).join('')}
+                    `).join('') || '<span style="color:var(--text-muted);">Brak operacji kasowych w tym zakresie.</span>'}
                 </div>
             </div>
         `;
@@ -75,13 +121,19 @@ export async function generateGeneralReport() {
         document.getElementById('btn-export-sales').onclick = () => {
             const rows = [
                 ["Kategoria", "Wartosc"],
-                ["Calkowity przychod", r.totalRevenue],
-                ["Sprzedaz w kasach", r.onsite.amount],
-                ["Liczba transakcji kasowych", r.onsite.count],
-                ["Sprzedaz online", r.online.amount],
-                ["Liczba transakcji online", r.online.count]
+                ["Wynik netto", r.totalRevenue],
+                ["Liczba transakcji", r.transactionCount],
+                ["Sprzedaz brutto", r.grossSalesAmount],
+                ["Liczba sprzedazy", r.grossSalesCount],
+                ["Zwroty", r.returnsAmount],
+                ["Liczba zwrotow", r.returnsCount],
+                ["Kasy netto", r.onsite.amount],
+                ["Kasy transakcje", r.onsite.count],
+                ["Online netto", r.online.amount],
+                ["Online transakcje", r.online.count]
             ];
-            r.onsite.byOperation.forEach(o => rows.push([`Operacja: ${o.operation}`, o.amount]));
+            r.onsite.byOperation.forEach(o => rows.push([`Kasa operacja: ${o.operation}`, o.amount]));
+            r.online.byOperation.forEach(o => rows.push([`Online operacja: ${o.operation}`, o.amount]));
             downloadCsv(`raport_sprzedazy_${from}_${to}.csv`, rows);
         };
     }
@@ -94,19 +146,29 @@ export async function loadThroughputReport() {
     const data = await apiFetch(`/api/raporty/przepustowosc-wyciagow?date=${date}`);
     if (data) {
         const resultEl = document.getElementById('infra-report-result');
+        const totalScans = data.reduce((sum, l) => sum + (l.totalScans || 0), 0);
         resultEl.innerHTML = `
-            <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
-                <button class="btn btn-outline btn-sm" onclick="window.print()">Drukuj zestawienie</button>
+            <div class="report-actions" style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+                <button class="btn btn-outline btn-sm" id="btn-export-throughput">Pobierz CSV</button>
+                <button class="btn btn-outline btn-sm" id="btn-print-throughput">Drukuj zestawienie</button>
             </div>
-        ` + data.map(l => `
-            <div class="card" style="margin-bottom:24px;">
-                <div class="card-header"><span style="font-weight:700;">Wyciag: ${l.liftName}</span></div>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-label">Laczna liczba przejsc</div><div class="stat-value">${totalScans}</div></div>
+                <div class="stat-card"><div class="stat-label">Wyciagi w raporcie</div><div class="stat-value">${data.length}</div></div>
+            </div>
+        ` + data.map(l => {
+            const max = Math.max(...l.hourlyStats.map(s => s.count), 1);
+            return `
+            <div class="card throughput-report-card" style="margin-bottom:24px;">
+                <div class="card-header">
+                    <span style="font-weight:700;">Wyci\u0105g: ${escapeHtml(l.liftName)}</span>
+                    <span style="color:var(--text-muted); font-size:12px;">Razem: ${l.totalScans}, szczyt: ${l.peakHour}:00 (${l.peakCount})</span>
+                </div>
                 <div class="card-body">
-                    <div style="display:flex; align-items:flex-end; gap:4px; height:100px; padding-top:20px;">
+                    <div class="throughput-chart" style="display:flex; align-items:flex-end; gap:4px; height:100px; padding-top:20px;">
                         ${Array.from({length: 24}, (_, h) => {
                             const hourStat = l.hourlyStats.find(s => s.hour === h);
                             const count = hourStat ? hourStat.count : 0;
-                            const max = Math.max(...l.hourlyStats.flatMap(ll => ll.hourlyStats.map(s => s.count)), 1);
                             return `
                                 <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;">
                                     <div title="${h}:00 - ${count} osob" style="width:100%; background:var(--primary); height:${(count/max)*80}px; min-height:${count>0?2:0}px;"></div>
@@ -115,9 +177,27 @@ export async function loadThroughputReport() {
                             `;
                         }).join('')}
                     </div>
+                    <table class="throughput-print-table">
+                        <thead>
+                            <tr><th>Godzina</th><th>Liczba przej\u015b\u0107</th></tr>
+                        </thead>
+                        <tbody>
+                            ${l.hourlyStats
+                                .filter(s => s.count > 0)
+                                .map(s => `<tr><td>${s.hour}:00</td><td>${s.count}</td></tr>`)
+                                .join('') || '<tr><td colspan="2">Brak przej\u015b\u0107 w tym dniu</td></tr>'}
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
+
+        document.getElementById('btn-export-throughput').onclick = () => {
+            const rows = [["Wyci\u0105g", "Godzina", "Liczba przej\u015b\u0107"]];
+            data.forEach(l => l.hourlyStats.forEach(h => rows.push([l.liftName, `${h.hour}:00`, h.count])));
+            downloadCsv(`raport_przepustowosci_${date}.csv`, rows);
+        };
+        document.getElementById('btn-print-throughput').onclick = printThroughputReport;
     }
 }
 

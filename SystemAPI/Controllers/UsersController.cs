@@ -114,8 +114,8 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
 
     // GET /api/users/all
     // Zwraca listę wszystkich użytkowników systemu (administratorzy, kasjerzy, narciarze).
-    // Tylko dla admina i kasjera (dostęp do panelu).
-    [Authorize(Roles = "admin,kasjer")]
+    // Tylko dla admina (dostep do panelu administratora).
+    [Authorize(Roles = "admin")]
     [HttpGet("all")]
     public async Task<IActionResult> GetAllUsers()
     {
@@ -144,12 +144,15 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> CreateUser([FromBody] UserModifyRequest req)
     {
+        var validationError = await ValidateStaffRequest(req, requirePassword: true);
+        if (validationError != null) return validationError;
+
         if (req.Role == "admin")
         {
             var admin = new Administrator
             {
-                Login = req.Login,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
+                Login = req.Login.Trim(),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password!),
                 IsActive = req.IsActive
             };
             db.Administrators.Add(admin);
@@ -158,8 +161,8 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
         {
             var cashier = new Cashier
             {
-                Login = req.Login,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
+                Login = req.Login.Trim(),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password!),
                 IsActive = req.IsActive
             };
             db.Cashiers.Add(cashier);
@@ -173,29 +176,43 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
         return Ok();
     }
 
-    // PUT /api/users/{id}
+    // PUT /api/users/{id}?role={role}
     [HttpPut("{id}")]
     [Authorize(Roles = "admin")]
-    public async Task<IActionResult> UpdateUser(int id, [FromBody] UserModifyRequest req)
+    public async Task<IActionResult> UpdateUser(int id, [FromQuery] string? role, [FromBody] UserModifyRequest req)
     {
-        if (req.Role == "admin")
+        if (string.IsNullOrWhiteSpace(role))
+            return BadRequest(new { message = "Parametr role jest wymagany przy edycji pracownika." });
+
+        role = role.Trim();
+        if (role != req.Role)
+            return BadRequest(new { message = "Nie mozna zmienic roli pracownika podczas edycji." });
+
+        var validationError = await ValidateStaffRequest(req, requirePassword: false, currentId: id);
+        if (validationError != null) return validationError;
+
+        if (role == "admin")
         {
+            var currentAdminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (id == currentAdminId && !req.IsActive)
+                return BadRequest(new { message = "Nie mozna dezaktywowac wlasnego konta administratora." });
+
             var admin = await db.Administrators.FindAsync(id);
             if (admin == null) return NotFound();
 
-            admin.Login = req.Login;
+            admin.Login = req.Login.Trim();
             admin.IsActive = req.IsActive;
             if (!string.IsNullOrEmpty(req.Password))
             {
                 admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password);
             }
         }
-        else if (req.Role == "kasjer")
+        else if (role == "kasjer")
         {
             var cashier = await db.Cashiers.FindAsync(id);
             if (cashier == null) return NotFound();
 
-            cashier.Login = req.Login;
+            cashier.Login = req.Login.Trim();
             cashier.IsActive = req.IsActive;
             if (!string.IsNullOrEmpty(req.Password))
             {
@@ -213,7 +230,7 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
 
     // GET /api/users/{id}/history
     // Zwraca historię rezerwacji i transakcji dla konkretnego użytkownika.
-    [Authorize(Roles = "admin,kasjer")]
+    [Authorize(Roles = "admin")]
     [HttpGet("{id}/history")]
     public async Task<IActionResult> GetUserHistory(int id)
     {
@@ -263,6 +280,10 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
     {
         if (role == "admin")
         {
+            var currentAdminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (id == currentAdminId)
+                return BadRequest(new { message = "Nie mozna usunac wlasnego konta administratora." });
+
             var admin = await db.Administrators.FindAsync(id);
             if (admin == null) return NotFound();
             db.Administrators.Remove(admin);
@@ -289,6 +310,32 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
 
         await db.SaveChangesAsync();
         return NoContent();
+    }
+
+    private async Task<IActionResult?> ValidateStaffRequest(UserModifyRequest req, bool requirePassword, int? currentId = null)
+    {
+        var login = req.Login?.Trim();
+        if (string.IsNullOrWhiteSpace(login))
+            return BadRequest(new { message = "Login jest wymagany." });
+
+        if (req.Role is not ("admin" or "kasjer"))
+            return BadRequest(new { message = "Nieprawidlowa rola. Dozwolone: admin, kasjer." });
+
+        if (requirePassword && string.IsNullOrWhiteSpace(req.Password))
+            return BadRequest(new { message = "Haslo jest wymagane przy tworzeniu pracownika." });
+
+        if (!string.IsNullOrWhiteSpace(req.Password) && req.Password.Length < 8)
+            return BadRequest(new { message = "Haslo musi miec co najmniej 8 znakow." });
+
+        var duplicateAdmin = await db.Administrators
+            .AnyAsync(a => a.Login == login && (!currentId.HasValue || req.Role != "admin" || a.Id != currentId.Value));
+        var duplicateCashier = await db.Cashiers
+            .AnyAsync(c => c.Login == login && (!currentId.HasValue || req.Role != "kasjer" || c.Id != currentId.Value));
+
+        if (duplicateAdmin || duplicateCashier)
+            return Conflict(new { message = "Pracownik o takim loginie juz istnieje." });
+
+        return null;
     }
 }
 

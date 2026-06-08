@@ -5,7 +5,7 @@ import { loadTariffs, openTariffModal, closeTariffModal, handleTariffSubmit, del
 import { loadCards, openCardModal, closeCardModal, handleCardSubmit, blockCard, unblockCard, returnCard, deleteCard } from './cards.js';
 import { loadSales } from './sales.js';
 import { loadUsers, openUserModal, closeUserModal, handleUserSubmit, openHistoryModal, closeHistoryModal } from './users.js';
-import { loadShiftReports, generateGeneralReport, loadThroughputReport } from './reports.js';
+import { loadShiftReports, loadAdminReportHistory, generateGeneralReport, loadThroughputReport } from './reports.js';
 
 // Nawigacja
 function showSection(id, el) {
@@ -26,9 +26,25 @@ function showSection(id, el) {
 function showReportTab(tab) {
     document.querySelectorAll('.report-tab').forEach(t => t.style.display = 'none');
     document.getElementById('report-tab-' + tab).style.display = 'block';
+    setDefaultReportDates();
     
     if (tab === 'shift') loadShiftReports();
     if (tab === 'history') loadAdminReportHistory();
+}
+
+function setDefaultReportDates() {
+    const today = new Date();
+    const weekAgo = new Date(today);
+    weekAgo.setDate(today.getDate() - 6);
+
+    const toDateInput = value => value.toISOString().slice(0, 10);
+    const salesFrom = document.getElementById('report-sales-from');
+    const salesTo = document.getElementById('report-sales-to');
+    const infraDate = document.getElementById('report-infra-date');
+
+    if (salesFrom && !salesFrom.value) salesFrom.value = toDateInput(weekAgo);
+    if (salesTo && !salesTo.value) salesTo.value = toDateInput(today);
+    if (infraDate && !infraDate.value) infraDate.value = toDateInput(today);
 }
 
 // Inicjalizacja
@@ -47,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('gate-form').onsubmit = handleGateSubmit;
     document.getElementById('tariff-form').onsubmit = handleTariffSubmit;
     document.getElementById('card-form').onsubmit = handleCardSubmit;
+    setDefaultReportDates();
 
     // Obsluga szukania kart na zywo
     const cardSearch = document.getElementById('card-search');

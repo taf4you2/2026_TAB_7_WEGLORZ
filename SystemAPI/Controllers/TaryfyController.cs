@@ -38,7 +38,7 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
 
     // POST /api/taryfy
     [HttpPost]
-    [Authorize(Roles = "admin,kasjer")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Create([FromBody] TariffModifyRequest req)
     {
         var seasonId = await db.DictSeasons
@@ -68,7 +68,7 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
 
     // PUT /api/taryfy/{id}
     [HttpPut("{id}")]
-    [Authorize(Roles = "admin,kasjer")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Update(int id, [FromBody] TariffModifyRequest req)
     {
         var tariff = await db.Tariffs.FindAsync(id);
@@ -98,7 +98,7 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
 
     // DELETE /api/taryfy/{id}
     [HttpDelete("{id}")]
-    [Authorize(Roles = "admin,kasjer")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Delete(int id)
     {
         var tariff = await db.Tariffs.Include(t => t.SkiPasses).FirstOrDefaultAsync(t => t.Id == id);

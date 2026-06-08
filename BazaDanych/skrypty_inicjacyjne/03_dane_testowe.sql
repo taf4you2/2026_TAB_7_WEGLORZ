@@ -86,15 +86,15 @@ SELECT setval(pg_get_serial_sequence('"user"',         'id'), 10);
 -- ========== WYCIÄ„GI I TRASY ==========
 
 INSERT INTO "lift" (id, name, location, length, planner_id) VALUES
-  (1, 'WyciÄ…g GĹ‚Ăłwny',         'Strefa A',   1200.0, 1),
+  (1, 'Wyciąg Główny',           'Strefa A',   1200.0, 1),
   (2, 'Ekspres Orlica',        'Strefa B',    800.0, 1),
-  (3, 'WyciÄ…g Dolny',          'Dolna Stacja', 600.0, 1),
-  (4, 'Orczyk MaĹ‚a Turnia',    'Strefa C',    400.0, 1),
+  (3, 'Wyciąg Dolny',           'Dolna Stacja', 600.0, 1),
+  (4, 'Orczyk Mała Turnia',     'Strefa C',    400.0, 1),
   (5, 'Kolej Linowa Szczyt',   'Szczyt',     1500.0, 1),
   (6, 'Gondola Wierch',        'Strefa D',   1100.0, 1);
 
 INSERT INTO "trail" (id, name, location, length, difficulty_id, planner_id) VALUES
-  (1, 'Trasa A â€“ GĹ‚Ăłwna',      'Strefa A', 2000.0, 2, 1),
+  (1, 'Trasa A - Główna',        'Strefa A', 2000.0, 2, 1),
   (2, 'Trasa B â€“ Slalom',      'Strefa A', 1500.0, 2, 1),
   (3, 'Trasa C â€“ Czerwona',    'Strefa D', 1800.0, 3, 1),
   (4, 'Trasa D â€“ Expert',      'Strefa B', 1200.0, 4, 1),
@@ -203,18 +203,61 @@ UPDATE "card" SET status_id = 2 WHERE id = 'A3:F2:11:CC';
 
 INSERT INTO "transaction" (id, reservation_id, cashier_id, operation_type_id, amount, transaction_date) VALUES
   (1, 1, 1, 2, 459.00, NOW() - INTERVAL '3 days'),
-  (2, 2, 1, 2, 299.00, NOW() - INTERVAL '110 days');
+  (2, 2, 1, 2, 299.00, NOW() - INTERVAL '110 days'),
+  -- Dane pod raport sprzedazy ogolnej: kasy, online, zwroty i kaucje.
+  (3, 1, 1,    1, 119.00, date_trunc('day', NOW()) + INTERVAL '08 hours 15 minutes'),
+  (4, 1, 1,    2, 459.00, date_trunc('day', NOW()) + INTERVAL '09 hours 05 minutes'),
+  (5, 1, 2,    1,  79.00, date_trunc('day', NOW()) + INTERVAL '10 hours 40 minutes'),
+  (6, 1, NULL, 2, 299.00, date_trunc('day', NOW()) + INTERVAL '11 hours 20 minutes'),
+  (7, 1, NULL, 2, 199.00, date_trunc('day', NOW()) - INTERVAL '1 day' + INTERVAL '14 hours 00 minutes'),
+  (8, 1, 1,    3, -89.00, date_trunc('day', NOW()) + INTERVAL '12 hours 10 minutes'),
+  (9, 1, 1,    4, -20.00, date_trunc('day', NOW()) + INTERVAL '12 hours 25 minutes'),
+  (10, 1, 2,   2, 159.00, date_trunc('day', NOW()) - INTERVAL '2 days' + INTERVAL '15 hours 30 minutes');
 
 -- Kilka skanĂłw bramki dla aktywnego karnetu (historia przejazdĂłw)
-INSERT INTO "gate_scan" (id, card_id, gate_id, scan_time, verification_result_id) VALUES
-  (1, 'A3:F2:11:CC', 1, NOW() - INTERVAL '2 days 7 hours',  1),
-  (2, 'A3:F2:11:CC', 1, NOW() - INTERVAL '2 days 5 hours',  1),
-  (3, 'A3:F2:11:CC', 3, NOW() - INTERVAL '2 days 3 hours',  1),
-  (4, 'A3:F2:11:CC', 2, NOW() - INTERVAL '1 day 8 hours',   1),
-  (5, 'A3:F2:11:CC', 3, NOW() - INTERVAL '1 day 6 hours',   1),
-  (6, 'A3:F2:11:CC', 1, NOW() - INTERVAL '1 day 4 hours',   1),
-  (7, 'A3:F2:11:CC', 4, NOW() - INTERVAL '3 hours',         1),
-  (8, 'A3:F2:11:CC', 1, NOW() - INTERVAL '1 hour 30 minutes', 1);
+INSERT INTO "gate_scan" (id, card_id, gate_id, pass_type_id, scan_time, verification_result_id) VALUES
+  (1, 'A3:F2:11:CC', 1, 2, NOW() - INTERVAL '2 days 7 hours',  1),
+  (2, 'A3:F2:11:CC', 1, 2, NOW() - INTERVAL '2 days 5 hours',  1),
+  (3, 'A3:F2:11:CC', 3, 2, NOW() - INTERVAL '2 days 3 hours',  1),
+  (4, 'A3:F2:11:CC', 2, 2, NOW() - INTERVAL '1 day 8 hours',   1),
+  (5, 'A3:F2:11:CC', 3, 2, NOW() - INTERVAL '1 day 6 hours',   1),
+  (6, 'A3:F2:11:CC', 1, 2, NOW() - INTERVAL '1 day 4 hours',   1),
+  (7, 'A3:F2:11:CC', 4, 2, NOW() - INTERVAL '3 hours',         1),
+  (8, 'A3:F2:11:CC', 1, 2, NOW() - INTERVAL '1 hour 30 minutes', 1),
+  -- Dane pod raport przepustowosci: dzisiejszy ruch na kilku wyciagach i godzinach.
+  (9,  'A3:F2:11:CC', 1, 2, date_trunc('day', NOW()) + INTERVAL '08 hours 05 minutes', 1),
+  (10, 'A3:F2:11:CC', 1, 2, date_trunc('day', NOW()) + INTERVAL '08 hours 25 minutes', 1),
+  (11, 'A3:F2:11:CC', 2, 2, date_trunc('day', NOW()) + INTERVAL '09 hours 10 minutes', 1),
+  (12, 'A3:F2:11:CC', 2, 2, date_trunc('day', NOW()) + INTERVAL '09 hours 35 minutes', 1),
+  (13, 'A3:F2:11:CC', 2, 2, date_trunc('day', NOW()) + INTERVAL '09 hours 50 minutes', 1),
+  (14, 'A3:F2:11:CC', 3, 2, date_trunc('day', NOW()) + INTERVAL '10 hours 15 minutes', 1),
+  (15, 'A3:F2:11:CC', 3, 2, date_trunc('day', NOW()) + INTERVAL '10 hours 45 minutes', 1),
+  (16, 'A3:F2:11:CC', 4, 2, date_trunc('day', NOW()) + INTERVAL '11 hours 05 minutes', 1),
+  (17, 'A3:F2:11:CC', 4, 2, date_trunc('day', NOW()) + INTERVAL '11 hours 25 minutes', 1),
+  (18, 'A3:F2:11:CC', 5, 2, date_trunc('day', NOW()) + INTERVAL '12 hours 00 minutes', 1),
+  (19, 'A3:F2:11:CC', 6, 2, date_trunc('day', NOW()) + INTERVAL '13 hours 10 minutes', 1),
+  (20, 'A3:F2:11:CC', 6, 2, date_trunc('day', NOW()) + INTERVAL '13 hours 40 minutes', 1),
+  (21, 'B7:AA:32:0E', 1, 2, date_trunc('day', NOW()) + INTERVAL '14 hours 05 minutes', 2),
+  (22, 'A3:F2:11:CC', 3, 2, date_trunc('day', NOW()) + INTERVAL '15 hours 20 minutes', 1),
+  -- Dodatkowa probka do wykresu przepustowosci: wyrazny szczyt poranny na glownych wyciagach.
+  (23, 'A3:F2:11:CC', 1, 2, date_trunc('day', NOW()) + INTERVAL '08 hours 40 minutes', 1),
+  (24, 'A3:F2:11:CC', 1, 2, date_trunc('day', NOW()) + INTERVAL '08 hours 55 minutes', 1),
+  (25, 'A3:F2:11:CC', 1, 2, date_trunc('day', NOW()) + INTERVAL '09 hours 05 minutes', 1),
+  (26, 'A3:F2:11:CC', 1, 2, date_trunc('day', NOW()) + INTERVAL '09 hours 20 minutes', 1),
+  (27, 'A3:F2:11:CC', 1, 2, date_trunc('day', NOW()) + INTERVAL '09 hours 45 minutes', 1),
+  (28, 'A3:F2:11:CC', 2, 2, date_trunc('day', NOW()) + INTERVAL '09 hours 15 minutes', 1),
+  (29, 'A3:F2:11:CC', 2, 2, date_trunc('day', NOW()) + INTERVAL '09 hours 30 minutes', 1),
+  (30, 'A3:F2:11:CC', 2, 2, date_trunc('day', NOW()) + INTERVAL '09 hours 55 minutes', 1),
+  (31, 'A3:F2:11:CC', 3, 2, date_trunc('day', NOW()) + INTERVAL '10 hours 05 minutes', 1),
+  (32, 'A3:F2:11:CC', 3, 2, date_trunc('day', NOW()) + INTERVAL '10 hours 25 minutes', 1),
+  (33, 'A3:F2:11:CC', 3, 2, date_trunc('day', NOW()) + INTERVAL '10 hours 55 minutes', 1),
+  (34, 'A3:F2:11:CC', 4, 2, date_trunc('day', NOW()) + INTERVAL '11 hours 45 minutes', 1),
+  (35, 'A3:F2:11:CC', 4, 2, date_trunc('day', NOW()) + INTERVAL '12 hours 15 minutes', 1),
+  (36, 'A3:F2:11:CC', 5, 2, date_trunc('day', NOW()) + INTERVAL '12 hours 35 minutes', 1),
+  (37, 'A3:F2:11:CC', 5, 2, date_trunc('day', NOW()) + INTERVAL '13 hours 05 minutes', 1),
+  (38, 'A3:F2:11:CC', 6, 2, date_trunc('day', NOW()) + INTERVAL '14 hours 30 minutes', 1),
+  (39, 'A3:F2:11:CC', 6, 2, date_trunc('day', NOW()) + INTERVAL '15 hours 05 minutes', 1),
+  (40, 'A3:F2:11:CC', 2, 2, date_trunc('day', NOW()) + INTERVAL '16 hours 10 minutes', 1);
 
 SELECT setval(pg_get_serial_sequence('"reservation"', 'id'), 100);
 SELECT setval(pg_get_serial_sequence('"ski_pass"',    'id'), 100);

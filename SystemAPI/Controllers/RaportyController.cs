@@ -80,18 +80,8 @@ public class RaportyController(SkiResortDbContext db) : ControllerBase
     [HttpGet("sprzedaz-ogolna")]
     public async Task<IActionResult> GetGeneralSalesReport([FromQuery] DateTime from, [FromQuery] DateTime to)
     {
-        var adminId = int.Parse(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier)!);
-        
-        // Logowanie wygenerowania raportu
-        var reportType = await db.DictReportTypes.FirstOrDefaultAsync(t => t.Name == "sprzedaz_ogolna");
-        db.AdminReports.Add(new SystemStacjiNarciarskiejDLL.Models.AdminReport
-        {
-            AdminId = adminId,
-            ReportTypeId = reportType?.Id,
-            GeneratedAt = DateTime.UtcNow,
-            ReportParameters = $"from={from:yyyy-MM-dd};to={to:yyyy-MM-dd}"
-        });
-        await db.SaveChangesAsync();
+        if (from > to)
+            return BadRequest(new { message = "Data poczatkowa nie moze byc pozniejsza niz data koncowa." });
 
         var transactions = await db.Transactions
             .Include(t => t.OperationType)
@@ -101,24 +91,42 @@ public class RaportyController(SkiResortDbContext db) : ControllerBase
         var onsite = transactions.Where(t => t.CashierId != null);
         var online = transactions.Where(t => t.CashierId == null);
 
+        static object BuildChannelSummary(IEnumerable<SystemStacjiNarciarskiejDLL.Models.Transaction> source)
+        {
+            var list = source.ToList();
+            return new
+            {
+                Amount = list.Sum(t => t.Amount),
+                Count = list.Count,
+                SalesAmount = list.Where(t => t.Amount > 0).Sum(t => t.Amount),
+                SalesCount = list.Count(t => t.Amount > 0),
+                ReturnsAmount = Math.Abs(list.Where(t => t.Amount < 0).Sum(t => t.Amount)),
+                ReturnsCount = list.Count(t => t.Amount < 0),
+                ByOperation = list.GroupBy(t => t.OperationType?.Name ?? "Inne")
+                    .Select(g => new
+                    {
+                        Operation = g.Key,
+                        Amount = g.Sum(x => x.Amount),
+                        Count = g.Count()
+                    })
+                    .OrderByDescending(x => Math.Abs(x.Amount))
+            };
+        }
+
         var result = new
         {
             TotalRevenue = transactions.Sum(t => t.Amount),
-            Onsite = new
-            {
-                Amount = onsite.Sum(t => t.Amount),
-                Count = onsite.Count(),
-                ByOperation = onsite.GroupBy(t => t.OperationType?.Name ?? "Inne")
-                                    .Select(g => new { Operation = g.Key, Amount = g.Sum(x => x.Amount) })
-            },
-            Online = new
-            {
-                Amount = online.Sum(t => t.Amount),
-                Count = online.Count()
-            },
+            TransactionCount = transactions.Count,
+            GrossSalesAmount = transactions.Where(t => t.Amount > 0).Sum(t => t.Amount),
+            GrossSalesCount = transactions.Count(t => t.Amount > 0),
+            ReturnsAmount = Math.Abs(transactions.Where(t => t.Amount < 0).Sum(t => t.Amount)),
+            ReturnsCount = transactions.Count(t => t.Amount < 0),
+            Onsite = BuildChannelSummary(onsite),
+            Online = BuildChannelSummary(online),
             GeneratedAt = DateTime.UtcNow
         };
 
+        await LogAdminReportAsync("sprzedaz_ogolna", $"from={from:yyyy-MM-dd};to={to:yyyy-MM-dd}");
         return Ok(result);
     }
 
@@ -130,27 +138,86 @@ public class RaportyController(SkiResortDbContext db) : ControllerBase
         var from = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         var to = from.AddDays(1);
 
-        var scans = await db.GateScans
-            .Include(gs => gs.Gate)
-                .ThenInclude(g => g!.Lift)
-            .Include(gs => gs.VerificationResult)
-            .Where(gs => gs.ScanTime >= from && gs.ScanTime < to 
-                     && gs.VerificationResult != null && gs.VerificationResult.Name == "ok")
+        var lifts = await db.Lifts
+            .OrderBy(l => l.Name)
+            .Select(l => new { l.Id, l.Name })
             .ToListAsync();
 
-        var throughput = scans
-            .GroupBy(gs => new { gs.Gate!.LiftId, LiftName = gs.Gate!.Lift!.Name })
-            .Select(g => new
+        var scans = await db.GateScans
+            .Where(gs => gs.ScanTime >= from && gs.ScanTime < to 
+                     && gs.VerificationResult != null && gs.VerificationResult.Name == "ok"
+                     && gs.Gate != null && gs.Gate.LiftId != null)
+            .Select(gs => new
             {
-                g.Key.LiftId,
-                g.Key.LiftName,
-                HourlyStats = g.GroupBy(gs => gs.ScanTime!.Value.Hour)
-                               .Select(hg => new { Hour = hg.Key, Count = hg.Count() })
-                               .OrderBy(x => x.Hour)
+                LiftId = gs.Gate!.LiftId!.Value,
+                Hour = gs.ScanTime!.Value.Hour
             })
-            .ToList();
+            .ToListAsync();
 
+        var countsByLift = scans
+            .GroupBy(s => s.LiftId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.GroupBy(s => s.Hour).ToDictionary(hg => hg.Key, hg => hg.Count()));
+
+        var throughput = lifts.Select(l =>
+        {
+            countsByLift.TryGetValue(l.Id, out var hourlyCounts);
+            var hourlyStats = Enumerable.Range(0, 24)
+                .Select(hour => new
+                {
+                    Hour = hour,
+                    Count = hourlyCounts != null && hourlyCounts.TryGetValue(hour, out var count) ? count : 0
+                })
+                .ToList();
+
+            return new
+            {
+                LiftId = l.Id,
+                LiftName = NormalizeReportText(l.Name),
+                TotalScans = hourlyStats.Sum(h => h.Count),
+                PeakHour = hourlyStats.OrderByDescending(h => h.Count).First().Hour,
+                PeakCount = hourlyStats.Max(h => h.Count),
+                HourlyStats = hourlyStats
+            };
+        }).ToList();
+
+        await LogAdminReportAsync("przepustowosc_wyciagow", $"date={date:yyyy-MM-dd}");
         return Ok(throughput);
+    }
+
+    // 4. Historia raportow wygenerowanych przez administratorow
+    [Authorize(Roles = "admin")]
+    [HttpGet("historia-admin")]
+    public async Task<IActionResult> GetAdminReportHistory([FromQuery] int limit = 100)
+    {
+        limit = Math.Clamp(limit, 1, 500);
+
+        var reportRows = await db.AdminReports
+            .Include(r => r.Admin)
+            .Include(r => r.ReportType)
+            .OrderByDescending(r => r.GeneratedAt)
+            .Take(limit)
+            .Select(r => new
+            {
+                r.Id,
+                AdminLogin = r.Admin != null ? r.Admin.Login : "Nieznany",
+                ReportTypeName = r.ReportType != null ? r.ReportType.Name : null,
+                ReportParameters = r.ReportParameters,
+                GeneratedAt = r.GeneratedAt ?? DateTime.MinValue
+            })
+            .ToListAsync();
+
+        var reports = reportRows.Select(r => new
+        {
+            r.Id,
+            r.AdminLogin,
+            ReportType = ResolveReportType(r.ReportParameters, r.ReportTypeName),
+            r.ReportParameters,
+            r.GeneratedAt
+        });
+
+        return Ok(reports);
     }
 
     // 5. Administracyjne zamykanie zmiany kasjera
@@ -181,6 +248,88 @@ public class RaportyController(SkiResortDbContext db) : ControllerBase
 
         await db.SaveChangesAsync();
         return Ok(new { message = "Zmiana zostala pomyslnie zamknieta przez administratora.", revenue });
+    }
+
+    private async Task LogAdminReportAsync(string reportName, string parameters)
+    {
+        var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var reportType = await db.DictReportTypes.FirstOrDefaultAsync(t => t.Name == reportName)
+            ?? await db.DictReportTypes.FirstOrDefaultAsync(t => t.Name == "zarzadczy");
+
+        db.AdminReports.Add(new SystemStacjiNarciarskiejDLL.Models.AdminReport
+        {
+            AdminId = adminId,
+            ReportTypeId = reportType?.Id,
+            GeneratedAt = DateTime.UtcNow,
+            ReportParameters = $"type={reportName};{parameters}"
+        });
+
+        await db.SaveChangesAsync();
+    }
+
+    private static string ResolveReportType(string? parameters, string? fallback)
+    {
+        if (!string.IsNullOrWhiteSpace(parameters))
+        {
+            var typePart = parameters
+                .Split(';', StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault(p => p.StartsWith("type=", StringComparison.OrdinalIgnoreCase));
+            if (typePart != null)
+                return typePart["type=".Length..];
+        }
+
+        return fallback ?? "nieznany";
+    }
+
+    private static string NormalizeReportText(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+
+        return value
+            .Replace("\u00C4\u2026", "\u0105")
+            .Replace("\u00C4\u2021", "\u0107")
+            .Replace("\u00C4\u2122", "\u0119")
+            .Replace("\u0139\u201A", "\u0142")
+            .Replace("\u0139\u201E", "\u0144")
+            .Replace("\u0102\u0142", "\u00F3")
+            .Replace("\u0139\u203A", "\u015B")
+            .Replace("\u0139\u015F", "\u017A")
+            .Replace("\u0139\u017A", "\u017A")
+            .Replace("\u0139\u013D", "\u017C")
+            .Replace("\u00C4\u201E", "\u0104")
+            .Replace("\u00C4\u2020", "\u0106")
+            .Replace("\u00C4\u02DC", "\u0118")
+            .Replace("\u0139\u0081", "\u0141")
+            .Replace("\u0139\u0192", "\u0143")
+            .Replace("\u0102\u201C", "\u00D3")
+            .Replace("\u0139\u0161", "\u015A")
+            .Replace("\u0139\u0105", "\u0179")
+            .Replace("\u0139\u00BB", "\u017B");
+    }
+
+    private static string NormalizePolishText(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+
+        return value
+            .Replace("Ä…", "ą")
+            .Replace("Ä‡", "ć")
+            .Replace("Ä™", "ę")
+            .Replace("Ĺ‚", "ł")
+            .Replace("Ĺ„", "ń")
+            .Replace("Ăł", "ó")
+            .Replace("Ĺ›", "ś")
+            .Replace("Ĺş", "ź")
+            .Replace("ĹĽ", "ż")
+            .Replace("Ä„", "Ą")
+            .Replace("Ä†", "Ć")
+            .Replace("Ä", "Ę")
+            .Replace("Ĺ", "Ł")
+            .Replace("Ĺƒ", "Ń")
+            .Replace("Ă“", "Ó")
+            .Replace("Ĺš", "Ś")
+            .Replace("Ĺą", "Ź")
+            .Replace("Ĺ»", "Ż");
     }
 }
 

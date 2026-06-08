@@ -5,7 +5,7 @@ import { loadTariffs, openTariffModal, closeTariffModal, handleTariffSubmit, del
 import { loadCards, openCardModal, closeCardModal, handleCardSubmit, blockCard, unblockCard, returnCard, deleteCard } from './cards.js';
 import { loadSales } from './sales.js';
 import { loadUsers, openUserModal, closeUserModal, handleUserSubmit, openHistoryModal, closeHistoryModal } from './users.js';
-import { loadShiftReports, loadAdminReportHistory, generateGeneralReport, loadThroughputReport, setSalesRange } from './reports.js';
+import { loadShiftReports, loadAdminReportHistory, generateGeneralReport, loadThroughputReport, setSalesRange, loadAdvancedReport, setAdvancedRange } from './reports.js';
 
 // Nawigacja
 function showSection(id, el) {
@@ -30,6 +30,7 @@ function showReportTab(tab) {
     
     if (tab === 'shift') loadShiftReports();
     if (tab === 'history') loadAdminReportHistory();
+    if (tab === 'advanced') loadAdvancedReport();
 }
 
 function setDefaultReportDates() {
@@ -41,10 +42,14 @@ function setDefaultReportDates() {
     const salesFrom = document.getElementById('report-sales-from');
     const salesTo = document.getElementById('report-sales-to');
     const infraDate = document.getElementById('report-infra-date');
+    const advancedFrom = document.getElementById('report-advanced-from');
+    const advancedTo = document.getElementById('report-advanced-to');
 
     if (salesFrom && !salesFrom.value) salesFrom.value = toDateInput(weekAgo);
     if (salesTo && !salesTo.value) salesTo.value = toDateInput(today);
     if (infraDate && !infraDate.value) infraDate.value = toDateInput(today);
+    if (advancedFrom && !advancedFrom.value) advancedFrom.value = toDateInput(weekAgo);
+    if (advancedTo && !advancedTo.value) advancedTo.value = toDateInput(today);
 }
 
 // Inicjalizacja
@@ -78,6 +83,8 @@ window.showReportTab = showReportTab;
 window.generateGeneralReport = generateGeneralReport;
 window.loadThroughputReport = loadThroughputReport;
 window.setSalesRange = setSalesRange;
+window.loadAdvancedReport = loadAdvancedReport;
+window.setAdvancedRange = setAdvancedRange;
 window.logout = logout;
 window.openUserModal = openUserModal;
 window.closeUserModal = closeUserModal;

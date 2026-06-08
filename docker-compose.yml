@@ -13,6 +13,7 @@ services:
       - ./BazaDanych/skrypty_inicjacyjne/baza_danych_kod.sql:/docker-entrypoint-initdb.d/01_schema.sql
       - ./BazaDanych/skrypty_inicjacyjne/02_sekwencje.sql:/docker-entrypoint-initdb.d/02_sekwencje.sql
       - ./BazaDanych/skrypty_inicjacyjne/03_dane_testowe.sql:/docker-entrypoint-initdb.d/03_dane_testowe.sql
+      - ./BazaDanych/skrypty_inicjacyjne/04_poprawki_schematu.sql:/docker-entrypoint-initdb.d/04_poprawki_schematu.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d ski_resort"]
       interval: 5s

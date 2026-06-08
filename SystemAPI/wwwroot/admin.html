@@ -139,6 +139,7 @@
                     <button class="btn btn-outline" onclick="showReportTab('shift')">Rozliczenia Kas</button>
                     <button class="btn btn-outline" onclick="showReportTab('sales')">Sprzedaz Ogolna</button>
                     <button class="btn btn-outline" onclick="showReportTab('infra')">Przepustowosc</button>
+                    <button class="btn btn-outline" onclick="showReportTab('advanced')">Zaawansowane</button>
                     <button class="btn btn-outline" onclick="showReportTab('history')">Historia Raportow</button>
                 </div>
                 <div id="report-tab-shift" class="report-tab">
@@ -171,6 +172,22 @@
                         </div>
                     </div></div>
                     <div id="infra-report-result"></div>
+                </div>
+                <div id="report-tab-advanced" class="report-tab" style="display:none;">
+                    <div class="card" style="margin-bottom:24px;"><div class="card-body">
+                        <div style="display:flex; align-items:flex-end; gap:12px;">
+                            <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Od</label><input type="date" id="report-advanced-from" style="width:100%; padding:10px; background:var(--bg-dark); border:1px solid var(--border); border-radius:8px; color:white;"></div>
+                            <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Do</label><input type="date" id="report-advanced-to" style="width:100%; padding:10px; background:var(--bg-dark); border:1px solid var(--border); border-radius:8px; color:white;"></div>
+                            <button class="btn btn-primary" onclick="loadAdvancedReport()">Generuj</button>
+                        </div>
+                        <div style="display:flex; gap:8px; margin-top:12px;">
+                            <button class="btn btn-outline btn-sm" onclick="setAdvancedRange('today')">Dzis</button>
+                            <button class="btn btn-outline btn-sm" onclick="setAdvancedRange('week')">7 dni</button>
+                            <button class="btn btn-outline btn-sm" onclick="setAdvancedRange('month')">30 dni</button>
+                            <button class="btn btn-outline btn-sm" onclick="setAdvancedRange('season')">90 dni</button>
+                        </div>
+                    </div></div>
+                    <div id="advanced-report-result"></div>
                 </div>
                 <div id="report-tab-history" class="report-tab" style="display:none;">
                     <div class="card"><div class="card-header"><h3>Logi wygenerowanych raportow</h3><button class="btn btn-outline btn-sm" id="btn-export-admin-history">Pobierz CSV</button></div>

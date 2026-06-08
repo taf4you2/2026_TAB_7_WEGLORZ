@@ -188,6 +188,162 @@ public class RaportyController(SkiResortDbContext db) : ControllerBase
 
     // 4. Historia raportow wygenerowanych przez administratorow
     [Authorize(Roles = "admin")]
+    [HttpGet("zaawansowany")]
+    public async Task<IActionResult> GetAdvancedReport([FromQuery] DateTime from, [FromQuery] DateTime to)
+    {
+        if (from > to)
+            return BadRequest(new { message = "Data poczatkowa nie moze byc pozniejsza niz data koncowa." });
+
+        var dayFrom = DateOnly.FromDateTime(from.Date);
+        var dayTo = DateOnly.FromDateTime(to.Date);
+        var dayCount = dayTo.DayNumber - dayFrom.DayNumber + 1;
+        if (dayCount > 370)
+            return BadRequest(new { message = "Raport zaawansowany moze obejmowac maksymalnie 370 dni." });
+
+        var transactions = await db.Transactions
+            .Include(t => t.OperationType)
+            .Where(t => t.TransactionDate >= from && t.TransactionDate <= to)
+            .ToListAsync();
+
+        var transactionRows = transactions
+            .Where(t => t.TransactionDate.HasValue)
+            .ToList();
+
+        var dailyRevenue = Enumerable.Range(0, dayCount)
+            .Select(offset =>
+            {
+                var day = dayFrom.AddDays(offset);
+                var dailyTransactions = transactionRows
+                    .Where(t => DateOnly.FromDateTime(t.TransactionDate!.Value.Date) == day)
+                    .ToList();
+
+                return new
+                {
+                    Date = day.ToString("yyyy-MM-dd"),
+                    NetRevenue = dailyTransactions.Sum(t => t.Amount),
+                    GrossSales = dailyTransactions.Where(t => t.Amount > 0).Sum(t => t.Amount),
+                    Returns = Math.Abs(dailyTransactions.Where(t => t.Amount < 0).Sum(t => t.Amount)),
+                    TransactionCount = dailyTransactions.Count
+                };
+            })
+            .ToList();
+
+        var tariffRows = await db.SkiPasses
+            .Include(p => p.Tariff)
+                .ThenInclude(t => t!.PassType)
+            .Include(p => p.Reservation)
+                .ThenInclude(r => r!.Transactions)
+            .Where(p => p.Reservation != null
+                && p.Reservation.Transactions.Any(t => t.TransactionDate >= from && t.TransactionDate <= to && t.Amount > 0))
+            .Select(p => new
+            {
+                TariffName = p.Tariff != null ? p.Tariff.Name : "Brak taryfy",
+                PassType = p.Tariff != null && p.Tariff.PassType != null ? p.Tariff.PassType.Name : "Inny",
+                Amount = p.Reservation!.Transactions
+                    .Where(t => t.TransactionDate >= from && t.TransactionDate <= to && t.Amount > 0)
+                    .Sum(t => t.Amount)
+            })
+            .ToListAsync();
+
+        var tariffSales = tariffRows
+            .GroupBy(t => new { t.TariffName, t.PassType })
+            .Select(g => new
+            {
+                TariffName = NormalizeReportText(g.Key.TariffName),
+                PassType = NormalizeReportText(g.Key.PassType),
+                Count = g.Count(),
+                Amount = g.Sum(x => x.Amount)
+            })
+            .OrderByDescending(x => x.Amount)
+            .ToList();
+
+        var scans = await db.GateScans
+            .Where(gs => gs.ScanTime >= from && gs.ScanTime <= to)
+            .Select(gs => new
+            {
+                gs.ScanTime,
+                ResultName = gs.VerificationResult != null ? gs.VerificationResult.Name : null,
+                LiftName = gs.Gate != null && gs.Gate.Lift != null ? gs.Gate.Lift.Name : "Nieznany wyciag"
+            })
+            .ToListAsync();
+
+        var scanRows = scans
+            .Where(gs => gs.ScanTime.HasValue)
+            .ToList();
+
+        var hourlyRides = Enumerable.Range(0, 24)
+            .Select(hour =>
+            {
+                var hourScans = scanRows.Where(gs => gs.ScanTime!.Value.Hour == hour).ToList();
+                return new
+                {
+                    Hour = hour,
+                    Accepted = hourScans.Count(gs => gs.ResultName == "ok"),
+                    Rejected = hourScans.Count(gs => gs.ResultName != "ok")
+                };
+            })
+            .ToList();
+
+        var liftUsage = scanRows
+            .Where(gs => gs.ResultName == "ok")
+            .GroupBy(gs => gs.LiftName)
+            .Select(g => new
+            {
+                LiftName = NormalizeReportText(g.Key),
+                Count = g.Count()
+            })
+            .OrderByDescending(x => x.Count)
+            .Take(8)
+            .ToList();
+
+        static object BuildDayTypeSummary(IEnumerable<SystemStacjiNarciarskiejDLL.Models.Transaction> source)
+        {
+            var list = source.ToList();
+            return new
+            {
+                NetRevenue = list.Sum(t => t.Amount),
+                GrossSales = list.Where(t => t.Amount > 0).Sum(t => t.Amount),
+                Returns = Math.Abs(list.Where(t => t.Amount < 0).Sum(t => t.Amount)),
+                TransactionCount = list.Count
+            };
+        }
+
+        static bool IsWeekend(DateTime date) =>
+            date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+
+        var result = new
+        {
+            DateFrom = from,
+            DateTo = to,
+            GeneratedAt = DateTime.UtcNow,
+            Summary = new
+            {
+                NetRevenue = transactionRows.Sum(t => t.Amount),
+                GrossSales = transactionRows.Where(t => t.Amount > 0).Sum(t => t.Amount),
+                Returns = Math.Abs(transactionRows.Where(t => t.Amount < 0).Sum(t => t.Amount)),
+                TransactionCount = transactionRows.Count,
+                AcceptedRides = scanRows.Count(gs => gs.ResultName == "ok"),
+                RejectedRides = scanRows.Count(gs => gs.ResultName != "ok"),
+                TopTariff = tariffSales.FirstOrDefault()?.TariffName ?? "Brak danych",
+                TopLift = liftUsage.FirstOrDefault()?.LiftName ?? "Brak danych"
+            },
+            DailyRevenue = dailyRevenue,
+            TariffSales = tariffSales,
+            HourlyRides = hourlyRides,
+            LiftUsage = liftUsage,
+            DayTypeComparison = new
+            {
+                Weekdays = BuildDayTypeSummary(transactionRows.Where(t => !IsWeekend(t.TransactionDate!.Value))),
+                Weekends = BuildDayTypeSummary(transactionRows.Where(t => IsWeekend(t.TransactionDate!.Value)))
+            }
+        };
+
+        await LogAdminReportAsync("raport_zaawansowany", $"from={from:yyyy-MM-dd};to={to:yyyy-MM-dd}");
+        return Ok(result);
+    }
+
+    // 5. Historia raportow wygenerowanych przez administratorow
+    [Authorize(Roles = "admin")]
     [HttpGet("historia-admin")]
     public async Task<IActionResult> GetAdminReportHistory([FromQuery] int limit = 100)
     {
@@ -220,7 +376,7 @@ public class RaportyController(SkiResortDbContext db) : ControllerBase
         return Ok(reports);
     }
 
-    // 5. Administracyjne zamykanie zmiany kasjera
+    // 6. Administracyjne zamykanie zmiany kasjera
     [Authorize(Roles = "admin")]
     [HttpPost("zamknij-kasjera/{cashierId}")]
     public async Task<IActionResult> AdminCloseShift(int cashierId)

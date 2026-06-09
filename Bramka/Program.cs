@@ -12,7 +12,7 @@ namespace Bramka
 
         static readonly HttpClient client = new();
         const string BramkaApiBaseUrl = "http://localhost:49226";
-        const int GateId = 1;
+        const int GateId = 4;
 
         static async Task Main(string[] args)
         {

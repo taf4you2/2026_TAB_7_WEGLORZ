@@ -10,9 +10,10 @@ export async function loadTariffs() {
                 <td>${t.passType}</td>
                 <td style="font-weight:700;">${t.price} zl</td>
                 <td>${t.poolLimit || '-'}</td>
+                <td><span class="badge badge-${t.isActive ? 'active' : 'inactive'}">${t.isActive ? 'AKTYWNA' : 'NIEAKTYWNA'}</span></td>
                 <td>
                     <button class="btn btn-outline" style="padding:4px 8px; font-size:12px;" onclick="openTariffModal(true, ${t.id}, '${t.name}', ${t.price}, ${t.poolLimit || ''}, '${t.season}', '${t.passType}')">E</button>
-                    <button class="btn btn-outline" style="padding:4px 8px; font-size:12px; color:var(--danger);" onclick="deleteTariff(${t.id})">U</button>
+                    ${t.isActive ? `<button class="btn btn-outline" style="padding:4px 8px; font-size:12px; color:var(--danger);" onclick="deleteTariff(${t.id})">Dezaktywuj</button>` : ''}
                 </td>
             </tr>
         `).join('');
@@ -51,8 +52,8 @@ export async function handleTariffSubmit(e) {
 }
 
 export async function deleteTariff(id) {
-    if (!confirm('Czy na pewno chcesz usunac te taryfe?')) return;
+    if (!confirm('Czy na pewno chcesz dezaktywowac te taryfe?')) return;
     const res = await fetch(`/api/taryfy/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-    if (res.ok) { showToast('Usunieto'); loadTariffs(); }
-    else { const err = await res.text(); showToast(err || 'Blad usuwania', 'error'); }
+    if (res.ok) { showToast('Dezaktywowano taryfe'); loadTariffs(); }
+    else { const err = await res.text(); showToast(err || 'Blad dezaktywacji', 'error'); }
 }

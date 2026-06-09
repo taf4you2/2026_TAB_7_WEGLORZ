@@ -18,7 +18,10 @@ export async function loadCards() {
                             : `<button class="btn btn-outline" style="padding:4px 8px; font-size:11px; color:var(--danger);" onclick="blockCard('${c.id}')">Blokuj</button>`
                         }
                         <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; color:var(--warning);" onclick="returnCard('${c.id}')">Zwrot</button>
-                        <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; color:var(--danger);" onclick="deleteCard('${c.id}')">U</button>
+                        ${c.status === 'zastrzezony' 
+                            ? ''
+                            : `<button class="btn btn-outline" style="padding:4px 8px; font-size:11px; color:var(--danger);" onclick="deleteCard('${c.id}')">Dezaktywuj</button>`
+                        }
                     </div>
                 </td>
             </tr>
@@ -74,8 +77,8 @@ export async function returnCard(id) {
 }
 
 export async function deleteCard(id) {
-    if (!confirm('Czy na pewno chcesz calkowicie USUNAC te karte z systemu?')) return;
+    if (!confirm('Czy na pewno chcesz dezaktywowac te karte?')) return;
     const res = await fetch(`/api/karty/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-    if (res.ok) { showToast('Usunieto'); loadCards(); }
-    else { const err = await res.json().catch(()=>({})); showToast(err.message || 'Blad usuwania', 'error'); }
+    if (res.ok) { showToast('Dezaktywowano karte'); loadCards(); }
+    else { const err = await res.json().catch(()=>({})); showToast(err.message || 'Blad dezaktywacji', 'error'); }
 }

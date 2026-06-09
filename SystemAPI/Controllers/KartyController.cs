@@ -107,7 +107,7 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
         return CreatedAtAction(nameof(GetByRfid), new { rfid = card.Id }, new { card.Id });
     }
 
-    // DELETE /api/karty/{rfid}
+    // DELETE /api/karty/{rfid} - dezaktywuje karte bez usuwania historii skanow i karnetow.
     [HttpDelete("{rfid}")]
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> DeleteCard(string rfid)
@@ -115,20 +115,18 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
         var card = await db.Cards
             .Include(c => c.SkiPasses)
                 .ThenInclude(sp => sp.Status)
-            .Include(c => c.GateScans)
             .FirstOrDefaultAsync(c => c.Id == rfid);
 
         if (card == null)
             return NotFound(new { message = $"Karta {rfid} nie istnieje w systemie." });
 
-        if (GetActivePass(card) != null)
-            return Conflict(new { message = "Nie mozna usunac karty z aktywnym karnetem." });
+        var blockedId = await db.DictCardStatuses
+            .Where(s => s.Name == "zastrzezony")
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync();
 
-        db.GateScans.RemoveRange(card.GateScans);
-        foreach (var pass in card.SkiPasses)
-            pass.CardId = null;
-
-        db.Cards.Remove(card);
+        card.StatusId = blockedId;
+        card.BlockReason = "Dezaktywowana przez administratora";
         await db.SaveChangesAsync();
         return NoContent();
     }

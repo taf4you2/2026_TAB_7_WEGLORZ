@@ -9,3 +9,16 @@ ALTER TABLE "card"
 
 ALTER TABLE "gate_scan"
     ADD COLUMN IF NOT EXISTS "pass_type_id" integer;
+
+ALTER TABLE "tariff"
+    ADD COLUMN IF NOT EXISTS "is_active" boolean DEFAULT true;
+
+ALTER TABLE "lift"
+    ADD COLUMN IF NOT EXISTS "is_active" boolean DEFAULT true;
+
+ALTER TABLE "trail"
+    ADD COLUMN IF NOT EXISTS "is_active" boolean DEFAULT true;
+
+UPDATE "tariff" SET "is_active" = true WHERE "is_active" IS NULL;
+UPDATE "lift" SET "is_active" = true WHERE "is_active" IS NULL;
+UPDATE "trail" SET "is_active" = true WHERE "is_active" IS NULL;

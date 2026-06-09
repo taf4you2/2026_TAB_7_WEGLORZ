@@ -32,5 +32,8 @@ public class Tariff
     [Column("pool_limit")]
     public int? PoolLimit { get; set; }
 
+    [Column("is_active")]
+    public bool? IsActive { get; set; }
+
     public virtual ICollection<SkiPass> SkiPasses { get; set; } = new List<SkiPass>();
 }

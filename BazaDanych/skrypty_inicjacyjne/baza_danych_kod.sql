@@ -77,7 +77,8 @@ CREATE TABLE "lift" (
   "name" varchar UNIQUE NOT NULL,
   "location" varchar,
   "length" decimal,
-  "planner_id" integer
+  "planner_id" integer,
+  "is_active" boolean DEFAULT true
 );
 
 CREATE TABLE "trail" (
@@ -86,7 +87,8 @@ CREATE TABLE "trail" (
   "location" varchar,
   "length" decimal,
   "difficulty_id" integer,
-  "planner_id" integer
+  "planner_id" integer,
+  "is_active" boolean DEFAULT true
 );
 
 CREATE TABLE "lift_trail" (
@@ -128,7 +130,8 @@ CREATE TABLE "tariff" (
   "pass_type_id" integer,
   "price" decimal,
   "ride_count" integer,
-  "pool_limit" integer
+  "pool_limit" integer,
+  "is_active" boolean DEFAULT true
 );
 
 CREATE TABLE "ski_pass" (

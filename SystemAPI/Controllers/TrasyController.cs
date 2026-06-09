@@ -15,17 +15,24 @@ public class TrasyController(SkiResortDbContext db) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var trasy = await db.Trails
+        var query = db.Trails
             .Include(t => t.Difficulty)
+            .AsQueryable();
+
+        if (!User.IsInRole("admin"))
+            query = query.Where(t => t.IsActive == true || t.IsActive == null);
+
+        var trails = await query
             .OrderBy(t => t.Name)
             .ToListAsync();
 
-        var result = trasy.Select(t => new TrailDto(
+        var result = trails.Select(t => new TrailDto(
             t.Id,
             t.Name,
             t.Location,
             t.Length,
-            t.Difficulty?.Name
+            t.Difficulty?.Name,
+            t.IsActive ?? true
         ));
 
         return Ok(result);
@@ -56,7 +63,8 @@ public class TrasyController(SkiResortDbContext db) : ControllerBase
             Name = req.Name,
             Location = req.Location,
             Length = req.Length,
-            DifficultyId = difficultyId
+            DifficultyId = difficultyId,
+            IsActive = true
         };
 
         db.Trails.Add(trail);
@@ -82,29 +90,32 @@ public class TrasyController(SkiResortDbContext db) : ControllerBase
         trail.Location = req.Location;
         trail.Length = req.Length;
         trail.DifficultyId = difficultyId;
+        if (req.IsActive.HasValue) trail.IsActive = req.IsActive.Value;
 
         await db.SaveChangesAsync();
 
         return Ok();
     }
 
-    // DELETE /api/trasy/{id}
+    // DELETE /api/trasy/{id} - dezaktywacja bez usuwania historii.
     [HttpDelete("{id}")]
     [Authorize(Roles = "admin,kasjer")]
     public async Task<IActionResult> Delete(int id)
     {
         var trail = await db.Trails
-            .Include(t => t.LiftTrails)
             .Include(t => t.Schedules)
             .FirstOrDefaultAsync(t => t.Id == id);
-            
+
         if (trail == null) return NotFound();
 
-        // Usuwamy powiązania przed usunięciem trasy
-        db.LiftTrails.RemoveRange(trail.LiftTrails);
-        db.TrailSchedules.RemoveRange(trail.Schedules);
-        db.Trails.Remove(trail);
-        
+        trail.IsActive = false;
+        foreach (var schedule in trail.Schedules)
+        {
+            schedule.IsOpen = false;
+            schedule.ClosureReason ??= "Trasa dezaktywowana";
+            schedule.UpdatedAt = DateTime.UtcNow;
+        }
+
         await db.SaveChangesAsync();
 
         return NoContent();
@@ -116,12 +127,14 @@ public record TrailDto(
     string Name,
     string? Location,
     decimal? Length,
-    string? Difficulty
+    string? Difficulty,
+    bool IsActive
 );
 
 public record TrailModifyRequest(
     string Name,
     string? Location,
     decimal? Length,
-    string? Difficulty
+    string? Difficulty,
+    bool? IsActive = null
 );

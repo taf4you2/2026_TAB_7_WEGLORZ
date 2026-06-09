@@ -1,11 +1,11 @@
-import { token, parseJwt, logout } from './core.js';
-import { loadDashboard } from './dashboard.js';
-import { loadInfra, openLiftModal, closeLiftModal, handleLiftSubmit, openGateModal, closeGateModal, handleGateSubmit } from './infra.js';
-import { loadTariffs, openTariffModal, closeTariffModal, handleTariffSubmit, deleteTariff } from './tariffs.js';
-import { loadCards, openCardModal, closeCardModal, handleCardSubmit, blockCard, unblockCard, returnCard, deleteCard } from './cards.js';
-import { loadSales } from './sales.js';
-import { loadUsers, openUserModal, closeUserModal, handleUserSubmit, openHistoryModal, closeHistoryModal } from './users.js';
-import { loadShiftReports, loadAdminReportHistory, generateGeneralReport, loadThroughputReport, setSalesRange, loadAdvancedReport, setAdvancedRange } from './reports.js';
+import { token, parseJwt, logout } from './core.js?v=soft-delete-1';
+import { loadDashboard } from './dashboard.js?v=soft-delete-1';
+import { loadInfra, openLiftModal, closeLiftModal, handleLiftSubmit, deactivateLift, openGateModal, closeGateModal, handleGateSubmit, deactivateGate } from './infra.js?v=soft-delete-1';
+import { loadTariffs, openTariffModal, closeTariffModal, handleTariffSubmit, deleteTariff } from './tariffs.js?v=soft-delete-1';
+import { loadCards, openCardModal, closeCardModal, handleCardSubmit, blockCard, unblockCard, returnCard, deleteCard } from './cards.js?v=soft-delete-1';
+import { loadSales } from './sales.js?v=soft-delete-1';
+import { loadUsers, openUserModal, closeUserModal, handleUserSubmit, openHistoryModal, closeHistoryModal } from './users.js?v=soft-delete-1';
+import { loadShiftReports, loadAdminReportHistory, generateGeneralReport, loadThroughputReport, setSalesRange, loadAdvancedReport, setAdvancedRange } from './reports.js?v=soft-delete-1';
 
 // Nawigacja
 function showSection(id, el) {
@@ -90,8 +90,10 @@ window.openUserModal = openUserModal;
 window.closeUserModal = closeUserModal;
 window.openLiftModal = openLiftModal;
 window.closeLiftModal = closeLiftModal;
+window.deactivateLift = deactivateLift;
 window.openGateModal = openGateModal;
 window.closeGateModal = closeGateModal;
+window.deactivateGate = deactivateGate;
 window.openTariffModal = openTariffModal;
 window.closeTariffModal = closeTariffModal;
 window.deleteTariff = deleteTariff;

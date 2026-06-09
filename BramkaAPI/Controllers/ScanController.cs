@@ -33,6 +33,26 @@ public class ScanController : ControllerBase
         int verificationResult = VERIFICATION_REJECTED;
         int? usedPassTypeId = null;
 
+        var gate = await _db.Gates
+            .Include(g => g.Lift)
+            .FirstOrDefaultAsync(g => g.Id == req.GateId);
+
+        if (gate == null || gate.IsActive == false)
+        {
+            response.Message = "Bramka jest nieaktywna. Odmowa dostepu.";
+            response.ReasonCode = "GATE_INACTIVE";
+            await LogScan(req, scanTime, verificationResult, usedPassTypeId, null);
+            return Ok(response);
+        }
+
+        if (gate.Lift?.IsActive == false)
+        {
+            response.Message = "Wyciag jest nieaktywny. Odmowa dostepu.";
+            response.ReasonCode = "LIFT_INACTIVE";
+            await LogScan(req, scanTime, verificationResult, usedPassTypeId, null);
+            return Ok(response);
+        }
+
         var card = await _db.Cards
             .Include(c => c.SkiPasses)
             .ThenInclude(sp => sp.Tariff)

@@ -30,7 +30,11 @@ public class StatystykiController(SkiResortDbContext db) : ControllerBase
 
         // Aktywne karnety w systemie
         var activePasses = await db.SkiPasses
-            .CountAsync(sp => sp.ValidFrom <= nowUtc && sp.ValidTo >= nowUtc);
+            .Include(sp => sp.Status)
+            .CountAsync(sp => sp.ValidFrom <= nowUtc
+                && sp.ValidTo >= nowUtc
+                && sp.Status != null
+                && sp.Status.Name == "aktywny");
 
         // Oczekujące zwroty: karnety ze statusem "oczekuje_na_zwrot"
         // TODO: ustalić właściwą nazwę statusu w DictPassStatus
@@ -54,6 +58,7 @@ public class StatystykiController(SkiResortDbContext db) : ControllerBase
             {
                 l.Id,
                 l.Name,
+                IsActive = l.IsActive ?? true,
                 Gates = l.Gates.Select(g => new { g.Id, g.Name, IsActive = g.IsActive ?? false }).ToList()
             })
             .ToListAsync();

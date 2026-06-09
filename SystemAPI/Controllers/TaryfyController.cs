@@ -12,25 +12,31 @@ namespace SystemAPI.Controllers;
 public class TaryfyController(SkiResortDbContext db) : ControllerBase
 {
     // GET /api/taryfy
-    // Zwraca listę dostępnych taryf wraz z typem karnetu i sezonem.
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var taryfy = await db.Tariffs
+        var query = db.Tariffs
             .Include(t => t.Season)
             .Include(t => t.PassType)
+            .AsQueryable();
+
+        if (!User.IsInRole("admin"))
+            query = query.Where(t => t.IsActive == true || t.IsActive == null);
+
+        var tariffs = await query
             .OrderBy(t => t.PassTypeId)
             .ThenBy(t => t.Name)
             .ToListAsync();
 
-        var result = taryfy.Select(t => new TariffDto(
+        var result = tariffs.Select(t => new TariffDto(
             t.Id,
             t.Name,
             t.Season?.Name,
             t.PassType?.Name,
             t.Price,
             t.RideCount,
-            t.PoolLimit
+            t.PoolLimit,
+            t.IsActive ?? true
         ));
 
         return Ok(result);
@@ -57,7 +63,8 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
             Price = req.Price,
             PoolLimit = req.PoolLimit,
             SeasonId = seasonId,
-            PassTypeId = passTypeId
+            PassTypeId = passTypeId,
+            IsActive = true
         };
 
         db.Tariffs.Add(tariff);
@@ -87,7 +94,8 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
         tariff.Name = req.Name;
         tariff.Price = req.Price;
         tariff.PoolLimit = req.PoolLimit;
-        
+        if (req.IsActive.HasValue) tariff.IsActive = req.IsActive.Value;
+
         if (req.Season != null) tariff.SeasonId = seasonId;
         if (req.PassType != null) tariff.PassTypeId = passTypeId;
 
@@ -96,20 +104,15 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
         return Ok();
     }
 
-    // DELETE /api/taryfy/{id}
+    // DELETE /api/taryfy/{id} - dezaktywacja bez usuwania historii.
     [HttpDelete("{id}")]
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> Delete(int id)
     {
-        var tariff = await db.Tariffs.Include(t => t.SkiPasses).FirstOrDefaultAsync(t => t.Id == id);
+        var tariff = await db.Tariffs.FirstOrDefaultAsync(t => t.Id == id);
         if (tariff == null) return NotFound();
 
-        if (tariff.SkiPasses.Any())
-        {
-            return BadRequest("Nie można usunąć taryfy, ponieważ ma przypisane karnety.");
-        }
-
-        db.Tariffs.Remove(tariff);
+        tariff.IsActive = false;
         await db.SaveChangesAsync();
 
         return NoContent();
@@ -123,7 +126,8 @@ public record TariffDto(
     string? PassType,
     decimal? Price,
     int? RideCount,
-    int? PoolLimit
+    int? PoolLimit,
+    bool IsActive
 );
 
 public record TariffModifyRequest(
@@ -131,5 +135,6 @@ public record TariffModifyRequest(
     string? Season,
     string? PassType,
     decimal? Price,
-    int? PoolLimit
+    int? PoolLimit,
+    bool? IsActive = null
 );

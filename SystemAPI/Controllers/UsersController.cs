@@ -36,6 +36,11 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
         return Ok(new { userId = user.Id, email = user.Email, cardIds });
     }
 
+    [HttpGet("my-rfid")]
+    public async Task<IActionResult> GetMyRFID()
+    {
+        return Ok();
+    }
     // GET /api/uzytkownicy?email=  — dla KasjerApp: wyszukiwanie narciarza po emailu
     [HttpGet("/api/uzytkownicy")]
     public async Task<IActionResult> Search([FromQuery] string email)

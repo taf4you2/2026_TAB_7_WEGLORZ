@@ -65,7 +65,7 @@ namespace BramkaAPI.Controllers
                 return Ok(new { Aktywna = false, Wiadomosc = "Karta jest zastrzeżona (zablokowana). Odmowa dostępu." });
             }
 
-            var now = DateTime.Now;
+            var now = SkiResortClock.Now;
             bool hasValidPass = karta.SkiPasses.Any(sp => sp.ValidFrom <= now && sp.ValidTo >= now && sp.StatusId == 1); // 1 = aktywny wg DB
 
             if (hasValidPass)
@@ -83,7 +83,7 @@ namespace BramkaAPI.Controllers
         [HttpGet("aktywne-karty")]
         public async Task<IActionResult> PobierzAktywneKarty()
         {
-            var now = DateTime.Now;
+            var now = SkiResortClock.Now;
             var karty = await _context.Cards
                 .Include(c => c.Status)
                 .Include(c => c.SkiPasses)

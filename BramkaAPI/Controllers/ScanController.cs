@@ -28,7 +28,7 @@ public class ScanController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Scan([FromBody] GateScanRequestDto req)
     {
-        var scanTime = DateTime.Now;
+        var scanTime = SkiResortClock.Now;
         var response = new GateScanResponseDto { IsGranted = false };
         int verificationResult = VERIFICATION_REJECTED;
         int? usedPassTypeId = null;

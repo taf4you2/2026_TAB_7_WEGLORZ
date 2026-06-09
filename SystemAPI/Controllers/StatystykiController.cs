@@ -16,13 +16,13 @@ public class StatystykiController(SkiResortDbContext db) : ControllerBase
     [HttpGet("dzisiaj")]
     public async Task<IActionResult> GetToday()
     {
-        var todayUtc = DateTime.UtcNow.Date;
-        var tomorrowUtc = todayUtc.AddDays(1);
-        var nowUtc = DateTime.UtcNow;
+        var today = SkiResortClock.Today;
+        var tomorrow = today.AddDays(1);
+        var now = SkiResortClock.Now;
 
         // Transakcje z dzisiaj (sprzedaż biletów i karnetów — kwoty dodatnie)
         var todayTransactions = await db.Transactions
-            .Where(t => t.TransactionDate >= todayUtc && t.TransactionDate < tomorrowUtc)
+            .Where(t => t.TransactionDate >= today && t.TransactionDate < tomorrow)
             .ToListAsync();
 
         var ticketsSoldToday = todayTransactions.Count(t => t.Amount > 0);
@@ -31,8 +31,8 @@ public class StatystykiController(SkiResortDbContext db) : ControllerBase
         // Aktywne karnety w systemie
         var activePasses = await db.SkiPasses
             .Include(sp => sp.Status)
-            .CountAsync(sp => sp.ValidFrom <= nowUtc
-                && sp.ValidTo >= nowUtc
+            .CountAsync(sp => sp.ValidFrom <= now
+                && sp.ValidTo >= now
                 && sp.Status != null
                 && sp.Status.Name == "aktywny");
 
@@ -143,7 +143,7 @@ public class StatystykiController(SkiResortDbContext db) : ControllerBase
     [HttpGet("oblozenie-minuty")]
     public async Task<IActionResult> GetRealtimeOccupancy()
     {
-        var minutesAgo = DateTime.UtcNow.AddMinutes(-15);
+        var minutesAgo = SkiResortClock.Now.AddMinutes(-15);
 
         var occupancy = await db.GateScans
             .Include(gs => gs.Gate)
@@ -167,7 +167,7 @@ public class StatystykiController(SkiResortDbContext db) : ControllerBase
     [HttpGet("ruch-godzinowy")]
     public async Task<IActionResult> GetHourlyTraffic()
     {
-        var today = DateTime.UtcNow.Date;
+        var today = SkiResortClock.Today;
 
         var traffic = await db.GateScans
             .Where(gs => gs.ScanTime >= today && gs.VerificationResult != null && gs.VerificationResult.Name == "ok")
@@ -205,13 +205,13 @@ public class StatystykiController(SkiResortDbContext db) : ControllerBase
     [HttpGet("wyciagi")]
     public async Task<IActionResult> GetLiftsTraffic()
     {
-        var todayUtc = DateTime.UtcNow.Date;
-        var tomorrowUtc = todayUtc.AddDays(1);
+        var today = SkiResortClock.Today;
+        var tomorrow = today.AddDays(1);
 
         var scansPerLift = await db.GateScans
             .Include(gs => gs.Gate)
                 .ThenInclude(g => g!.Lift)
-            .Where(gs => gs.ScanTime >= todayUtc && gs.ScanTime < tomorrowUtc)
+            .Where(gs => gs.ScanTime >= today && gs.ScanTime < tomorrow)
             .GroupBy(gs => gs.Gate!.Lift!.Name)
             .Select(g => new
             {
@@ -240,7 +240,7 @@ public class StatystykiController(SkiResortDbContext db) : ControllerBase
                 Id = gs.Id,
                 CardRfid = gs.CardId ?? "Nieznana",
                 Location = (gs.Gate != null ? gs.Gate.Name : "") + (gs.Gate != null && gs.Gate.Lift != null ? " - " + gs.Gate.Lift.Name : ""),
-                Timestamp = gs.ScanTime ?? DateTime.UtcNow,
+                Timestamp = gs.ScanTime ?? SkiResortClock.Now,
                 Status = gs.VerificationResult != null ? gs.VerificationResult.Name : "Brak statusu",
                 Reason = gs.VerificationResult != null && gs.VerificationResult.Name != "ok" ? "Odmowa dostępu" : ""
             })

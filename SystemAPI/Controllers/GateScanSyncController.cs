@@ -32,7 +32,7 @@ public class GateScanSyncController : ControllerBase
         {
             CardId = req.CardId,
             GateId = req.GateId,
-            ScanTime = req.ScanTime,
+            ScanTime = req.ScanTime ?? SkiResortClock.Now,
             TimeBlockedUntil = req.TimeBlockedUntil,
             VerificationResultId = req.VerificationResultId,
             PassTypeId = req.PassTypeId

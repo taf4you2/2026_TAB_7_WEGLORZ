@@ -31,7 +31,7 @@ public class RaportyController(SkiResortDbContext db) : ControllerBase
 
         if (date.HasValue)
         {
-            var from = date.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            var from = SkiResortClock.StartOfDay(date.Value);
             var to = from.AddDays(1);
             query = query.Where(gs => gs.ScanTime >= from && gs.ScanTime < to);
         }
@@ -135,7 +135,7 @@ public class RaportyController(SkiResortDbContext db) : ControllerBase
     [HttpGet("przepustowosc-wyciagow")]
     public async Task<IActionResult> GetLiftThroughput([FromQuery] DateOnly date)
     {
-        var from = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var from = SkiResortClock.StartOfDay(date);
         var to = from.AddDays(1);
 
         var lifts = await db.Lifts

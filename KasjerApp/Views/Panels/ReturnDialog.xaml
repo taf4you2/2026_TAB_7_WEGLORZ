@@ -36,19 +36,23 @@
                       IsChecked="True"
                       Margin="0,0,0,10"
                       Checked="ReturnCardCheck_Changed"
-                      Unchecked="ReturnCardCheck_Changed"/>
+                      Unchecked="ReturnCardCheck_Changed"
+                      ToolTip="Zaznacz, jeśli klient oddaje również fizyczną kartę i ma otrzymać należną kaucję. Zmiana aktualizuje kalkulację."/>
             <TextBlock Text="Powód zwrotu:" Style="{StaticResource FieldLabelText}"/>
-            <TextBox x:Name="ReasonBox"/>
+            <TextBox x:Name="ReasonBox"
+                     ToolTip="Podaj krótki, rzeczowy powód zwrotu. Pole jest wymagane."/>
         </StackPanel>
 
         <WrapPanel Grid.Row="3" HorizontalAlignment="Right">
             <Button Content="Anuluj"
                     Click="CancelBtn_Click"
                     Style="{StaticResource SecondaryButton}"
-                    Margin="0,0,10,0"/>
+                    Margin="0,0,10,0"
+                    ToolTip="Zamyka okno bez wykonania zwrotu."/>
             <Button Content="Zatwierdź zwrot"
                     Click="ConfirmBtn_Click"
-                    Style="{StaticResource DangerButton}"/>
+                    Style="{StaticResource DangerButton}"
+                    ToolTip="Przekazuje zatwierdzony zwrot do realizacji. Przed kliknięciem sprawdź kalkulację i opcję zwrotu karty."/>
         </WrapPanel>
     </Grid>
 </Window>

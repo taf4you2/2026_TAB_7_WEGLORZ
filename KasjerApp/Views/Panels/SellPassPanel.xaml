@@ -20,19 +20,22 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox x:Name="RfidBox" Grid.Column="0"/>
+                        <TextBox x:Name="RfidBox" Grid.Column="0"
+                                 ToolTip="Wpisz lub zeskanuj numer karty RFID, na której ma zostać zapisany karnet."/>
                         <Button Grid.Column="1"
                                 Content="Weryfikuj"
                                 Click="VerifyCard_Click"
                                 Style="{StaticResource PrimaryButton}"
-                                Margin="8,0,0,0"/>
+                                Margin="8,0,0,0"
+                                ToolTip="Sprawdza, czy karta istnieje i czy można wydać na niej nowy karnet."/>
                     </Grid>
 
                     <TextBlock Text="Lub wybierz wolną kartę z listy:" Style="{StaticResource MutedText}" Margin="0,0,0,5"/>
                     <ComboBox x:Name="FreeCardCombo"
                               Margin="0,0,0,16"
                               DisplayMemberPath="DisplayName"
-                              SelectionChanged="FreeCardCombo_SelectionChanged"/>
+                              SelectionChanged="FreeCardCombo_SelectionChanged"
+                              ToolTip="Wybierz wolną kartę zamiast wpisywania jej numeru ręcznie."/>
 
                     <Border x:Name="CardInfoBorder"
                             Style="{StaticResource InfoBorder}"
@@ -45,7 +48,8 @@
                     <ComboBox x:Name="TariffCombo"
                               Margin="0,0,0,16"
                               DisplayMemberPath="DisplayName"
-                              SelectionChanged="TariffCombo_SelectionChanged"/>
+                              SelectionChanged="TariffCombo_SelectionChanged"
+                              ToolTip="Wybierz taryfę określającą typ, cenę i okres ważności karnetu."/>
 
                     <Grid Margin="0,0,0,16">
                         <Grid.ColumnDefinitions>
@@ -57,11 +61,13 @@
                             <TextBlock Text="Start" Style="{StaticResource FieldLabelText}"/>
                             <DatePicker x:Name="ValidFromPicker"
                                         SelectedDateFormat="Short"
-                                        SelectedDateChanged="ValidFromPicker_SelectedDateChanged"/>
+                                        SelectedDateChanged="ValidFromPicker_SelectedDateChanged"
+                                        ToolTip="Wybierz dzień rozpoczęcia ważności karnetu."/>
                             <TextBox x:Name="ValidFromTimeBox"
                                      Text="08:00"
                                      Margin="0,6,0,0"
-                                     TextChanged="ValidFromTimeBox_TextChanged"/>
+                                     TextChanged="ValidFromTimeBox_TextChanged"
+                                     ToolTip="Podaj godzinę rozpoczęcia w formacie HH:mm, na przykład 08:00."/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="Koniec" Style="{StaticResource FieldLabelText}"/>
@@ -84,12 +90,14 @@
                         <TextBox x:Name="UserEmailBox"
                                  Grid.Column="0"
                                  KeyDown="UserEmailBox_KeyDown"
-                                 TextChanged="UserEmailBox_TextChanged"/>
+                                 TextChanged="UserEmailBox_TextChanged"
+                                 ToolTip="Opcjonalnie podaj e-mail narciarza, aby przypisać mu karnet. Puste pole oznacza sprzedaż bez przypisania użytkownika."/>
                         <Button Grid.Column="1"
                                 Content="Szukaj"
                                 Click="UserSearch_Click"
                                 Style="{StaticResource SecondaryButton}"
-                                Margin="8,0,0,0"/>
+                                Margin="8,0,0,0"
+                                ToolTip="Wyszukuje narciarza po adresie e-mail; jeśli konto nie istnieje, aplikacja może zaproponować jego utworzenie."/>
                     </Grid>
 
                     <Border x:Name="UserInfoBorder"
@@ -120,7 +128,8 @@
                     <Button Content="Wydaj karnet"
                             Click="SellBtn_Click"
                             Style="{StaticResource SuccessButton}"
-                            Height="40"/>
+                            Height="40"
+                            ToolTip="Finalizuje sprzedaż i przypisuje wybraną taryfę do zweryfikowanej karty RFID."/>
                 </StackPanel>
             </Border>
 

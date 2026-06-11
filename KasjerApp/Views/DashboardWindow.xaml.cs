@@ -1,5 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Diagnostics;
+using System.IO;
 using KasjerApp.Services;
 using KasjerApp.Views.Panels;
 
@@ -7,12 +9,14 @@ namespace KasjerApp.Views;
 
 public partial class DashboardWindow : Window
 {
+    private const string HelpDocumentRelativePath = @"Dokumentacja\Instrukcja_KasjerApp.docx";
     private readonly ApiService _api;
     private Button? _activeBtn;
 
     public DashboardWindow()
     {
         InitializeComponent();
+        SetTooltipsEnabled(true);
         _api = new ApiService(AppConfig.ApiBaseUrl, Session.Token!);
         UserLabel.Text = $"Kasjer ID: {Session.UserId}";
         Navigate(BtnReservations, new ReservationsPanel(_api));
@@ -48,5 +52,44 @@ public partial class DashboardWindow : Window
         Session.Role = null;
         new LoginWindow().Show();
         Close();
+    }
+
+    private void HelpBtn_Click(object sender, RoutedEventArgs e)
+    {
+        var helpPath = Path.Combine(AppContext.BaseDirectory, HelpDocumentRelativePath);
+        if (!File.Exists(helpPath))
+        {
+            MessageBox.Show(
+                this,
+                $"Nie znaleziono instrukcji obsługi. Oczekiwany plik:\n{helpPath}",
+                "Pomoc",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(helpPath) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                this,
+                $"Nie udało się otworzyć instrukcji. Sprawdź, czy w systemie jest zainstalowany program obsługujący pliki DOCX.\n\nSzczegóły: {ex.Message}",
+                "Pomoc",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
+    private void TooltipsToggle_Changed(object sender, RoutedEventArgs e)
+    {
+        SetTooltipsEnabled(TooltipsToggle.IsChecked == true);
+    }
+
+    private static void SetTooltipsEnabled(bool isEnabled)
+    {
+        Application.Current.Resources["TooltipsEnabled"] = isEnabled;
     }
 }

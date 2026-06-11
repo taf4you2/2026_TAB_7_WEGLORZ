@@ -9,6 +9,10 @@
         Background="{StaticResource AppBackgroundBrush}">
     <Window.Resources>
         <Style x:Key="NavBtn" TargetType="Button">
+            <Setter Property="ToolTipService.IsEnabled" Value="{DynamicResource TooltipsEnabled}"/>
+            <Setter Property="ToolTipService.InitialShowDelay" Value="450"/>
+            <Setter Property="ToolTipService.ShowDuration" Value="12000"/>
+            <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="#DCE8F5"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -81,11 +85,11 @@
 
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Margin="0,12,0,12">
-                    <Button x:Name="BtnReservations" Content="Rezerwacje" Click="Nav_Click" Tag="reservations" Style="{StaticResource NavBtn}" IsEnabled="False"/>
-                    <Button x:Name="BtnSellPass" Content="Wydaj karnet" Click="Nav_Click" Tag="sell_pass" Style="{StaticResource NavBtn}"/>
-                    <Button x:Name="BtnPasses" Content="Karnety i zwroty" Click="Nav_Click" Tag="passes" Style="{StaticResource NavBtn}"/>
-                    <Button x:Name="BtnCards" Content="Karty RFID" Click="Nav_Click" Tag="cards" Style="{StaticResource NavBtn}"/>
-                    <Button x:Name="BtnTransactions" Content="Transakcje" Click="Nav_Click" Tag="transactions" Style="{StaticResource NavBtn}"/>
+                    <Button x:Name="BtnReservations" Content="Rezerwacje" Click="Nav_Click" Tag="reservations" Style="{StaticResource NavBtn}" IsEnabled="False" ToolTip="Wyszukaj rezerwację internetową i przypisz kartę RFID do oczekującego karnetu."/>
+                    <Button x:Name="BtnSellPass" Content="Wydaj karnet" Click="Nav_Click" Tag="sell_pass" Style="{StaticResource NavBtn}" ToolTip="Sprzedaj nowy karnet na wolnej karcie RFID."/>
+                    <Button x:Name="BtnPasses" Content="Karnety i zwroty" Click="Nav_Click" Tag="passes" Style="{StaticResource NavBtn}" ToolTip="Wyszukaj karnet, wykonaj jego zwrot albo odbierz samą kartę."/>
+                    <Button x:Name="BtnCards" Content="Karty RFID" Click="Nav_Click" Tag="cards" Style="{StaticResource NavBtn}" ToolTip="Zarządzaj kartami RFID, blokadami i historią przypisanych karnetów."/>
+                    <Button x:Name="BtnTransactions" Content="Transakcje" Click="Nav_Click" Tag="transactions" Style="{StaticResource NavBtn}" ToolTip="Przeglądaj operacje sprzedaży i zwrotów, opcjonalnie dla wybranej daty."/>
                 </StackPanel>
             </ScrollViewer>
 
@@ -96,10 +100,25 @@
                                FontSize="12"
                                TextWrapping="Wrap"
                                Margin="0,0,0,10"/>
+                    <CheckBox x:Name="TooltipsToggle"
+                              Content="Podpowiedzi ekranowe"
+                              IsChecked="True"
+                              Checked="TooltipsToggle_Changed"
+                              Unchecked="TooltipsToggle_Changed"
+                              Foreground="#DCE8F5"
+                              Margin="0,0,0,10"
+                              ToolTip="Włącza lub wyłącza krótkie podpowiedzi wyświetlane po zatrzymaniu kursora nad elementem."/>
+                    <Button Content="Pomoc"
+                            Click="HelpBtn_Click"
+                            Style="{StaticResource SecondaryButton}"
+                            HorizontalContentAlignment="Center"
+                            Margin="0,0,0,8"
+                            ToolTip="Otwiera pełną instrukcję obsługi KasjerApp w domyślnej aplikacji do plików DOCX."/>
                     <Button Content="Wyloguj"
                             Click="LogoutBtn_Click"
                             Style="{StaticResource DangerButton}"
-                            HorizontalContentAlignment="Center"/>
+                            HorizontalContentAlignment="Center"
+                            ToolTip="Kończy bieżącą sesję kasjera i wraca do ekranu logowania."/>
                 </StackPanel>
             </Border>
         </Grid>

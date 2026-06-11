@@ -7,4 +7,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>KasjerApp</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\Dokumentacja\Instrukcja_KasjerApp.docx"
+             Link="Dokumentacja\Instrukcja_KasjerApp.docx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

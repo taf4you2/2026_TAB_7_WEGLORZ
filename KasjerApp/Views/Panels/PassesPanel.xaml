@@ -18,25 +18,27 @@
                     <Button Content="Szukaj"
                             Click="SearchBtn_Click"
                             Style="{StaticResource PrimaryButton}"
-                            Margin="0,0,8,8"/>
+                            Margin="0,0,8,8"
+                            ToolTip="Wyszukuje karnety przez numer RFID lub dane dostępne w wyszukiwarce kart."/>
                     <Button Content="Odśwież"
                             Click="RefreshBtn_Click"
                             Style="{StaticResource SecondaryButton}"
-                            Margin="0,0,8,8"/>
+                            Margin="0,0,8,8"
+                            ToolTip="Ponownie pobiera listę karnetów z zachowaniem wpisanego filtra."/>
                     <Button x:Name="ReturnBtn"
                             Content="Zwróć karnet"
                             Click="ReturnBtn_Click"
                             IsEnabled="False"
                             Style="{StaticResource DangerButton}"
                             Margin="0,0,8,8"
-                            ToolTip="Refund za niewykorzystane dni, opcjonalnie wraz z odbiorem karty i kaucji."/>
+                            ToolTip="Oblicza zwrot za niewykorzystany okres i otwiera okno zatwierdzenia. Najpierw wybierz karnet z listy."/>
                     <Button x:Name="ReturnCardOnlyBtn"
                             Content="Odbierz kartę"
                             Click="ReturnCardOnlyBtn_Click"
                             IsEnabled="False"
                             Style="{StaticResource WarningButton}"
                             Margin="0,0,12,8"
-                            ToolTip="Tylko zwala kartę i wypłaca kaucję. Bez refundu za karnet. Działa też dla wygasłych/zwróconych karnetów."/>
+                            ToolTip="Odbiera fizyczną kartę i wypłaca kaucję bez zwrotu opłaty za karnet. Aktywne karnety zostaną wygaszone."/>
                     <TextBlock x:Name="ActionMsg"
                                VerticalAlignment="Center"
                                FontSize="12"
@@ -46,7 +48,8 @@
                 <TextBox x:Name="SearchBox"
                          MinWidth="180"
                          Margin="0,0,0,8"
-                         KeyDown="SearchBox_KeyDown"/>
+                         KeyDown="SearchBox_KeyDown"
+                         ToolTip="Wpisz pełny lub częściowy numer RFID. Enter uruchamia wyszukiwanie."/>
             </DockPanel>
         </Border>
 
@@ -55,7 +58,8 @@
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       BorderThickness="0"
-                      SelectionChanged="PassesGrid_SelectionChanged">
+                      SelectionChanged="PassesGrid_SelectionChanged"
+                      ToolTip="Wybierz karnet, aby uaktywnić operację zwrotu karnetu lub odbioru karty.">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="ID karnetu" Binding="{Binding PassId}" Width="90" MinWidth="80"/>
                     <DataGridTextColumn Header="RFID" Binding="{Binding CardId}" Width="150" MinWidth="120"/>

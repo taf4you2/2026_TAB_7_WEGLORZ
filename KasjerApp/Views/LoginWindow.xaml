@@ -26,10 +26,12 @@
                                    Margin="0,0,0,24"/>
 
                         <TextBlock Text="Login (e-mail)" Style="{StaticResource FieldLabelText}"/>
-                        <TextBox x:Name="EmailBox"/>
+                        <TextBox x:Name="EmailBox"
+                                 ToolTip="Wpisz login kasjera w formacie adresu e-mail otrzymany od administratora."/>
 
                         <TextBlock Text="Hasło" Style="{StaticResource FieldLabelText}" Margin="0,16,0,5"/>
-                        <PasswordBox x:Name="PasswordBox"/>
+                        <PasswordBox x:Name="PasswordBox"
+                                     ToolTip="Wpisz hasło do konta kasjera. Naciśnięcie Enter uruchamia logowanie."/>
 
                         <TextBlock x:Name="ErrorText"
                                    Foreground="{StaticResource DangerBrush}"
@@ -43,6 +45,7 @@
                                 Style="{StaticResource PrimaryButton}"
                                 Height="40"
                                 Margin="0,24,0,0"
+                                ToolTip="Sprawdza dane logowania i otwiera panel kasjera."
                                 Click="LoginBtn_Click"/>
                     </StackPanel>
                 </Border>

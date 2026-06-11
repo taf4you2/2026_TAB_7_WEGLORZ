@@ -19,7 +19,8 @@
                     <ComboBox x:Name="StatusCombo"
                               Width="140"
                               Margin="0,0,8,8"
-                              SelectedIndex="0">
+                              SelectedIndex="0"
+                              ToolTip="Ogranicza wyniki do kart o wybranym statusie. Wartość wszystkie wyłącza filtr statusu.">
                         <ComboBoxItem Content="(wszystkie)"/>
                         <ComboBoxItem Content="wolna"/>
                         <ComboBoxItem Content="zajeta"/>
@@ -29,37 +30,44 @@
                     <Button Content="Szukaj"
                             Click="SearchBtn_Click"
                             Style="{StaticResource PrimaryButton}"
-                            Margin="0,0,8,8"/>
+                            Margin="0,0,8,8"
+                            ToolTip="Wyszukuje karty według wpisanego numeru lub wybranego statusu."/>
                     <Button Content="Odśwież"
                             Click="RefreshBtn_Click"
                             Style="{StaticResource SecondaryButton}"
-                            Margin="0,0,8,8"/>
+                            Margin="0,0,8,8"
+                            ToolTip="Ponownie pobiera listę kart z aktualnymi filtrami."/>
                     <Button Content="Dodaj kartę"
                             Click="AddCardBtn_Click"
                             Style="{StaticResource SuccessButton}"
-                            Margin="0,0,8,8"/>
+                            Margin="0,0,8,8"
+                            ToolTip="Rejestruje nową fizyczną kartę RFID w systemie jako wolną."/>
                     <Button Content="Oznacz usuniętą"
                             Click="DeleteCardBtn_Click"
                             Style="{StaticResource DangerButton}"
-                            Margin="0,0,8,8"/>
+                            Margin="0,0,8,8"
+                            ToolTip="Trwale wycofuje kartę z użycia przez zmianę statusu na usunięta. Operacja wymaga potwierdzenia."/>
                     <Button x:Name="BlockBtn"
                             Content="Zablokuj kartę"
                             Click="BlockBtn_Click"
                             IsEnabled="False"
                             Style="{StaticResource WarningButton}"
-                            Margin="0,0,8,8"/>
+                            Margin="0,0,8,8"
+                            ToolTip="Zastrzega wybraną kartę i wymaga podania powodu. Najpierw wybierz kartę, która nie jest zastrzeżona ani usunięta."/>
                     <Button x:Name="UnblockBtn"
                             Content="Odblokuj kartę"
                             Click="UnblockBtn_Click"
                             IsEnabled="False"
                             Style="{StaticResource SuccessButton}"
-                            Margin="0,0,8,8"/>
+                            Margin="0,0,8,8"
+                            ToolTip="Przywraca wybraną zastrzeżoną kartę do użycia. Najpierw wybierz kartę ze statusem zastrzeżony."/>
                     <Button x:Name="ReturnCardBtn"
                             Content="Zwróć kartę"
                             Click="ReturnCardBtn_Click"
                             IsEnabled="False"
                             Style="{StaticResource SecondaryButton}"
-                            Margin="0,0,12,8"/>
+                            Margin="0,0,12,8"
+                            ToolTip="Odbiera fizyczną kartę, rozlicza należną kaucję i wygasza aktywne karnety bez refundu."/>
                     <TextBlock x:Name="MsgText"
                                VerticalAlignment="Center"
                                FontSize="12"
@@ -69,7 +77,8 @@
                 <TextBox x:Name="SearchBox"
                          MinWidth="180"
                          Margin="0,0,0,8"
-                         KeyDown="SearchBox_KeyDown"/>
+                         KeyDown="SearchBox_KeyDown"
+                         ToolTip="Wpisz pełny lub częściowy numer RFID albo dane właściciela. Enter uruchamia wyszukiwanie."/>
             </DockPanel>
         </Border>
 
@@ -78,7 +87,8 @@
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       BorderThickness="0"
-                      SelectionChanged="CardsGrid_SelectionChanged">
+                      SelectionChanged="CardsGrid_SelectionChanged"
+                      ToolTip="Wybierz kartę, aby zobaczyć jej historię karnetów i uaktywnić dozwolone operacje.">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="RFID" Binding="{Binding Id}" Width="150" MinWidth="120"/>
                     <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110" MinWidth="95"/>
@@ -112,7 +122,8 @@
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       BorderThickness="0"
-                      SelectionChanged="PassesGrid_SelectionChanged">
+                      SelectionChanged="PassesGrid_SelectionChanged"
+                      ToolTip="Historia wszystkich karnetów przypisanych do wybranej karty RFID.">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="70" MinWidth="60"/>
                     <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110" MinWidth="95"/>

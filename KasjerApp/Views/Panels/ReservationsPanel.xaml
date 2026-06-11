@@ -18,11 +18,13 @@
                     <Button Content="Szukaj"
                             Click="SearchBtn_Click"
                             Style="{StaticResource PrimaryButton}"
-                            Margin="0,0,8,8"/>
+                            Margin="0,0,8,8"
+                            ToolTip="Wyszukuje rezerwacje internetowe przypisane do podanego adresu e-mail."/>
                     <Button Content="Wyczyść"
                             Click="ClearBtn_Click"
                             Style="{StaticResource SecondaryButton}"
-                            Margin="0,0,12,8"/>
+                            Margin="0,0,12,8"
+                            ToolTip="Czyści adres e-mail, wyniki wyszukiwania i bieżący wybór."/>
                     <TextBlock x:Name="SearchMsg"
                                VerticalAlignment="Center"
                                FontSize="12"
@@ -36,7 +38,8 @@
                              KeyDown="EmailBox_KeyDown"
                              PreviewKeyDown="EmailBox_PreviewKeyDown"
                              TextChanged="EmailBox_TextChanged"
-                             LostFocus="EmailBox_LostFocus"/>
+                             LostFocus="EmailBox_LostFocus"
+                             ToolTip="Wpisz adres e-mail narciarza. Podpowiedzi pojawią się podczas pisania; Enter uruchamia wyszukiwanie."/>
                     <Popup x:Name="SuggestionsPopup"
                            PlacementTarget="{Binding ElementName=EmailBox}"
                            Placement="Bottom"
@@ -74,7 +77,8 @@
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
                           BorderThickness="0"
-                          SelectionChanged="ReservationsGrid_SelectionChanged">
+                          SelectionChanged="ReservationsGrid_SelectionChanged"
+                          ToolTip="Wybierz rezerwację, aby zobaczyć należące do niej karnety i rozpocząć realizację." >
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Nr rezerwacji" Binding="{Binding ReservationNumber}" Width="170" MinWidth="150"/>
                         <DataGridTextColumn Header="Data" Binding="{Binding ReservationDate, StringFormat=dd.MM.yyyy HH:mm}" Width="135" MinWidth="120"/>
@@ -100,7 +104,8 @@
                                 Click="AcceptReservationBtn_Click"
                                 IsEnabled="False"
                                 Style="{StaticResource SuccessButton}"
-                                Margin="12,0,0,0"/>
+                                Margin="12,0,0,0"
+                                ToolTip="Oznacza wybraną rezerwację jako przyjętą do realizacji. Najpierw wybierz rezerwację z listy."/>
                         <TextBlock x:Name="SelectedReservationText"
                                    VerticalAlignment="Center"
                                    FontSize="13"
@@ -114,7 +119,8 @@
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
                               BorderThickness="0"
-                              SelectionChanged="PassesGrid_SelectionChanged">
+                              SelectionChanged="PassesGrid_SelectionChanged"
+                              ToolTip="Wybierz karnet ze statusem oczekuje_na_odbior, któremu ma zostać przypisana karta RFID.">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="ID karnetu" Binding="{Binding Id}" Width="82" MinWidth="72"/>
                             <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="130" MinWidth="115"/>
@@ -135,11 +141,13 @@
                                 <ColumnDefinition Width="12"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox x:Name="RfidBox" Grid.Column="0"/>
+                            <TextBox x:Name="RfidBox" Grid.Column="0"
+                                     ToolTip="Wpisz lub zeskanuj numer wolnej karty RFID przeznaczonej dla wybranego karnetu."/>
                             <ComboBox x:Name="FreeCardCombo"
                                       Grid.Column="2"
                                       DisplayMemberPath="DisplayName"
-                                      SelectionChanged="FreeCardCombo_SelectionChanged"/>
+                                      SelectionChanged="FreeCardCombo_SelectionChanged"
+                                      ToolTip="Alternatywnie wybierz jedną z kart oznaczonych w systemie jako wolne."/>
                         </Grid>
                         <DockPanel LastChildFill="True">
                             <Button x:Name="IssueCardBtn"
@@ -149,7 +157,8 @@
                                     IsEnabled="False"
                                     Style="{StaticResource PrimaryButton}"
                                     Margin="12,0,0,0"
-                                    MinWidth="132"/>
+                                    MinWidth="132"
+                                    ToolTip="Aktywuje wybrany karnet na podanej karcie. Przycisk jest dostępny po wybraniu oczekującego karnetu."/>
                             <TextBlock x:Name="IssueMsg"
                                        VerticalAlignment="Center"
                                        FontSize="12"

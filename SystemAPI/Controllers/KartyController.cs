@@ -12,6 +12,8 @@ namespace SystemAPI.Controllers;
 [Route("api/karty")]
 public class KartyController(SkiResortDbContext db) : ControllerBase
 {
+    private const string DeletedCardStatus = "usunieta";
+
     // GET /api/karty?status=aktywna&search=A3:F2
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] string? status, [FromQuery] string? search)
@@ -28,8 +30,11 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
                     .ThenInclude(r => r!.User)
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(status))
-            query = query.Where(c => c.Status != null && c.Status.Name == status);
+        var selectedStatus = string.IsNullOrWhiteSpace(status) ? null : status.Trim();
+        if (selectedStatus != null)
+            query = query.Where(c => c.Status != null && c.Status.Name == selectedStatus);
+        else
+            query = query.Where(c => c.Status == null || c.Status.Name != DeletedCardStatus);
 
         if (!string.IsNullOrEmpty(search))
             query = query.Where(c => c.Id.Contains(search));
@@ -110,7 +115,6 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
         var card = await db.Cards
             .Include(c => c.SkiPasses)
                 .ThenInclude(sp => sp.Status)
-            .Include(c => c.GateScans)
             .FirstOrDefaultAsync(c => c.Id == rfid);
 
         if (card == null)
@@ -119,11 +123,17 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
         if (GetActivePass(card) != null)
             return Conflict(new { message = "Nie mozna usunac karty z aktywnym karnetem." });
 
-        db.GateScans.RemoveRange(card.GateScans);
-        foreach (var pass in card.SkiPasses)
-            pass.CardId = null;
+        var deletedStatusId = await db.DictCardStatuses
+            .Where(s => s.Name == DeletedCardStatus)
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync();
+        if (!deletedStatusId.HasValue)
+            return BadRequest(new { message = "Nie znaleziono statusu usunieta w slowniku kart." });
 
-        db.Cards.Remove(card);
+        card.StatusId = deletedStatusId.Value;
+        card.UserId = null;
+        card.DepositPaid = false;
+        card.BlockReason = null;
         await db.SaveChangesAsync();
         return NoContent();
     }

@@ -5,7 +5,8 @@
 INSERT INTO "dict_card_status" (id, name) VALUES
   (1, 'wolna'),
   (2, 'zajeta'),
-  (3, 'zastrzezony');
+  (3, 'zastrzezony'),
+  (4, 'usunieta');
 
 INSERT INTO "dict_pass_status" (id, name) VALUES
   (1, 'aktywny'),

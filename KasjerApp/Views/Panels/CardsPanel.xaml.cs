@@ -139,9 +139,10 @@ public partial class CardsPanel : UserControl
 
     private void UpdateCardButtons()
     {
-        BlockBtn.IsEnabled = _selectedCard != null && _selectedCard.Status != "zastrzezony";
-        UnblockBtn.IsEnabled = _selectedCard != null && _selectedCard.Status == "zastrzezony";
-        ReturnCardBtn.IsEnabled = _selectedCard != null;
+        var isDeleted = _selectedCard?.Status == "usunieta";
+        BlockBtn.IsEnabled = _selectedCard != null && !isDeleted && _selectedCard.Status != "zastrzezony";
+        UnblockBtn.IsEnabled = _selectedCard != null && !isDeleted && _selectedCard.Status == "zastrzezony";
+        ReturnCardBtn.IsEnabled = _selectedCard != null && !isDeleted;
     }
 
     private async void AddCardBtn_Click(object sender, RoutedEventArgs e)
@@ -166,13 +167,13 @@ public partial class CardsPanel : UserControl
         var rfid = selected?.Id ?? AskText("Usun karte RFID", "RFID karty do usuniecia:");
         if (string.IsNullOrWhiteSpace(rfid)) return;
 
-        if (MessageBox.Show(Window.GetWindow(this), $"Usunac karte {rfid}?", "Usun karte", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+        if (MessageBox.Show(Window.GetWindow(this), $"Oznaczyc karte {rfid} jako usunieta?", "Oznacz karte jako usunieta", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
             return;
 
         try
         {
             await _api.DeleteCardAsync(rfid);
-            ShowMsg($"Karta {rfid} usunieta.", true);
+            ShowMsg($"Karta {rfid} oznaczona jako usunieta.", true);
             await LoadAsync();
         }
         catch (Exception ex)

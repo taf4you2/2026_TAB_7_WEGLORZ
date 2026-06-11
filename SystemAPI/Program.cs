@@ -56,6 +56,7 @@ using (var scope = app.Services.CreateScope())
         );
         INSERT INTO dict_lift_status (name) VALUES ('Otwarty'), ('Zamknięty z powodu warunków'), ('Awaria'), ('Przerwa techniczna') ON CONFLICT DO NOTHING;
         INSERT INTO dict_trail_status (name) VALUES ('Otwarta'), ('Zamknięta') ON CONFLICT DO NOTHING;
+        INSERT INTO dict_card_status (id, name) VALUES (4, 'usunieta') ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
 
         ALTER TABLE lift ADD COLUMN IF NOT EXISTS capacity integer NULL;
         ALTER TABLE lift ADD COLUMN IF NOT EXISTS type text NULL;

@@ -24,6 +24,7 @@
                         <ComboBoxItem Content="wolna"/>
                         <ComboBoxItem Content="zajeta"/>
                         <ComboBoxItem Content="zastrzezony"/>
+                        <ComboBoxItem Content="usunieta"/>
                     </ComboBox>
                     <Button Content="Szukaj"
                             Click="SearchBtn_Click"
@@ -37,7 +38,7 @@
                             Click="AddCardBtn_Click"
                             Style="{StaticResource SuccessButton}"
                             Margin="0,0,8,8"/>
-                    <Button Content="Usuń kartę"
+                    <Button Content="Oznacz usuniętą"
                             Click="DeleteCardBtn_Click"
                             Style="{StaticResource DangerButton}"
                             Margin="0,0,8,8"/>

@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instrukcja obsługi bramki</title>
+    <style>
+        :root {
+            --navy: #0f2942;
+            --blue: #2563eb;
+            --ice: #eaf4ff;
+            --green: #16865c;
+            --red: #c73737;
+            --amber: #a96100;
+            --ink: #172033;
+            --muted: #526174;
+            --line: #cbd5e1;
+        }
+
+        * { box-sizing: border-box; }
+
+        @page {
+            size: A4;
+            margin: 16mm 15mm 17mm;
+        }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            background: white;
+            font: 10.5pt/1.48 "Segoe UI", Arial, sans-serif;
+        }
+
+        h1, h2, h3 { color: var(--navy); page-break-after: avoid; }
+        h1 { font-size: 27pt; line-height: 1.1; }
+        h2 {
+            margin: 22px 0 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #dbeafe;
+            font-size: 18pt;
+        }
+        h3 { margin: 16px 0 7px; font-size: 12.5pt; }
+        p { margin: 7px 0; }
+        ul, ol { margin: 7px 0 10px 22px; padding: 0; }
+        li { margin: 4px 0; }
+        code { font-family: Consolas, "Courier New", monospace; }
+
+        .cover {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 255mm;
+            padding: 22mm 14mm 14mm;
+            color: white;
+            background:
+                radial-gradient(circle at 82% 12%, rgba(96, 165, 250, 0.62), transparent 28%),
+                linear-gradient(145deg, #07192a, #143c61 62%, #2563eb);
+            page-break-after: always;
+        }
+
+        .cover h1 { max-width: 145mm; color: white; font-size: 34pt; }
+        .cover .lead { max-width: 135mm; color: #dbeafe; font-size: 15pt; }
+        .cover-badge {
+            display: inline-block;
+            align-self: flex-start;
+            padding: 7px 12px;
+            border: 1px solid rgba(255,255,255,.4);
+            border-radius: 999px;
+            background: rgba(255,255,255,.1);
+            font-size: 9pt;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .cover-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255,255,255,.25);
+            color: #dbeafe;
+            font-size: 9.5pt;
+        }
+
+        .toc {
+            page-break-after: always;
+        }
+        .toc ol { columns: 2; column-gap: 14mm; }
+        .toc li { break-inside: avoid; margin-bottom: 7px; }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 13px 0;
+        }
+        .summary div {
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+        .summary strong { display: block; color: var(--navy); }
+        .summary span { color: var(--muted); font-size: 9pt; }
+
+        .note, .warning, .danger, .success {
+            margin: 11px 0;
+            padding: 10px 12px;
+            border-left: 4px solid var(--blue);
+            background: var(--ice);
+            page-break-inside: avoid;
+        }
+        .warning { border-color: #f59e0b; background: #fff8e8; }
+        .danger { border-color: var(--red); background: #fff0f0; }
+        .success { border-color: var(--green); background: #edfdf6; }
+
+        .console {
+            margin: 10px 0 14px;
+            padding: 13px 15px;
+            border-radius: 8px;
+            color: #d1fae5;
+            background: #07131f;
+            box-shadow: inset 0 0 0 1px #243b53;
+            font: 9.2pt/1.5 Consolas, "Courier New", monospace;
+            white-space: pre-wrap;
+            page-break-inside: avoid;
+        }
+        .console .ok { color: #6ee7b7; font-weight: 700; }
+        .console .bad { color: #fca5a5; font-weight: 700; }
+        .console .warn { color: #fcd34d; }
+
+        table {
+            width: 100%;
+            margin: 10px 0 14px;
+            border-collapse: collapse;
+            page-break-inside: avoid;
+        }
+        th, td {
+            padding: 7px 8px;
+            border: 1px solid var(--line);
+            vertical-align: top;
+            text-align: left;
+        }
+        th { color: var(--navy); background: #eff6ff; }
+
+        .flow {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto 1fr;
+            align-items: center;
+            gap: 7px;
+            margin: 13px 0;
+            page-break-inside: avoid;
+        }
+        .flow div {
+            min-height: 52px;
+            padding: 8px;
+            border: 1px solid #bfdbfe;
+            border-radius: 7px;
+            background: #eff6ff;
+            text-align: center;
+        }
+        .flow b { color: var(--blue); font-size: 14pt; }
+
+        .page-break { page-break-before: always; }
+        .keep { page-break-inside: avoid; }
+
+        .quick {
+            padding: 14px;
+            border: 3px solid var(--navy);
+            border-radius: 10px;
+            page-break-before: always;
+        }
+        .quick h2 { margin-top: 0; }
+        .quick-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .quick-card {
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+        }
+        .quick-card strong { display: block; margin-bottom: 4px; color: var(--navy); }
+
+        footer {
+            margin-top: 24px;
+            padding-top: 8px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 8pt;
+        }
+    </style>
+</head>
+<body>
+    <section class="cover">
+        <div>
+            <span class="cover-badge">System sprzedaży biletów narciarskich</span>
+            <h1>Instrukcja obsługi programu Bramka</h1>
+            <p class="lead">Weryfikacja kart RFID, praca online i offline, synchronizacja oraz postępowanie w sytuacjach awaryjnych.</p>
+        </div>
+        <div class="cover-meta">
+            <div><strong>Wersja dokumentu</strong><br>1.0</div>
+            <div><strong>Data wygenerowania</strong><br><span id="generated-date">—</span></div>
+            <div><strong>Program</strong><br><code>Bramka</code> / .NET 10</div>
+            <div><strong>Domyślna bramka</strong><br><code>GateId = 1</code></div>
+        </div>
+    </section>
+
+    <section class="toc">
+        <h1>Spis treści</h1>
+        <ol>
+            <li>Przeznaczenie programu</li>
+            <li>Wymagania i konfiguracja</li>
+            <li>Uruchomienie</li>
+            <li>Standardowa obsługa karty</li>
+            <li>Interpretacja komunikatów</li>
+            <li>Praca w trybie online</li>
+            <li>Praca w trybie offline</li>
+            <li>Synchronizacja danych</li>
+            <li>Lokalna baza SQLite</li>
+            <li>Zatrzymanie i ponowne uruchomienie</li>
+            <li>Rozwiązywanie problemów</li>
+            <li>Skrócona instrukcja operatora</li>
+        </ol>
+        <div class="note">
+            <strong>Dla operatora:</strong> najważniejsze czynności znajdują się także na ostatniej stronie w formie skróconej instrukcji.
+        </div>
+    </section>
+
+    <main>
+        <h2>1. Przeznaczenie programu</h2>
+        <p>Program <code>Bramka</code> służy do rejestrowania odbić kart RFID przy wejściu na wyciąg i do wyświetlania decyzji o dostępie. W normalnym trybie wysyła identyfikator karty oraz numer bramki do <code>BramkaAPI</code>.</p>
+        <p>Jeżeli połączenie z serwerem jest niedostępne, program korzysta z lokalnego cache aktywnych kart i zapisuje odbicie w lokalnej bazie. Po odzyskaniu połączenia zaległe odbicia są wysyłane automatycznie.</p>
+
+        <div class="summary">
+            <div><strong>Online</strong><span>Decyzja serwera i natychmiastowy zapis odbicia.</span></div>
+            <div><strong>Offline</strong><span>Decyzja na podstawie lokalnego cache kart.</span></div>
+            <div><strong>Synchronizacja</strong><span>Automatyczna próba co około 5 sekund.</span></div>
+        </div>
+
+        <h2>2. Wymagania i konfiguracja</h2>
+        <h3>2.1. Wymagane elementy</h3>
+        <ul>
+            <li>.NET 10 Runtime lub SDK.</li>
+            <li>Uruchomione <code>BramkaAPI</code> pod skonfigurowanym adresem.</li>
+            <li>Dostęp do zapisu w katalogu programu — potrzebny dla pliku <code>bramka_lokalna.db</code>.</li>
+            <li>Poprawny identyfikator bramki istniejący w centralnej bazie danych.</li>
+        </ul>
+
+        <h3>2.2. Parametry w programie</h3>
+        <table>
+            <thead><tr><th>Parametr</th><th>Aktualna wartość</th><th>Znaczenie</th></tr></thead>
+            <tbody>
+                <tr><td><code>BramkaApiBaseUrl</code></td><td><code>http://localhost:49226</code></td><td>Adres usługi BramkaAPI.</td></tr>
+                <tr><td><code>GateId</code></td><td><code>1</code></td><td>Identyfikator fizycznej bramki używany przy każdym odbiciu.</td></tr>
+                <tr><td>Plik SQLite</td><td><code>bramka_lokalna.db</code></td><td>Cache kart i kolejka odbić wykonanych offline.</td></tr>
+            </tbody>
+        </table>
+
+        <div class="danger">
+            <strong>Ważne:</strong> każda fizyczna bramka powinna mieć własny, poprawny <code>GateId</code>. Skopiowanie programu bez zmiany tego parametru spowoduje przypisanie odbić do niewłaściwej lokalizacji.
+        </div>
+
+        <h2>3. Uruchomienie</h2>
+        <ol>
+            <li>Uruchom PostgreSQL oraz <code>BramkaAPI</code>.</li>
+            <li>Przejdź do katalogu rozwiązania.</li>
+            <li>Uruchom polecenie <code>dotnet run --project Bramka</code> albo plik wynikowy aplikacji.</li>
+            <li>Poczekaj na pojawienie się nagłówka i prośby o identyfikator karty.</li>
+        </ol>
+
+        <div class="console">=== BRAMKA 1 | 2026-06-18 10:24:17 ===
+
+Podaj ID karty do sprawdzenia: _</div>
+
+        <p>Podczas startu program tworzy lokalną bazę, próbuje pobrać aktywne karty i uruchamia dwa procesy w tle: odświeżanie cache oraz wysyłkę zaległych odbić.</p>
+
+        <h2>4. Standardowa obsługa karty</h2>
+        <ol>
+            <li>Przyłóż kartę do czytnika lub wpisz jej identyfikator.</li>
+            <li>Naciśnij <strong>Enter</strong>.</li>
+            <li>Poczekaj na komunikat o decyzji.</li>
+            <li>Po około 5 sekundach program wróci do ekranu oczekiwania. Dowolny klawisz może skrócić oczekiwanie.</li>
+        </ol>
+
+        <div class="flow">
+            <div>Odczyt RFID</div><b>→</b><div>Weryfikacja API lub cache</div><b>→</b><div>Decyzja i zapis odbicia</div>
+        </div>
+
+        <div class="warning">
+            Nie wpisuj spacji przed ani po numerze karty. Jeśli czytnik działa jak klawiatura, powinien wysłać dokładny identyfikator i klawisz Enter.
+        </div>
+
+        <h2>5. Interpretacja komunikatów</h2>
+        <table>
+            <thead><tr><th>Komunikat</th><th>Znaczenie</th><th>Działanie operatora</th></tr></thead>
+            <tbody>
+                <tr><td><strong>ZAPRASZAMY [serwer]</strong></td><td>Serwer potwierdził ważność karty.</td><td>Przepuścić użytkownika.</td></tr>
+                <tr><td><strong>ZAPRASZAMY [lokalnie]</strong></td><td>Brak połączenia, ale karta była aktywna w cache.</td><td>Przepuścić użytkownika; odbicie zostanie zsynchronizowane.</td></tr>
+                <tr><td><strong>ODMOWA DOSTĘPU</strong></td><td>Karta nie ma ważnego uprawnienia albo jest zablokowana.</td><td>Nie przepuszczać; skierować użytkownika do kasy lub obsługi.</td></tr>
+                <tr><td><strong>Błąd połączenia z API</strong></td><td>Serwer nie odpowiada lub sieć jest niedostępna.</td><td>Sprawdzić sieć i status BramkaAPI.</td></tr>
+                <tr><td><strong>Zapisano odbicie lokalnie</strong></td><td>Odbicie czeka w lokalnej kolejce.</td><td>Nie usuwać pliku SQLite; poczekać na synchronizację.</td></tr>
+                <tr><td><strong>Nieoczekiwany błąd serwera</strong></td><td>API zwróciło odpowiedź inną niż oczekiwana.</td><td>Zanotować godzinę i kod, zgłosić administratorowi.</td></tr>
+            </tbody>
+        </table>
+
+        <h2 class="page-break">6. Praca w trybie online</h2>
+        <p>W trybie online program wysyła żądanie <code>POST /api/bramka/Scan</code> z numerem karty i <code>GateId</code>. Serwer weryfikuje karnet, zapisuje odbicie i zwraca decyzję.</p>
+
+        <h3>6.1. Dostęp przyznany</h3>
+        <div class="console">Sprawdzanie karty...
+[Serwer API] Odbicie zarejestrowane w bazie danych.
+Karta ma ważny karnet.
+
+<span class="ok">&gt;&gt;&gt; ZAPRASZAMY [serwer] &lt;&lt;&lt;</span></div>
+
+        <h3>6.2. Dostęp odrzucony</h3>
+        <div class="console">Sprawdzanie karty...
+[Serwer API] Odbicie zarejestrowane w bazie danych.
+Karnet jest zablokowany.
+
+<span class="bad">&gt;&gt;&gt; ODMOWA DOSTĘPU &lt;&lt;&lt;</span></div>
+
+        <div class="note">
+            Każda decyzja serwera — również odmowa — powinna zostać zapisana jako odbicie i być widoczna w raportach administratora.
+        </div>
+
+        <h2>7. Praca w trybie offline</h2>
+        <p>Gdy wywołanie API nie powiedzie się, program sprawdza kartę w lokalnej tabeli <code>KartyLokalne</code>. Odbicie trafia do tabeli <code>OdbiciaLokalne</code> i czeka na wysłanie.</p>
+
+        <h3>7.1. Karta znana i aktywna w cache</h3>
+        <div class="console"><span class="warn">Błąd połączenia z serwerem API.</span>
+[Offline] Zapisano odbicie lokalnie.
+Zostanie wysłane po odzyskaniu połączenia.
+
+<span class="ok">&gt;&gt;&gt; ZAPRASZAMY [lokalnie] &lt;&lt;&lt;</span></div>
+
+        <h3>7.2. Karta nieznana lokalnie</h3>
+        <div class="console"><span class="warn">[Offline] Brak połączenia z API i karta nie jest w lokalnym cache.</span>
+Zapisano odmowę lokalnie do późniejszej synchronizacji.
+
+<span class="bad">&gt;&gt;&gt; ODMOWA DOSTĘPU &lt;&lt;&lt;</span></div>
+
+        <div class="danger">
+            W trybie offline nowa karta, której nie ma w cache, musi zostać odrzucona. Operator nie powinien ręcznie omijać tej decyzji.
+        </div>
+
+        <h2>8. Synchronizacja danych</h2>
+        <h3>8.1. Cache aktywnych kart</h3>
+        <p>Program cyklicznie pobiera dane z <code>/api/bramka/aktywne-karty</code>. Rekordy lokalne są dodawane lub aktualizowane, a karty po dacie ważności są usuwane z cache.</p>
+
+        <h3>8.2. Zaległe odbicia</h3>
+        <p>Odbicia wykonane offline są wysyłane do <code>/api/GateScanSync</code>. Dopiero po poprawnej odpowiedzi serwera są usuwane z lokalnej kolejki.</p>
+
+        <div class="success">
+            Po odzyskaniu połączenia operator nie musi uruchamiać ręcznej synchronizacji. Program próbuje wysłać dane automatycznie.
+        </div>
+
+        <h2>9. Lokalna baza SQLite</h2>
+        <p>Plik <code>bramka_lokalna.db</code> powstaje w katalogu roboczym programu i zawiera:</p>
+        <table>
+            <thead><tr><th>Tabela</th><th>Zawartość</th><th>Czy można usunąć podczas pracy?</th></tr></thead>
+            <tbody>
+                <tr><td><code>KartyLokalne</code></td><td>Cache kart używany podczas awarii sieci.</td><td>Nie.</td></tr>
+                <tr><td><code>OdbiciaLokalne</code></td><td>Odbicia oczekujące na synchronizację.</td><td>Nie — grozi utratą danych.</td></tr>
+            </tbody>
+        </table>
+        <p>Kopię pliku można wykonać po zamknięciu programu. Nie należy edytować bazy ręcznie bez wiedzy technicznej.</p>
+
+        <h2>10. Zatrzymanie i ponowne uruchomienie</h2>
+        <ol>
+            <li>Jeżeli to możliwe, upewnij się, że połączenie z API działa, aby zaległe odbicia zostały wysłane.</li>
+            <li>Zamknij program kombinacją <strong>Ctrl+C</strong> albo zamknij okno konsoli.</li>
+            <li>Nie usuwaj pliku <code>bramka_lokalna.db</code>.</li>
+            <li>Po ponownym uruchomieniu poczekaj na odświeżenie cache i automatyczną synchronizację.</li>
+        </ol>
+
+        <h2 class="page-break">11. Rozwiązywanie problemów</h2>
+        <table>
+            <thead><tr><th>Problem</th><th>Możliwa przyczyna</th><th>Postępowanie</th></tr></thead>
+            <tbody>
+                <tr><td>Każda karta jest odrzucana</td><td>API nie działa i cache jest pusty albo nieaktualny.</td><td>Sprawdź BramkaAPI, sieć i czas ostatniej synchronizacji.</td></tr>
+                <tr><td>Odbicia pojawiają się przy złym wyciągu</td><td>Niepoprawny <code>GateId</code>.</td><td>Zatrzymaj program, popraw konfigurację i uruchom ponownie.</td></tr>
+                <tr><td>Brak komunikacji z serwerem</td><td>Zły adres, port, firewall lub wyłączona usługa.</td><td>Sprawdź <code>http://localhost:49226</code> i uruchom BramkaAPI.</td></tr>
+                <tr><td>Zaległe odbicia nie znikają</td><td>Endpoint synchronizacji zwraca błąd.</td><td>Nie usuwaj bazy; sprawdź logi BramkaAPI i centralną bazę.</td></tr>
+                <tr><td>Błąd dostępu do SQLite</td><td>Brak uprawnień, blokada pliku lub uszkodzenie.</td><td>Zamknij drugą instancję programu, sprawdź prawa zapisu i wykonaj kopię pliku.</td></tr>
+                <tr><td>Data lub godzina odbicia jest błędna</td><td>Niepoprawny zegar systemowy.</td><td>Popraw czas i strefę czasową komputera bramki.</td></tr>
+                <tr><td>Czytnik nie zatwierdza numeru</td><td>Brak wysłania klawisza Enter.</td><td>Skonfiguruj czytnik z sufiksem Enter albo naciśnij Enter ręcznie.</td></tr>
+            </tbody>
+        </table>
+
+        <div class="warning keep">
+            Przy zgłoszeniu awarii podaj: numer bramki, godzinę zdarzenia, numer karty testowej, dokładny komunikat oraz informację, czy inne bramki działają.
+        </div>
+
+        <section class="quick">
+            <h2>12. Skrócona instrukcja operatora</h2>
+            <div class="quick-grid">
+                <div class="quick-card"><strong>1. Odczytaj kartę</strong>Przyłóż kartę lub wpisz RFID i naciśnij Enter.</div>
+                <div class="quick-card"><strong>2. Zielony komunikat</strong><em>ZAPRASZAMY</em> — przepuść użytkownika.</div>
+                <div class="quick-card"><strong>3. Czerwony komunikat</strong><em>ODMOWA DOSTĘPU</em> — skieruj użytkownika do obsługi.</div>
+                <div class="quick-card"><strong>4. Tryb offline</strong>Program może przepuścić tylko kartę znaną jako aktywna w lokalnym cache.</div>
+                <div class="quick-card"><strong>5. Nie usuwaj bazy</strong><code>bramka_lokalna.db</code> może zawierać niewysłane odbicia.</div>
+                <div class="quick-card"><strong>6. Awaria</strong>Zanotuj godzinę, komunikat i numer bramki; sprawdź API i sieć.</div>
+            </div>
+            <div class="danger"><strong>Nigdy nie zmieniaj ręcznie decyzji programu ani zawartości lokalnej bazy podczas pracy bramki.</strong></div>
+        </section>
+
+        <footer>
+            Instrukcja odpowiada implementacji <code>Bramka/Program.cs</code> z konfiguracją <code>GateId = 1</code>.
+        </footer>
+    </main>
+
+    <script>
+        document.getElementById('generated-date').textContent =
+            new Intl.DateTimeFormat('pl-PL', { dateStyle: 'long' }).format(new Date());
+    </script>
+</body>
+</html>

@@ -6,6 +6,7 @@ import { loadCards, openCardModal, closeCardModal, handleCardSubmit, blockCard, 
 import { loadSales } from './sales.js?v=soft-delete-1';
 import { loadUsers, openUserModal, closeUserModal, handleUserSubmit, openHistoryModal, closeHistoryModal } from './users.js?v=soft-delete-1';
 import { loadShiftReports, loadAdminReportHistory, generateGeneralReport, loadThroughputReport, setSalesRange, loadAdvancedReport, setAdvancedRange } from './reports.js?v=soft-delete-1';
+import { initAdminHelp, setAdminHelpSection } from './admin-help.js?v=1';
 
 // Nawigacja
 function showSection(id, el) {
@@ -21,6 +22,7 @@ function showSection(id, el) {
     if (id === 'sales') loadSales();
     if (id === 'reports') loadShiftReports();
     if (id === 'staff' || id === 'customers') loadUsers();
+    setAdminHelpSection(id);
 }
 
 function showReportTab(tab) {
@@ -69,12 +71,22 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('tariff-form').onsubmit = handleTariffSubmit;
     document.getElementById('card-form').onsubmit = handleCardSubmit;
     setDefaultReportDates();
+    initAdminHelp();
 
     // Obsluga szukania kart na zywo
     const cardSearch = document.getElementById('card-search');
     if (cardSearch) {
         cardSearch.addEventListener('input', () => loadCards());
     }
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                item.click();
+            }
+        });
+    });
 });
 
 // Ekspozycja do okna (dla onclick w HTML)

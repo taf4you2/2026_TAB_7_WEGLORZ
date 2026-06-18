@@ -1,0 +1,288 @@
+.admin-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-help-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.admin-help-toggle input {
+    accent-color: var(--primary);
+}
+
+.admin-help-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-help-button::before {
+    content: "?";
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    font-size: 12px;
+}
+
+[data-help-id].admin-help-target {
+    outline: 1px dashed rgba(59, 130, 246, 0.48);
+    outline-offset: 3px;
+}
+
+.admin-help-tooltip {
+    position: fixed;
+    z-index: 5000;
+    width: min(320px, calc(100vw - 24px));
+    padding: 12px 14px;
+    border: 1px solid rgba(96, 165, 250, 0.55);
+    border-radius: 10px;
+    background: #172033;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+    color: var(--text-light);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: none;
+}
+
+.admin-help-tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.admin-help-tooltip strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #bfdbfe;
+    font-size: 13px;
+}
+
+.admin-help-tooltip span {
+    display: block;
+    color: #dbeafe;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.admin-help-tooltip small {
+    display: block;
+    margin-top: 7px;
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+.admin-help-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 3900;
+    background: rgba(2, 6, 23, 0.48);
+    opacity: 0;
+    pointer-events: none;
+    transition: none;
+}
+
+.admin-help-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.admin-help-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 4000;
+    display: flex;
+    flex-direction: column;
+    width: min(560px, 100vw);
+    height: 100vh;
+    border-left: 1px solid var(--border);
+    background: #111b2e;
+    box-shadow: -24px 0 60px rgba(0, 0, 0, 0.42);
+    transform: translateX(102%);
+    transition: none;
+}
+
+.admin-help-panel.open {
+    transform: translateX(0);
+}
+
+.admin-help-panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.admin-help-panel-header h2 {
+    margin: 0 0 5px;
+    font-size: 20px;
+}
+
+.admin-help-panel-header p {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.admin-help-close {
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-light);
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.admin-help-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.68);
+}
+
+.admin-help-toolbar .btn {
+    font-size: 12px;
+}
+
+.admin-help-toolbar select {
+    min-width: 150px;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-dark);
+    color: var(--text-light);
+    font: inherit;
+    font-size: 12px;
+}
+
+.admin-help-toolbar .active {
+    border-color: var(--primary);
+    color: #bfdbfe;
+    background: rgba(59, 130, 246, 0.12);
+}
+
+.admin-help-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+.admin-help-section-intro {
+    margin-bottom: 20px;
+    padding: 16px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 10px;
+    background: rgba(59, 130, 246, 0.08);
+    color: #dbeafe;
+    line-height: 1.55;
+}
+
+.admin-help-entry {
+    margin-bottom: 16px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.admin-help-entry h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+.admin-help-entry p,
+.admin-help-entry li {
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.admin-help-entry ol,
+.admin-help-entry ul {
+    margin: 10px 0 0 20px;
+}
+
+.admin-help-warning {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--warning);
+    background: rgba(245, 158, 11, 0.08);
+    color: #fde68a !important;
+}
+
+.admin-help-edit-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.admin-help-edit-grid label {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.admin-help-edit-grid input,
+.admin-help-edit-grid textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-dark);
+    color: var(--text-light);
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.admin-help-edit-grid textarea {
+    min-height: 88px;
+    resize: vertical;
+}
+
+.admin-help-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.admin-help-empty {
+    padding: 30px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+@media (max-width: 760px) {
+    .admin-header-actions { gap: 6px; }
+    .admin-help-toggle span { display: none; }
+    .admin-help-button { padding: 7px 10px; }
+    .admin-help-button .label { display: none; }
+    .admin-help-toolbar select { width: 100%; }
+}
+
+@media print {
+    .admin-help-panel,
+    .admin-help-backdrop,
+    .admin-help-tooltip,
+    .admin-header-actions {
+        display: none !important;
+    }
+}

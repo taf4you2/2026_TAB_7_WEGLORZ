@@ -1,5 +1,9 @@
 # Plan wykonania instrukcji obsługi
 
+> Status: pierwsza wersja wdrożona. Panel administratora korzysta z edytowalnego
+> JSON, ma tooltipy, panel pomocy i eksport treści. Instrukcja bramki jest
+> generowana do PDF ze źródła HTML.
+
 ## 1. Cel
 
 Przygotować dwie instrukcje:

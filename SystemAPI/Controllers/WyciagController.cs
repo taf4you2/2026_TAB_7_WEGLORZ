@@ -22,13 +22,19 @@ public class WyciagController(SkiResortDbContext db, IHubContext<InfrastructureH
         var today = (int)DateTime.UtcNow.DayOfWeek; // 0=Sunday … 6=Saturday
         var now = DateTime.UtcNow.TimeOfDay;
 
-        var lifts = await db.Lifts
+        var query = db.Lifts
             .Include(l => l.Schedules)
             .Include(l => l.LiftTrails)
                 .ThenInclude(lt => lt.Trail)
                     .ThenInclude(t => t!.Difficulty)
             .Include(l => l.Gates)
             .Include(l => l.Status)
+            .AsQueryable();
+
+        if (!User.IsInRole("admin"))
+            query = query.Where(l => l.IsActive == true || l.IsActive == null);
+
+        var lifts = await query
             .OrderBy(l => l.Name)
             .ToListAsync();
 
@@ -40,7 +46,9 @@ public class WyciagController(SkiResortDbContext db, IHubContext<InfrastructureH
 
             // Status na podstawie słownika, a jeśli brak, to z rozkładu dnia
             string status;
-            if (l.Status != null)
+            if (l.IsActive == false)
+                status = "nieaktywny";
+            else if (l.Status != null)
                 status = l.Status.Name;
             else if (opens == null || closes == null)
                 status = "nieczynny";
@@ -51,7 +59,9 @@ public class WyciagController(SkiResortDbContext db, IHubContext<InfrastructureH
             else
                 status = "czynny";
 
-            var trails = l.LiftTrails.Select(lt => new TrailSummaryDto(
+            var trails = l.LiftTrails
+                .Where(lt => lt.Trail == null || lt.Trail.IsActive == true || lt.Trail.IsActive == null)
+                .Select(lt => new TrailSummaryDto(
                 lt.Trail?.Id ?? 0,
                 lt.Trail?.Name ?? "",
                 lt.Trail?.Difficulty?.Name
@@ -65,7 +75,8 @@ public class WyciagController(SkiResortDbContext db, IHubContext<InfrastructureH
                 l.Type,
                 opens,
                 closes,
-                trails
+                trails,
+                l.IsActive ?? true
             );
         });
 
@@ -74,13 +85,14 @@ public class WyciagController(SkiResortDbContext db, IHubContext<InfrastructureH
 
     // POST /api/wyciagi
     [HttpPost]
-    [Authorize(Roles = "admin,kasjer")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Create([FromBody] LiftModifyRequest req)
     {
-        var lift = new Lift { 
+        var lift = new Lift {
             Name = req.Name,
             Capacity = req.Capacity,
-            Type = req.Type 
+            Type = req.Type,
+            IsActive = req.Status != "zamkniety" && req.Status != "awaria"
         };
         db.Lifts.Add(lift);
         await db.SaveChangesAsync();
@@ -103,7 +115,7 @@ public class WyciagController(SkiResortDbContext db, IHubContext<InfrastructureH
 
     // PUT /api/wyciagi/{id}
     [HttpPut("{id}")]
-    [Authorize(Roles = "admin,kasjer")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Update(int id, [FromBody] LiftModifyRequest req)
     {
         var lift = await db.Lifts.Include(l => l.Schedules).FirstOrDefaultAsync(l => l.Id == id);
@@ -112,6 +124,7 @@ public class WyciagController(SkiResortDbContext db, IHubContext<InfrastructureH
         lift.Name = req.Name;
         lift.Capacity = req.Capacity;
         lift.Type = req.Type;
+        lift.IsActive = req.Status != "zamkniety" && req.Status != "awaria";
 
         // Aktualizuj lub dodaj rozkład dla wszystkich dni
         for (int i = 0; i <= 6; i++)
@@ -138,18 +151,17 @@ public class WyciagController(SkiResortDbContext db, IHubContext<InfrastructureH
         return Ok();
     }
 
-    // DELETE /api/wyciagi/{id}
+    // DELETE /api/wyciagi/{id} - dezaktywuje wyciag i jego bramki bez usuwania historii.
     [HttpDelete("{id}")]
-    [Authorize(Roles = "admin,kasjer")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Delete(int id)
     {
         var lift = await db.Lifts.Include(l => l.Schedules).Include(l => l.Gates).Include(l => l.LiftTrails).FirstOrDefaultAsync(l => l.Id == id);
         if (lift == null) return NotFound();
 
-        db.LiftSchedules.RemoveRange(lift.Schedules);
-        db.Gates.RemoveRange(lift.Gates);
-        db.LiftTrails.RemoveRange(lift.LiftTrails);
-        db.Lifts.Remove(lift);
+        lift.IsActive = false;
+        foreach (var gate in lift.Gates)
+            gate.IsActive = false;
         await db.SaveChangesAsync();
 
         return NoContent();
@@ -239,7 +251,8 @@ public record LiftDto(
     string? Type,
     TimeSpan? OpensAt,
     TimeSpan? ClosesAt,
-    TrailSummaryDto[] Trails
+    TrailSummaryDto[] Trails,
+    bool IsActive
 );
 
 public record TrailSummaryDto(int Id, string Name, string? Difficulty);

@@ -1,9 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using SystemStacjiNarciarskiejDLL;
+using BramkaAPI.Services;
+
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddHttpClient();
+// builder.Services.AddHostedService<SyncBackgroundService>(); // Wyłączone w środowisku współdzielonej bazy danych
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var dbPassword = builder.Configuration["DbPassword"];

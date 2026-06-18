@@ -40,7 +40,8 @@ public class BramkiController(SkiResortDbContext db) : ControllerBase
     public async Task<IActionResult> Create([FromBody] GateModifyRequest req)
     {
         var lift = await db.Lifts.FindAsync(req.LiftId);
-        if (lift == null) return BadRequest("Podany wyciąg nie istnieje.");
+        if (lift == null) return BadRequest("Podany wyciag nie istnieje.");
+        if (lift.IsActive == false) return BadRequest("Podany wyciag jest nieaktywny.");
 
         var gate = new Gate
         {
@@ -64,7 +65,8 @@ public class BramkiController(SkiResortDbContext db) : ControllerBase
         if (gate == null) return NotFound();
 
         var lift = await db.Lifts.FindAsync(req.LiftId);
-        if (lift == null) return BadRequest("Podany wyciąg nie istnieje.");
+        if (lift == null) return BadRequest("Podany wyciag nie istnieje.");
+        if (lift.IsActive == false) return BadRequest("Podany wyciag jest nieaktywny.");
 
         gate.Name = req.Name;
         gate.LiftId = req.LiftId;
@@ -75,20 +77,15 @@ public class BramkiController(SkiResortDbContext db) : ControllerBase
         return Ok();
     }
 
-    // DELETE /api/bramki/{id}
+    // DELETE /api/bramki/{id} - dezaktywacja bez usuwania historii skanowan.
     [HttpDelete("{id}")]
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> Delete(int id)
     {
-        var gate = await db.Gates.Include(g => g.GateScans).FirstOrDefaultAsync(g => g.Id == id);
+        var gate = await db.Gates.FirstOrDefaultAsync(g => g.Id == id);
         if (gate == null) return NotFound();
 
-        if (gate.GateScans.Any())
-        {
-            return BadRequest("Nie można usunąć bramki, która ma przypisane skanowania kart.");
-        }
-
-        db.Gates.Remove(gate);
+        gate.IsActive = false;
         await db.SaveChangesAsync();
 
         return NoContent();

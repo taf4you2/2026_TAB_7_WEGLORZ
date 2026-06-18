@@ -1,0 +1,388 @@
+{
+  "version": 1,
+  "title": "Instrukcja panelu administratora",
+  "intro": "Podpowiedzi opisują działanie panelu, warunki wykonania operacji i skutki zmian. Treść można edytować w panelu pomocy, zapisać lokalnie oraz wyeksportować do JSON jako materiał do instrukcji PDF.",
+  "sections": {
+    "dashboard": { "title": "Dashboard", "description": "Szybki podgląd sprzedaży, aktywnych karnetów, kart RFID i bieżącego ruchu na stacji." },
+    "infra": { "title": "Infrastruktura", "description": "Zarządzanie wyciągami i przypisanymi do nich bramkami. Dezaktywacja zachowuje historię danych." },
+    "tariffs": { "title": "Cennik i taryfy", "description": "Tworzenie, edycja i dezaktywacja taryf używanych podczas sprzedaży karnetów." },
+    "cards": { "title": "Karty RFID", "description": "Obsługa puli kart: wyszukiwanie, dodawanie, blokowanie, zwrot i dezaktywacja." },
+    "sales": { "title": "Sprzedaż i kasy", "description": "Analiza kanałów sprzedaży oraz kontrola aktywnych zmian kasjerskich." },
+    "reports": { "title": "Raporty zarządcze", "description": "Raporty finansowe i operacyjne z filtrami dat, eksportem CSV i drukowaniem do PDF." },
+    "staff": { "title": "Pracownicy", "description": "Tworzenie kont kasjerów i administratorów oraz zarządzanie ich aktywnością." },
+    "customers": { "title": "Klienci", "description": "Przegląd klientów i ich historii kart, karnetów, rezerwacji, transakcji oraz odbić." },
+    "global": { "title": "Nawigacja i bezpieczeństwo", "description": "Elementy wspólne dla całego panelu administratora." }
+  },
+  "items": [
+    {
+      "id": "nav.dashboard",
+      "section": "global",
+      "title": "Dashboard",
+      "tooltip": "Otwiera podsumowanie bieżącego działania stacji.",
+      "description": "Dashboard jest ekranem startowym. Pokazuje najważniejsze liczby, wykres ruchu, stan kart oraz ostatnie odbicia na bramkach.",
+      "steps": ["Kliknij Dashboard w menu bocznym.", "Sprawdź kafelki podsumowania.", "Przejrzyj ruch godzinowy i Live Activity Feed."],
+      "warnings": [],
+      "pdfOrder": 10
+    },
+    {
+      "id": "nav.infra",
+      "section": "global",
+      "title": "Infrastruktura",
+      "tooltip": "Przechodzi do zarządzania wyciągami i bramkami.",
+      "description": "Sekcja pozwala dodawać i edytować wyciągi oraz przypisane do nich bramki.",
+      "steps": ["Kliknij Infrastruktura.", "Wybierz wyciąg lub bramkę.", "Użyj edycji albo dezaktywacji."],
+      "warnings": ["Dezaktywacja wyciągu dezaktywuje również jego bramki."],
+      "pdfOrder": 20
+    },
+    {
+      "id": "nav.tariffs",
+      "section": "global",
+      "title": "Cennik i taryfy",
+      "tooltip": "Otwiera listę taryf i cen karnetów.",
+      "description": "Tutaj definiuje się ceny, typy i limity taryf dostępnych w sprzedaży.",
+      "steps": ["Kliknij Cennik i Taryfy.", "Dodaj nową taryfę albo edytuj istniejącą.", "Sprawdź status aktywności."],
+      "warnings": [],
+      "pdfOrder": 30
+    },
+    {
+      "id": "nav.cards",
+      "section": "global",
+      "title": "Karty RFID",
+      "tooltip": "Otwiera zarządzanie kartami RFID.",
+      "description": "Sekcja służy do kontroli całej puli fizycznych kart RFID.",
+      "steps": ["Kliknij Karty RFID.", "Wyszukaj kartę po numerze.", "Wybierz właściwą akcję w wierszu karty."],
+      "warnings": ["Przed blokadą lub zwrotem upewnij się, że wybrano właściwy numer RFID."],
+      "pdfOrder": 40
+    },
+    {
+      "id": "nav.sales",
+      "section": "global",
+      "title": "Sprzedaż i kasy",
+      "tooltip": "Pokazuje analizę sprzedaży i aktywne zmiany kasjerskie.",
+      "description": "Widok porównuje kanały sprzedaży, strukturę taryf oraz pracę kasjerów.",
+      "steps": ["Kliknij Sprzedaż i Kasy.", "Porównaj wykresy.", "Sprawdź aktywne zmiany kasjerów."],
+      "warnings": [],
+      "pdfOrder": 50
+    },
+    {
+      "id": "nav.reports",
+      "section": "global",
+      "title": "Raporty",
+      "tooltip": "Otwiera raporty finansowe i operacyjne.",
+      "description": "Raporty można filtrować datami, eksportować do CSV lub drukować do PDF.",
+      "steps": ["Kliknij Raporty.", "Wybierz rodzaj raportu.", "Ustaw zakres i wygeneruj wynik."],
+      "warnings": ["Duży zakres dat może wydłużyć generowanie raportu."],
+      "pdfOrder": 60
+    },
+    {
+      "id": "nav.staff",
+      "section": "global",
+      "title": "Pracownicy",
+      "tooltip": "Otwiera konta kasjerów i administratorów.",
+      "description": "Sekcja umożliwia dodawanie pracowników oraz zmianę ich roli i statusu.",
+      "steps": ["Kliknij Pracownicy.", "Dodaj konto albo wybierz edycję.", "Zapisz rolę i status aktywności."],
+      "warnings": ["Uprawnienia administratora dają dostęp do całego panelu."],
+      "pdfOrder": 70
+    },
+    {
+      "id": "nav.customers",
+      "section": "global",
+      "title": "Klienci",
+      "tooltip": "Otwiera listę klientów i ich historię.",
+      "description": "Widok klienta łączy informacje o kartach, karnetach, rezerwacjach, płatnościach i przejazdach.",
+      "steps": ["Kliknij Klienci.", "Znajdź konto po adresie e-mail.", "Otwórz historię klienta."],
+      "warnings": ["Dane klienta należy przeglądać wyłącznie w uzasadnionym celu służbowym."],
+      "pdfOrder": 80
+    },
+    {
+      "id": "global.help",
+      "section": "global",
+      "title": "Pomoc i edycja instrukcji",
+      "tooltip": "Otwiera instrukcję aktualnej sekcji i narzędzia edycji treści.",
+      "description": "Panel pomocy pokazuje dłuższe opisy i kroki. Tryb edycji zapisuje zmiany w tej przeglądarce. Eksport JSON tworzy plik z pełną, aktualną treścią.",
+      "steps": ["Kliknij Pomoc.", "Włącz Tryb edycji, jeśli chcesz zmienić tekst.", "Zapisz zmiany.", "Kliknij Eksportuj JSON, aby pobrać materiał do PDF."],
+      "warnings": ["Lokalne zmiany nie modyfikują automatycznie pliku w repozytorium. Wyeksportowany JSON należy później zatwierdzić w projekcie."],
+      "pdfOrder": 90
+    },
+    {
+      "id": "dashboard.summary",
+      "section": "dashboard",
+      "title": "Kafelki podsumowania",
+      "tooltip": "Najważniejsze wartości z bieżącego dnia i aktywnej działalności stacji.",
+      "description": "Kafelki pokazują sprzedaż dzienną, aktywne karnety, dzisiejszy przychód oraz liczbę zwrotów oczekujących na obsługę.",
+      "steps": ["Porównaj wartości z poprzednim raportem zmiany.", "W przypadku nietypowej wartości przejdź do odpowiedniej sekcji szczegółowej."],
+      "warnings": ["Dane odświeżają się po ponownym załadowaniu dashboardu."],
+      "pdfOrder": 110
+    },
+    {
+      "id": "dashboard.traffic",
+      "section": "dashboard",
+      "title": "Ruch godzinowy",
+      "tooltip": "Wykres liczby odbić na bramkach w kolejnych godzinach.",
+      "description": "Wykres pomaga rozpoznać godziny największego ruchu i porównać obciążenie stacji w ciągu dnia.",
+      "steps": ["Najedź na punkt wykresu, aby odczytać wartość.", "Zwróć uwagę na nagłe skoki lub spadki."],
+      "warnings": ["Brak odbić może oznaczać brak ruchu albo problem z synchronizacją bramki."],
+      "pdfOrder": 120
+    },
+    {
+      "id": "dashboard.card-statuses",
+      "section": "dashboard",
+      "title": "Statusy kart RFID",
+      "tooltip": "Podsumowanie liczby kart według aktualnego statusu.",
+      "description": "Zestawienie pokazuje, ile kart jest wolnych, zajętych lub zastrzeżonych.",
+      "steps": ["Sprawdź liczbę wolnych kart.", "Jeżeli pula jest mała, przejdź do sekcji Karty RFID."],
+      "warnings": [],
+      "pdfOrder": 130
+    },
+    {
+      "id": "dashboard.occupancy",
+      "section": "dashboard",
+      "title": "Obłożenie wyciągów",
+      "tooltip": "Liczba odbić przy wyciągach z ostatnich 15 minut.",
+      "description": "Bieżące obłożenie pomaga ocenić kolejki i szybko reagować na przeciążenie infrastruktury.",
+      "steps": ["Porównaj wyciągi.", "Przy dużym obciążeniu sprawdź status alternatywnych tras i wyciągów."],
+      "warnings": [],
+      "pdfOrder": 140
+    },
+    {
+      "id": "dashboard.activity",
+      "section": "dashboard",
+      "title": "Live Activity Feed",
+      "tooltip": "Najnowsze decyzje bramek i odbicia kart.",
+      "description": "Lista jest automatycznie odświeżana i pokazuje lokalizację, kartę, czas oraz wynik weryfikacji.",
+      "steps": ["Sprawdź czerwone lub odrzucone zdarzenia.", "W razie powtarzających się odmów przejdź do kart lub infrastruktury."],
+      "warnings": ["Numer RFID jest identyfikatorem karty i nie powinien być publikowany poza systemem."],
+      "pdfOrder": 150
+    },
+    {
+      "id": "infra.add-gate",
+      "section": "infra",
+      "title": "Dodawanie bramki",
+      "tooltip": "Otwiera formularz nowej bramki i przypisania jej do wyciągu.",
+      "description": "Nowa bramka wymaga nazwy, wyciągu oraz określenia aktywności.",
+      "steps": ["Kliknij + Bramka.", "Wpisz nazwę.", "Wybierz wyciąg.", "Zaznacz Aktywna i kliknij Zapisz."],
+      "warnings": ["Błędne przypisanie wyciągu spowoduje raportowanie odbić w niewłaściwej lokalizacji."],
+      "pdfOrder": 210
+    },
+    {
+      "id": "infra.add-lift",
+      "section": "infra",
+      "title": "Dodawanie wyciągu",
+      "tooltip": "Otwiera formularz utworzenia wyciągu i jego godzin pracy.",
+      "description": "Formularz pozwala określić nazwę, status oraz domyślne godziny pracy wyciągu.",
+      "steps": ["Kliknij + Wyciąg.", "Podaj unikalną nazwę.", "Wybierz status.", "Ustaw godziny otwarcia i zamknięcia.", "Kliknij Zapisz."],
+      "warnings": ["Godzina zamknięcia powinna być późniejsza niż godzina otwarcia."],
+      "pdfOrder": 220
+    },
+    {
+      "id": "infra.list",
+      "section": "infra",
+      "title": "Lista infrastruktury",
+      "tooltip": "Wyciągi wraz z ich bramkami, statusami i akcjami.",
+      "description": "Każdy wyciąg zawiera listę przypisanych bramek. Akcje pozwalają edytować albo dezaktywować element.",
+      "steps": ["Znajdź wyciąg.", "Sprawdź status jego bramek.", "Wybierz Edytuj lub Dezaktywuj."],
+      "warnings": ["Dezaktywacja nie usuwa historii, ale zatrzymuje używanie elementu w bieżącej pracy."],
+      "pdfOrder": 230
+    },
+    {
+      "id": "tariffs.add",
+      "section": "tariffs",
+      "title": "Nowa taryfa",
+      "tooltip": "Dodaje nową cenę i wariant karnetu.",
+      "description": "Taryfa określa nazwę, cenę, limit punktów, sezon i typ karnetu.",
+      "steps": ["Kliknij + Nowa taryfa.", "Wprowadź nazwę i cenę.", "Ustaw limit, sezon i typ.", "Kliknij Zapisz."],
+      "warnings": ["Przed zapisem sprawdź cenę i jednostkę limitu. Taryfa może być użyta przez sprzedaż natychmiast po aktywacji."],
+      "pdfOrder": 310
+    },
+    {
+      "id": "tariffs.list",
+      "section": "tariffs",
+      "title": "Lista taryf",
+      "tooltip": "Zestawienie cen, typów, limitów i statusów.",
+      "description": "Lista pokazuje taryfy aktywne i nieaktywne. Edycja zmienia parametry, a dezaktywacja wyłącza dalszą sprzedaż bez kasowania historii.",
+      "steps": ["Znajdź taryfę.", "Sprawdź status.", "Wybierz edycję lub dezaktywację."],
+      "warnings": ["Nie dezaktywuj taryfy używanej w trwającej sprzedaży bez uzgodnienia z kasjerami."],
+      "pdfOrder": 320
+    },
+    {
+      "id": "cards.search",
+      "section": "cards",
+      "title": "Wyszukiwanie RFID",
+      "tooltip": "Filtruje listę kart po wpisanym numerze RFID.",
+      "description": "Wyszukiwanie działa podczas pisania. Można wpisać pełny identyfikator lub jego fragment.",
+      "steps": ["Kliknij pole wyszukiwania.", "Wpisz numer RFID.", "Sprawdź właściciela, karnet i status znalezionej karty."],
+      "warnings": [],
+      "pdfOrder": 410
+    },
+    {
+      "id": "cards.add",
+      "section": "cards",
+      "title": "Dodawanie karty",
+      "tooltip": "Rejestruje nowy identyfikator RFID w puli kart.",
+      "description": "Nowa karta trafia do systemu jako karta dostępna do dalszej obsługi.",
+      "steps": ["Kliknij + Dodaj kartę.", "Wpisz identyfikator dokładnie tak, jak odczytał go czytnik.", "Kliknij Dodaj."],
+      "warnings": ["Identyfikator musi być unikalny. Literówka utworzy nieprawidłowy rekord."],
+      "pdfOrder": 420
+    },
+    {
+      "id": "cards.actions",
+      "section": "cards",
+      "title": "Akcje na karcie",
+      "tooltip": "Blokowanie, odblokowanie, zwrot lub dezaktywacja wybranej karty.",
+      "description": "Blokada uniemożliwia użycie karty. Zwrot oddaje ją do puli i resetuje właściciela oraz kaucję. Dezaktywacja wyłącza kartę z użycia.",
+      "steps": ["Potwierdź numer RFID.", "Wybierz akcję.", "Przeczytaj komunikat potwierdzający.", "Po wykonaniu sprawdź nowy status."],
+      "warnings": ["Zwrot karty może wygasić powiązane aktywne uprawnienia zgodnie z regułami systemu."],
+      "pdfOrder": 430
+    },
+    {
+      "id": "sales.charts",
+      "section": "sales",
+      "title": "Wykresy sprzedaży",
+      "tooltip": "Porównanie kanałów sprzedaży i udziału taryf.",
+      "description": "Pierwszy wykres porównuje sprzedaż kasową i internetową, a drugi pokazuje udział taryf w wartości sprzedaży.",
+      "steps": ["Porównaj kanały.", "Sprawdź dominujące taryfy.", "Użyj raportów, jeśli potrzebujesz dokładnych wartości."],
+      "warnings": [],
+      "pdfOrder": 510
+    },
+    {
+      "id": "sales.shifts",
+      "section": "sales",
+      "title": "Aktywne zmiany",
+      "tooltip": "Lista kasjerów z aktualnie otwartą zmianą.",
+      "description": "Administrator może sprawdzić czas pracy i w razie potrzeby zamknąć pozostawioną zmianę.",
+      "steps": ["Znajdź kasjera.", "Sprawdź godzinę rozpoczęcia.", "Zamknij zmianę tylko po potwierdzeniu stanu kasy."],
+      "warnings": ["Wymuszone zamknięcie zmiany wpływa na raport operacyjny kasjera."],
+      "pdfOrder": 520
+    },
+    {
+      "id": "reports.tabs",
+      "section": "reports",
+      "title": "Rodzaje raportów",
+      "tooltip": "Przełącza między rozliczeniami, sprzedażą, przepustowością, analizą i historią.",
+      "description": "Każda karta raportu ma inny zakres danych i własne filtry.",
+      "steps": ["Wybierz rodzaj raportu.", "Ustaw wymagane daty.", "Wygeneruj lub przejrzyj wynik."],
+      "warnings": [],
+      "pdfOrder": 610
+    },
+    {
+      "id": "reports.sales-range",
+      "section": "reports",
+      "title": "Zakres sprzedaży",
+      "tooltip": "Określa początek i koniec okresu raportu sprzedażowego.",
+      "description": "Przyciski Dziś, 7 dni i 30 dni automatycznie ustawiają daty. Można też wpisać własny zakres.",
+      "steps": ["Wybierz gotowy zakres albo ustaw daty ręcznie.", "Kliknij Generuj.", "Sprawdź podsumowanie przed eksportem."],
+      "warnings": ["Data końcowa nie może być wcześniejsza od początkowej."],
+      "pdfOrder": 620
+    },
+    {
+      "id": "reports.throughput",
+      "section": "reports",
+      "title": "Raport przepustowości",
+      "tooltip": "Analizuje liczbę odbić dla wybranej daty.",
+      "description": "Raport pokazuje wykorzystanie bramek i wyciągów w ciągu dnia.",
+      "steps": ["Wybierz datę.", "Kliknij Analizuj.", "Porównaj godziny i lokalizacje.", "W razie potrzeby wydrukuj raport."],
+      "warnings": ["Niepełne dane mogą oznaczać opóźnioną synchronizację bramki."],
+      "pdfOrder": 630
+    },
+    {
+      "id": "reports.advanced",
+      "section": "reports",
+      "title": "Raport zaawansowany",
+      "tooltip": "Łączy wskaźniki sprzedaży, ruchu i wykorzystania zasobów.",
+      "description": "Raport zaawansowany służy do analizy trendów w wybranym okresie.",
+      "steps": ["Wybierz zakres.", "Kliknij Generuj.", "Przejrzyj wskaźniki i wykresy.", "Eksportuj CSV albo wydrukuj PDF."],
+      "warnings": ["Wynik zależy od kompletności transakcji i odbić w bazie."],
+      "pdfOrder": 640
+    },
+    {
+      "id": "reports.history",
+      "section": "reports",
+      "title": "Historia raportów",
+      "tooltip": "Pokazuje kto, kiedy i z jakimi parametrami generował raport.",
+      "description": "Historia wspiera audyt działań administratorów i pozwala odtworzyć użyte zakresy.",
+      "steps": ["Otwórz Historię raportów.", "Znajdź wpis po dacie lub administratorze.", "Pobierz CSV, jeśli potrzebujesz archiwum."],
+      "warnings": [],
+      "pdfOrder": 650
+    },
+    {
+      "id": "staff.add",
+      "section": "staff",
+      "title": "Nowy pracownik",
+      "tooltip": "Tworzy konto kasjera lub administratora.",
+      "description": "Formularz wymaga loginu, hasła, roli i statusu aktywności.",
+      "steps": ["Kliknij + Nowy pracownik.", "Wpisz login i hasło.", "Wybierz rolę.", "Zaznacz aktywność i zapisz."],
+      "warnings": ["Rolę administratora należy nadawać wyłącznie upoważnionym osobom."],
+      "pdfOrder": 710
+    },
+    {
+      "id": "staff.list",
+      "section": "staff",
+      "title": "Lista pracowników",
+      "tooltip": "Konta pracowników, ich role, status i dostępne akcje.",
+      "description": "Nieaktywne konto nie może się zalogować, ale jego historyczne operacje pozostają w systemie.",
+      "steps": ["Znajdź pracownika.", "Sprawdź rolę i status.", "W razie potrzeby edytuj konto."],
+      "warnings": [],
+      "pdfOrder": 720
+    },
+    {
+      "id": "customers.list",
+      "section": "customers",
+      "title": "Baza klientów",
+      "tooltip": "Lista kont klientów wraz ze statusem i dostępem do historii.",
+      "description": "Historia klienta pokazuje jego karty, karnety, rezerwacje, transakcje i odbicia.",
+      "steps": ["Znajdź adres e-mail.", "Kliknij historię.", "Rozwiń potrzebną część danych."],
+      "warnings": ["Nie udostępniaj danych klienta osobom nieupoważnionym."],
+      "pdfOrder": 810
+    },
+    {
+      "id": "form.lift",
+      "section": "infra",
+      "title": "Formularz wyciągu",
+      "tooltip": "Nazwa, status i godziny pracy tworzonego lub edytowanego wyciągu.",
+      "description": "Zmiany zapisują się po kliknięciu Zapisz. Anuluj zamyka formularz bez wysyłania zmian.",
+      "steps": ["Uzupełnij nazwę.", "Wybierz status.", "Ustaw godziny.", "Kliknij Zapisz."],
+      "warnings": ["Sprawdź godziny przed zapisaniem."],
+      "pdfOrder": 240
+    },
+    {
+      "id": "form.gate",
+      "section": "infra",
+      "title": "Formularz bramki",
+      "tooltip": "Nazwa, przypisany wyciąg i aktywność bramki.",
+      "description": "Przypisanie określa, przy którym wyciągu będą raportowane odbicia.",
+      "steps": ["Wpisz nazwę.", "Wybierz właściwy wyciąg.", "Ustaw aktywność.", "Kliknij Zapisz."],
+      "warnings": ["Zmiana wyciągu wpływa na lokalizację raportowanych odbić."],
+      "pdfOrder": 250
+    },
+    {
+      "id": "form.tariff",
+      "section": "tariffs",
+      "title": "Formularz taryfy",
+      "tooltip": "Parametry ceny i rodzaju karnetu.",
+      "description": "Cena jest podawana w złotych. Limit punktów dotyczy taryf punktowych.",
+      "steps": ["Wpisz nazwę i cenę.", "Ustaw limit, jeśli jest potrzebny.", "Wybierz sezon i typ.", "Kliknij Zapisz."],
+      "warnings": ["Nie używaj ujemnej ceny ani niezgodnego typu karnetu."],
+      "pdfOrder": 330
+    },
+    {
+      "id": "form.card",
+      "section": "cards",
+      "title": "Formularz karty RFID",
+      "tooltip": "Rejestruje dokładny identyfikator fizycznej karty.",
+      "description": "Identyfikator powinien pochodzić bezpośrednio z czytnika lub oznaczenia karty.",
+      "steps": ["Wprowadź RFID.", "Porównaj zapis z kartą.", "Kliknij Dodaj."],
+      "warnings": ["Nie dodawaj tej samej karty drugi raz."],
+      "pdfOrder": 440
+    },
+    {
+      "id": "form.user",
+      "section": "staff",
+      "title": "Formularz pracownika",
+      "tooltip": "Dane logowania, rola i aktywność konta pracownika.",
+      "description": "Podczas edycji hasło może pozostać puste, jeśli nie ma być zmieniane.",
+      "steps": ["Podaj login.", "Ustaw lub pozostaw hasło zgodnie z trybem formularza.", "Wybierz rolę i status.", "Kliknij Zapisz."],
+      "warnings": ["Nie udostępniaj haseł w wiadomościach ani dokumentacji."],
+      "pdfOrder": 730
+    }
+  ]
+}

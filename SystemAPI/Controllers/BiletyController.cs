@@ -28,6 +28,8 @@ public class BiletyController(SkiResortDbContext db) : ControllerBase
         var tariff = await db.Tariffs.FindAsync(req.TariffId);
         if (tariff == null)
             return BadRequest(new { message = "Taryfa nie istnieje." });
+        if (tariff.IsActive == false)
+            return Conflict(new { message = "Taryfa jest nieaktywna." });
 
         // TODO: status "aktywny", status rezerwacji "potwierdzona", typ operacji "sprzedaz_biletu"
         var activeStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "aktywny");

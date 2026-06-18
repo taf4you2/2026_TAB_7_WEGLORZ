@@ -39,6 +39,9 @@ public class Trail
     public int? PlannerId { get; set; }
     public virtual TrailPlanner? Planner { get; set; }
 
+    [Column("is_active")]
+    public bool? IsActive { get; set; }
+
     public virtual ICollection<LiftTrail> LiftTrails { get; set; } = new List<LiftTrail>();
     public virtual ICollection<TrailSchedule> Schedules { get; set; } = new List<TrailSchedule>();
 }

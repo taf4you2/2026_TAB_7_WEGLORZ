@@ -5,7 +5,7 @@ Project documentation lives in `Dokumentacja/`.
 
 ## Project Shape
 
-This repository contains **System Sprzedazy Biletow Narciarskich**, a .NET ski-ticket sales system.
+This repository contains **System Sprzedaży Biletów Narciarskich**, a .NET 10 ski-ticket sales system.
 Documentation and user-facing domain language are mostly Polish; code identifiers are mostly English.
 
 Main modules:
@@ -17,6 +17,37 @@ Main modules:
 - `Bramka` - console client for gate testing.
 - `BazaDanych` - SQL schema, sequences, and test data scripts.
 - `Dokumentacja` - diagrams, use cases, scenarios, and project notes.
+
+Solution file: `TAB.slnx`.
+Primary IDEs: JetBrains Rider (`.idea/`) and Visual Studio (`.vs/`).
+
+## Build and Run
+
+Docker is the primary full-system workflow:
+
+```bash
+docker-compose up --build
+```
+
+This starts PostgreSQL, `SystemAPI`, and `BramkaAPI`. Database schema, sequences,
+and test data are initialized from `BazaDanych/skrypty_inicjacyjne/`.
+
+Local development requires the .NET 10 SDK and PostgreSQL. Local
+`appsettings.json` files are not committed; configure `DefaultConnection` and
+`DbPassword` for `SystemAPI` and `BramkaAPI`.
+
+```bash
+dotnet build TAB.slnx
+dotnet run --project SystemAPI
+dotnet run --project BramkaAPI
+dotnet run --project Bramka
+```
+
+The database schema is managed through SQL scripts, not EF migrations:
+
+- `BazaDanych/skrypty_inicjacyjne/baza_danych_kod.sql` - schema and foreign keys.
+- `BazaDanych/skrypty_inicjacyjne/02_sekwencje.sql` - identity sequences.
+- `BazaDanych/skrypty_inicjacyjne/03_dane_testowe.sql` - test data.
 
 ## Optional Quality Rulebooks
 
@@ -55,4 +86,3 @@ UI rulebooks are visual guidance, not stack instructions. Keep the existing WPF 
 - Keep database schema changes aligned with SQL scripts under `BazaDanych`; do not assume EF migrations are the source of truth unless the project changes that policy.
 - For auth, roles, IDs, and security-sensitive behavior, verify current code before editing because documentation may lag behind implementation.
 - For API changes, keep WPF `KasjerApp`, static `SystemAPI/wwwroot` clients, and documentation in sync when they are affected.
-

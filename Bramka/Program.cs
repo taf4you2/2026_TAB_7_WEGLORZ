@@ -1,9 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Bramka
@@ -12,12 +11,15 @@ namespace Bramka
     {
 
         static readonly HttpClient client = new();
+        const string BramkaApiBaseUrl = "http://localhost:49226";
+        const int GateId = 1;
 
         static async Task Main(string[] args)
         {
             InicjalizujBazeLokalna();
             await SynchronizujBazeLokalnaAsync();
             UruchomSynchronizacjeWTle();
+            UruchomWysylkeOdbicWTle();
 
             while (true)
             {
@@ -47,22 +49,119 @@ namespace Bramka
         static async Task WeryfikujKarteAsync(string cardId)
         {
             using var db = new BramkaDbContext();
-            var karta = await db.KartyLokalne.FindAsync(cardId);
 
             Console.WriteLine();
 
+            if (await ZarejestrujOdbicieWApiAsync(cardId))
+            {
+                return;
+            }
+
+            var karta = await db.KartyLokalne.FindAsync(cardId);
+
             if (karta != null)
             {
+                await ZapiszOdbicieLokalneAsync(db, cardId, karta.CzyAktywna ? 1 : 2);
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                Console.WriteLine("[Offline] Zapisano odbicie lokalnie. Zostanie wyslane po odzyskaniu polaczenia.");
+                Console.ResetColor();
                 WyswietlStatusKarty(karta.CzyAktywna, false);
                 return;
             }
 
-            await SprawdzKarteWApiAsync(cardId, db);
+            await ZapiszOdbicieLokalneAsync(db, cardId, 2);
+
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.WriteLine("[Offline] Brak polaczenia z API i karta nie jest w lokalnym cache.");
+            Console.WriteLine("Zapisano odmowe lokalnie do pozniejszej synchronizacji.");
+            Console.ResetColor();
+            WyswietlStatusKarty(false, false);
+        }
+
+        static async Task<bool> ZarejestrujOdbicieWApiAsync(string cardId)
+        {
+            string url = $"{BramkaApiBaseUrl}/api/bramka/Scan";
+
+            try
+            {
+                var payload = new
+                {
+                    cardId,
+                    gateId = GateId
+                };
+
+                string json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+                Task<HttpResponseMessage> postTask = client.PostAsync(url, content);
+
+                while (!postTask.IsCompleted)
+                {
+                    OdswiezNaglowek();
+                    await Task.Delay(200);
+                }
+
+                HttpResponseMessage response = await postTask;
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"\nNieoczekiwany blad serwera przy rejestracji odbicia: {response.StatusCode}");
+                    return false;
+                }
+
+                string jsonResponse = await response.Content.ReadAsStringAsync();
+                using JsonDocument doc = JsonDocument.Parse(jsonResponse);
+                JsonElement root = doc.RootElement;
+
+                bool isGranted = false;
+                if (root.TryGetProperty("isGranted", out JsonElement grantedProp) || root.TryGetProperty("IsGranted", out grantedProp))
+                {
+                    isGranted = grantedProp.GetBoolean();
+                }
+
+                string message = "";
+                if (root.TryGetProperty("message", out JsonElement messageProp) || root.TryGetProperty("Message", out messageProp))
+                {
+                    message = messageProp.GetString() ?? "";
+                }
+
+                Console.WriteLine("[Serwer API] Odbicie zarejestrowane w bazie danych.");
+                if (!string.IsNullOrWhiteSpace(message))
+                {
+                    Console.WriteLine(message);
+                }
+
+                WyswietlStatusKarty(isGranted, true);
+                return true;
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine($"\nBlad polaczenia z serwerem API: {e.Message}");
+                return false;
+            }
+            catch (TaskCanceledException e)
+            {
+                Console.WriteLine($"\nPrzekroczono czas oczekiwania na serwer API: {e.Message}");
+                return false;
+            }
+        }
+
+        static async Task ZapiszOdbicieLokalneAsync(BramkaDbContext db, string cardId, int verificationResultId)
+        {
+            db.OdbiciaLokalne.Add(new OdbicieLokalne
+            {
+                CardId = cardId,
+                GateId = GateId,
+                ScanTime = DateTime.Now,
+                VerificationResultId = verificationResultId
+            });
+
+            await db.SaveChangesAsync();
         }
 
         static async Task SprawdzKarteWApiAsync(string cardId, BramkaDbContext db)
         {
-            string url = $"http://localhost:49226/api/bramka/sprawdz-karte/{cardId}";
+            string url = $"{BramkaApiBaseUrl}/api/bramka/sprawdz-karte/{cardId}";
 
             try
             {
@@ -88,14 +187,27 @@ namespace Bramka
                         czyAktywna = prop.GetBoolean();
                     }
 
-                    db.KartyLokalne.Add(new KartaLokalna { Id = cardId, CzyAktywna = czyAktywna });
-                    await db.SaveChangesAsync();
+                    DateTime? waznaDo = null;
+                    if (root.TryGetProperty("waznaDo", out JsonElement dateProp) || root.TryGetProperty("WaznaDo", out dateProp))
+                    {
+                        if (dateProp.ValueKind != JsonValueKind.Null)
+                            waznaDo = dateProp.GetDateTime();
+                    }
 
-                    Console.WriteLine("[Serwer API] Karta zsynchronizowana pomyślnie.");
+                if (czyAktywna)
+                {
+                    db.KartyLokalne.Add(new KartaLokalna { Id = cardId, CzyAktywna = czyAktywna, WaznaDo = waznaDo });
+                }
+                    
+                    await ZapiszOdbicieLokalneAsync(db, cardId, czyAktywna ? 1 : 2);
+
+                    Console.WriteLine("[Serwer API] Karta zweryfikowana pomyślnie.");
                     WyswietlStatusKarty(czyAktywna, true);
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
+                    await ZapiszOdbicieLokalneAsync(db, cardId, 2);
+
                     Console.WriteLine();
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine(">>> ODMÓWIONO DOSTĘPU (Karta nie istnieje w systemie) <<<");
@@ -103,11 +215,14 @@ namespace Bramka
                 }
                 else
                 {
+                    await ZapiszOdbicieLokalneAsync(db, cardId, 2);
                     Console.WriteLine($"\nNieoczekiwany błąd serwera: {response.StatusCode}");
                 }
             }
             catch (HttpRequestException e)
             {
+                await ZapiszOdbicieLokalneAsync(db, cardId, 2);
+
                 Console.ForegroundColor = ConsoleColor.DarkYellow;
                 Console.WriteLine($"\nBłąd połączenia z serwerem API: {e.Message}");
                 Console.WriteLine("Bramka w trybie offline nie może zweryfikować nowej karty!");
@@ -232,7 +347,7 @@ namespace Bramka
                     await db.SaveChangesAsync();
                 }
 
-                string url = "http://localhost:49226/api/bramka/aktywne-karty";
+                string url = $"{BramkaApiBaseUrl}/api/bramka/aktywne-karty";
                 HttpResponseMessage response = await client.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
@@ -268,7 +383,56 @@ namespace Bramka
                     }
                 }
             }
-            catch (Exception ex){ // zastanawiam sie jaka obsluge bledow dodac
+            catch (Exception){ // zastanawiam sie jaka obsluge bledow dodac
+            }
+        }
+
+        static void UruchomWysylkeOdbicWTle()
+        {
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+                    await WyslijZalegleOdbiciaAsync();
+                }
+            });
+        }
+
+        static async Task WyslijZalegleOdbiciaAsync()
+        {
+            try
+            {
+                using var db = new BramkaDbContext();
+                var nieZsynchronizowane = db.OdbiciaLokalne.ToList();
+
+                if (!nieZsynchronizowane.Any())
+                    return;
+
+                var payload = nieZsynchronizowane.Select(o => new
+                {
+                    cardId = o.CardId,
+                    gateId = o.GateId,
+                    scanTime = o.ScanTime,
+                    verificationResultId = o.VerificationResultId,
+                    passTypeId = o.PassTypeId
+                }).ToList();
+
+                string json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+                string url = $"{BramkaApiBaseUrl}/api/GateScanSync";
+                HttpResponseMessage response = await client.PostAsync(url, content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    db.OdbiciaLokalne.RemoveRange(nieZsynchronizowane);
+                    await db.SaveChangesAsync();
+                }
+            }
+            catch (Exception)
+            {
+                // Ignoruj błędy, w następnej pętli spróbuje ponownie
             }
         }
     }

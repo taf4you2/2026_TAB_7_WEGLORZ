@@ -35,5 +35,8 @@ public class Tariff
     [Column("discount_type")]
     public string? DiscountType { get; set; }
 
+    [Column("is_active")]
+    public bool? IsActive { get; set; }
+
     public virtual ICollection<SkiPass> SkiPasses { get; set; } = new List<SkiPass>();
 }

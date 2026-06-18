@@ -18,13 +18,19 @@ public class TrasyController(SkiResortDbContext db, IHubContext<InfrastructureHu
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var trasy = await db.Trails
+        var query = db.Trails
             .Include(t => t.Difficulty)
             .Include(t => t.Status)
+            .AsQueryable();
+
+        if (!User.IsInRole("admin"))
+            query = query.Where(t => t.IsActive == true || t.IsActive == null);
+
+        var trails = await query
             .OrderBy(t => t.Name)
             .ToListAsync();
 
-        var result = trasy.Select(t => new TrailDto(
+        var result = trails.Select(t => new TrailDto(
             t.Id,
             t.Name,
             t.Location,
@@ -33,7 +39,8 @@ public class TrasyController(SkiResortDbContext db, IHubContext<InfrastructureHu
             t.SnowCondition,
             t.PreparationStatus,
             t.Status?.Name,
-            t.StatusId
+            t.StatusId,
+            t.IsActive ?? true
         ));
 
         return Ok(result);
@@ -66,7 +73,8 @@ public class TrasyController(SkiResortDbContext db, IHubContext<InfrastructureHu
             Length = req.Length,
             DifficultyId = difficultyId,
             SnowCondition = req.SnowCondition,
-            PreparationStatus = req.PreparationStatus
+            PreparationStatus = req.PreparationStatus,
+            IsActive = true
         };
 
         db.Trails.Add(trail);
@@ -94,29 +102,32 @@ public class TrasyController(SkiResortDbContext db, IHubContext<InfrastructureHu
         trail.DifficultyId = difficultyId;
         trail.SnowCondition = req.SnowCondition;
         trail.PreparationStatus = req.PreparationStatus;
+        if (req.IsActive.HasValue) trail.IsActive = req.IsActive.Value;
 
         await db.SaveChangesAsync();
 
         return Ok();
     }
 
-    // DELETE /api/trasy/{id}
+    // DELETE /api/trasy/{id} - dezaktywacja bez usuwania historii.
     [HttpDelete("{id}")]
     [Authorize(Roles = "admin,kasjer")]
     public async Task<IActionResult> Delete(int id)
     {
         var trail = await db.Trails
-            .Include(t => t.LiftTrails)
             .Include(t => t.Schedules)
             .FirstOrDefaultAsync(t => t.Id == id);
-            
+
         if (trail == null) return NotFound();
 
-        // Usuwamy powiązania przed usunięciem trasy
-        db.LiftTrails.RemoveRange(trail.LiftTrails);
-        db.TrailSchedules.RemoveRange(trail.Schedules);
-        db.Trails.Remove(trail);
-        
+        trail.IsActive = false;
+        foreach (var schedule in trail.Schedules)
+        {
+            schedule.IsOpen = false;
+            schedule.ClosureReason ??= "Trasa dezaktywowana";
+            schedule.UpdatedAt = DateTime.UtcNow;
+        }
+
         await db.SaveChangesAsync();
 
         return NoContent();
@@ -147,7 +158,8 @@ public record TrailDto(
     string? SnowCondition,
     string? PreparationStatus,
     string? StatusName,
-    int? StatusId
+    int? StatusId,
+    bool IsActive
 );
 
 public record TrailModifyRequest(
@@ -156,7 +168,8 @@ public record TrailModifyRequest(
     decimal? Length,
     string? Difficulty,
     string? SnowCondition,
-    string? PreparationStatus
+    string? PreparationStatus,
+    bool? IsActive = null
 );
 
 public record UpdateTrailStatusRequest(int? StatusId);

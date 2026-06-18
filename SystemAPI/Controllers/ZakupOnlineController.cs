@@ -18,7 +18,9 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
         var taryfy = await db.Tariffs
             .Include(t => t.Season)
             .Include(t => t.PassType)
-            .Where(t => t.PassType != null && t.PassType.Name.StartsWith("karnet"))
+            .Where(t => (t.IsActive == true || t.IsActive == null)
+                && t.PassType != null
+                && t.PassType.Name.StartsWith("karnet"))
             .OrderBy(t => t.Price)
             .ToListAsync();
 
@@ -43,6 +45,8 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
         var tariff = await db.Tariffs.Include(t => t.PassType).FirstOrDefaultAsync(t => t.Id == req.TariffId);
         if (tariff == null)
             return BadRequest(new { message = "Wybrana taryfa nie istnieje." });
+        if (tariff.IsActive == false)
+            return Conflict(new { message = "Wybrana taryfa jest nieaktywna." });
 
         if (tariff.PassType?.Name?.StartsWith("karnet") != true)
             return BadRequest(new { message = "Zakup online dotyczy wyłącznie karnetów." });

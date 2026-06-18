@@ -28,4 +28,8 @@ public class GateScan
     [Column("verification_result_id")]
     public int? VerificationResultId { get; set; }
     public virtual DictVerificationResult? VerificationResult { get; set; }
+
+    [Column("pass_type_id")]
+    public int? PassTypeId { get; set; }
+    public virtual DictPassType? PassType { get; set; }
 }

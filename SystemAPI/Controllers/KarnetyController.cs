@@ -83,6 +83,8 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         var tariff = await db.Tariffs.FindAsync(req.TariffId);
         if (tariff == null)
             return BadRequest(new { message = "Taryfa nie istnieje." });
+        if (tariff.IsActive == false)
+            return Conflict(new { message = "Taryfa jest nieaktywna." });
 
         if (req.UserId.HasValue && !await db.Users.AnyAsync(u => u.Id == req.UserId))
             return BadRequest(new { message = $"Uzytkownik {req.UserId} nie istnieje." });
@@ -347,6 +349,29 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
             await db.Cards.Where(c => c.Id == pass.CardId)
                 .ExecuteUpdateAsync(s => s.SetProperty(p => p.StatusId, wolnaId.Value));
 
+        return NoContent();
+    }
+
+    // DELETE /api/karnety/{id} - dezaktywacja karnetu bez usuwania historii.
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeactivatePass(int id)
+    {
+        var pass = await db.SkiPasses.FindAsync(id);
+        if (pass == null) return NotFound();
+
+        var blockedStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "zablokowany");
+        pass.StatusId = blockedStatus?.Id;
+        pass.BlockReason = "Dezaktywowany przez administratora";
+
+        var wolnaId = await db.DictCardStatuses
+            .Where(s => s.Name == "wolna")
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync();
+        if (wolnaId.HasValue && pass.CardId != null)
+            await db.Cards.Where(c => c.Id == pass.CardId)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.StatusId, wolnaId.Value));
+
+        await db.SaveChangesAsync();
         return NoContent();
     }
 

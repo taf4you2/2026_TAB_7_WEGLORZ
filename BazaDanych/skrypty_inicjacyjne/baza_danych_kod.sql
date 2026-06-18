@@ -77,7 +77,8 @@ CREATE TABLE "lift" (
   "name" varchar UNIQUE NOT NULL,
   "location" varchar,
   "length" decimal,
-  "planner_id" integer
+  "planner_id" integer,
+  "is_active" boolean DEFAULT true
 );
 
 CREATE TABLE "trail" (
@@ -86,7 +87,8 @@ CREATE TABLE "trail" (
   "location" varchar,
   "length" decimal,
   "difficulty_id" integer,
-  "planner_id" integer
+  "planner_id" integer,
+  "is_active" boolean DEFAULT true
 );
 
 CREATE TABLE "lift_trail" (
@@ -128,7 +130,8 @@ CREATE TABLE "tariff" (
   "pass_type_id" integer,
   "price" decimal,
   "ride_count" integer,
-  "pool_limit" integer
+  "pool_limit" integer,
+  "is_active" boolean DEFAULT true
 );
 
 CREATE TABLE "ski_pass" (
@@ -172,6 +175,7 @@ CREATE TABLE "gate_scan" (
   "id" integer PRIMARY KEY,
   "card_id" varchar,
   "gate_id" integer,
+  "pass_type_id" integer,
   "scan_time" timestamp,
   "time_blocked_until" timestamp,
   "verification_result_id" integer
@@ -248,3 +252,5 @@ ALTER TABLE "gate_scan" ADD FOREIGN KEY ("gate_id") REFERENCES "gate" ("id") DEF
 ALTER TABLE "admin_report" ADD FOREIGN KEY ("admin_id") REFERENCES "administrator" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "admin_report" ADD FOREIGN KEY ("report_type_id") REFERENCES "dict_report_type" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE "gate_scan" ADD FOREIGN KEY ("pass_type_id") REFERENCES "dict_pass_type" ("id") DEFERRABLE INITIALLY IMMEDIATE;

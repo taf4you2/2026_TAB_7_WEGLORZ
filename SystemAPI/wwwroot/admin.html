@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administratora - SkiAdmin</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <aside>
+        <div class="brand">SkiAdmin</div>
+        <nav id="sidebar-nav">
+            <div class="nav-item active" onclick="showSection('dashboard', this)">Dashboard</div>
+            <div class="nav-item" onclick="showSection('infra', this)">Infrastruktura</div>
+            <div class="nav-item" onclick="showSection('tariffs', this)">Cennik i Taryfy</div>
+            <div class="nav-item" onclick="showSection('cards', this)">Karty RFID</div>
+            <div class="nav-item" onclick="showSection('sales', this)">Sprzedaz i Kasy</div>
+            <div class="nav-item" onclick="showSection('reports', this)">Raporty</div>
+            <div class="nav-item" onclick="showSection('staff', this)">Pracownicy</div>
+            <div class="nav-item" onclick="showSection('customers', this)">Klienci</div>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="logout-btn" onclick="logout()">Wyloguj sie</button>
+        </div>
+    </aside>
+
+    <main>
+        <header>
+            <div id="header-title" style="font-weight: 600;">Panel Administratora</div>
+            <div id="user-display" style="color: var(--text-muted); font-size: 14px;">Zalogowano jako: ...</div>
+        </header>
+
+        <div class="content">
+            <!-- DASHBOARD -->
+            <div id="sec-dashboard" class="section active">
+                <h1>Dashboard</h1>
+                <p class="subtitle">Podglad stanu stacji narciarskiej</p>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-label">Bilety dzis</div><div id="stat-tickets" class="stat-value">0</div></div>
+                    <div class="stat-card"><div class="stat-label">Aktywne karnety</div><div id="stat-passes" class="stat-value">0</div></div>
+                    <div class="stat-card"><div class="stat-label">Przychod dzis</div><div id="stat-revenue" class="stat-value">0 zl</div></div>
+                    <div class="stat-card"><div class="stat-label">Zwroty</div><div id="stat-returns" class="stat-value">0</div></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                    <div class="card">
+                        <div class="card-header"><h3>Ruch dzisiaj (godzinowo)</h3></div>
+                        <div class="card-body" style="height: 250px; padding-top: 20px;">
+                            <canvas id="hourly-traffic-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3>Statusy kart RFID</h3></div>
+                        <div class="card-body" id="card-status-list">
+                            Laduje dane...
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3>Oblozenie wyciagow (15 min)</h3></div>
+                    <div class="card-body" id="realtime-occupancy-list">Laduje...</div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3>Live Activity Feed</h3></div>
+                    <div class="card-body" id="activity-feed-list" style="padding: 0; max-height: 300px; overflow-y: auto;">Laduje...</div>
+                </div>
+            </div>
+
+            <!-- INFRASTRUCTURE -->
+            <div id="sec-infra" class="section">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 24px;">
+                    <h1>Infrastruktura</h1>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-outline" onclick="openGateModal()">+ Bramka</button>
+                        <button class="btn btn-primary" onclick="openLiftModal()">+ Wyciag</button>
+                    </div>
+                </div>
+                <div id="infra-list">Laduje...</div>
+            </div>
+
+            <!-- TARIFFS -->
+            <div id="sec-tariffs" class="section">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 24px;">
+                    <h1>Cennik i Taryfy</h1>
+                    <button class="btn btn-primary" onclick="openTariffModal()">+ Nowa taryfa</button>
+                </div>
+                <div class="card"><div class="card-body">
+                    <table><thead><tr><th>Nazwa</th><th>Sezon</th><th>Typ</th><th>Cena</th><th>Limit</th><th>Status</th><th>Akcje</th></tr></thead>
+                    <tbody id="tariffs-tbody"></tbody></table>
+                </div></div>
+            </div>
+
+            <!-- CARDS -->
+            <div id="sec-cards" class="section">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 24px;">
+                    <h1>Karty RFID</h1>
+                    <div style="display: flex; gap: 12px;">
+                        <input type="text" id="card-search" placeholder="Szukaj RFID..." style="padding: 8px 12px; background: var(--panel-dark); border: 1px solid var(--border); border-radius: 8px; color: white;">
+                        <button class="btn btn-primary" onclick="openCardModal()">+ Dodaj karte</button>
+                    </div>
+                </div>
+                <div class="card"><div class="card-body">
+                    <table><thead><tr><th>RFID</th><th>Status</th><th>Wlasciciel</th><th>Karnet</th><th>Kaucja</th><th>Akcje</th></tr></thead>
+                    <tbody id="cards-tbody"></tbody></table>
+                </div></div>
+            </div>
+
+            <!-- SALES -->
+            <div id="sec-sales" class="section">
+                <h1>Sprzedaz i Kasy</h1>
+                <p class="subtitle">Analiza kanalow i aktywni pracownicy</p>
+                <div class="card"><div class="card-body">
+                    <div class="chart-grid">
+                        <div class="chart-panel">
+                            <h4>Kanaly sprzedazy (ostatnie 7 dni)</h4>
+                            <div class="chart-frame">
+                                <canvas id="sales-channels-chart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-panel">
+                            <h4>Struktura sprzedazy taryf (ostatnie 30 dni)</h4>
+                            <div class="chart-frame">
+                                <canvas id="sales-structure-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div></div>
+                <div class="card"><div class="card-header"><h3>Aktywne zmiany</h3></div><div class="card-body">
+                    <table><thead><tr><th>Pracownik</th><th>Start</th><th>Czas</th><th>Status</th><th>Akcja</th></tr></thead>
+                    <tbody id="active-cashiers-tbody"></tbody></table>
+                </div></div>
+            </div>
+
+            <!-- REPORTS -->
+            <div id="sec-reports" class="section">
+                <h1>Raporty Zarzadcze</h1>
+                <p class="subtitle">Analityka finansowa i operacyjna stacji</p>
+                <div style="display:flex; gap:12px; margin-bottom:24px;">
+                    <button class="btn btn-outline" onclick="showReportTab('shift')">Rozliczenia Kas</button>
+                    <button class="btn btn-outline" onclick="showReportTab('sales')">Sprzedaz Ogolna</button>
+                    <button class="btn btn-outline" onclick="showReportTab('infra')">Przepustowosc</button>
+                    <button class="btn btn-outline" onclick="showReportTab('advanced')">Zaawansowane</button>
+                    <button class="btn btn-outline" onclick="showReportTab('history')">Historia Raportow</button>
+                </div>
+                <div id="report-tab-shift" class="report-tab">
+                    <div class="card"><div class="card-header"><h3>Historia dniowek kasowych</h3><button class="btn btn-outline btn-sm" id="btn-export-shifts">Pobierz CSV</button></div>
+                    <div class="card-body">
+                        <table><thead><tr><th>ID</th><th>Kasjer</th><th>Otwarcie</th><th>Zamkniecie</th><th>Przychod</th><th>Karty</th></tr></thead>
+                        <tbody id="reports-shift-tbody"></tbody></table>
+                    </div></div>
+                </div>
+                <div id="report-tab-sales" class="report-tab" style="display:none;">
+                    <div class="card" style="margin-bottom:24px;"><div class="card-body">
+                        <div style="display:flex; align-items:flex-end; gap:12px;">
+                            <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Od</label><input type="date" id="report-sales-from" style="width:100%; padding:10px; background:var(--bg-dark); border:1px solid var(--border); border-radius:8px; color:white;"></div>
+                            <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Do</label><input type="date" id="report-sales-to" style="width:100%; padding:10px; background:var(--bg-dark); border:1px solid var(--border); border-radius:8px; color:white;"></div>
+                            <button class="btn btn-primary" onclick="generateGeneralReport()">Generuj</button>
+                        </div>
+                        <div style="display:flex; gap:8px; margin-top:12px;">
+                            <button class="btn btn-outline btn-sm" onclick="setSalesRange('today')">Dzis</button>
+                            <button class="btn btn-outline btn-sm" onclick="setSalesRange('week')">7 dni</button>
+                            <button class="btn btn-outline btn-sm" onclick="setSalesRange('month')">30 dni</button>
+                        </div>
+                    </div></div>
+                    <div id="sales-report-result"></div>
+                </div>
+                <div id="report-tab-infra" class="report-tab" style="display:none;">
+                    <div class="card" style="margin-bottom:24px;"><div class="card-body">
+                        <div style="display:flex; align-items:flex-end; gap:12px;">
+                            <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Data</label><input type="date" id="report-infra-date" style="width:100%; padding:10px; background:var(--bg-dark); border:1px solid var(--border); border-radius:8px; color:white;"></div>
+                            <button class="btn btn-primary" onclick="loadThroughputReport()">Analizuj</button>
+                        </div>
+                    </div></div>
+                    <div id="infra-report-result"></div>
+                </div>
+                <div id="report-tab-advanced" class="report-tab" style="display:none;">
+                    <div class="card" style="margin-bottom:24px;"><div class="card-body">
+                        <div style="display:flex; align-items:flex-end; gap:12px;">
+                            <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Od</label><input type="date" id="report-advanced-from" style="width:100%; padding:10px; background:var(--bg-dark); border:1px solid var(--border); border-radius:8px; color:white;"></div>
+                            <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Do</label><input type="date" id="report-advanced-to" style="width:100%; padding:10px; background:var(--bg-dark); border:1px solid var(--border); border-radius:8px; color:white;"></div>
+                            <button class="btn btn-primary" onclick="loadAdvancedReport()">Generuj</button>
+                        </div>
+                        <div style="display:flex; gap:8px; margin-top:12px;">
+                            <button class="btn btn-outline btn-sm" onclick="setAdvancedRange('today')">Dzis</button>
+                            <button class="btn btn-outline btn-sm" onclick="setAdvancedRange('week')">7 dni</button>
+                            <button class="btn btn-outline btn-sm" onclick="setAdvancedRange('month')">30 dni</button>
+                            <button class="btn btn-outline btn-sm" onclick="setAdvancedRange('season')">90 dni</button>
+                        </div>
+                    </div></div>
+                    <div id="advanced-report-result"></div>
+                </div>
+                <div id="report-tab-history" class="report-tab" style="display:none;">
+                    <div class="card"><div class="card-header"><h3>Logi wygenerowanych raportow</h3><button class="btn btn-outline btn-sm" id="btn-export-admin-history">Pobierz CSV</button></div>
+                    <div class="card-body">
+                        <table><thead><tr><th>ID</th><th>Administrator</th><th>Typ</th><th>Parametry</th><th>Data</th></tr></thead>
+                        <tbody id="reports-history-tbody"></tbody></table>
+                    </div></div>
+                </div>
+            </div>
+
+            <!-- STAFF -->
+            <div id="sec-staff" class="section">
+                <div style="display: flex; justify-content: space-between;">
+                    <h1>Pracownicy</h1>
+                    <button class="btn btn-primary" onclick="openUserModal()">+ Nowy pracownik</button>
+                </div>
+                <div class="card"><div class="card-body">
+                    <table><thead><tr><th>ID</th><th>Login</th><th>Rola</th><th>Status</th><th>Akcje</th></tr></thead>
+                    <tbody id="staff-tbody"></tbody></table>
+                </div></div>
+            </div>
+
+            <!-- CUSTOMERS -->
+            <div id="sec-customers" class="section">
+                <h1>Baza Klientow</h1>
+                <div class="card"><div class="card-body">
+                    <table><thead><tr><th>ID</th><th>Email</th><th>Status</th><th>Akcje</th></tr></thead>
+                    <tbody id="customers-tbody"></tbody></table>
+                </div></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODALS -->
+    <div id="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; place-items: center;">
+        <div class="card" style="width: 400px; margin-bottom: 0;">
+            <div class="card-header"><h3 id="modal-title">Pracownik</h3></div>
+            <div class="card-body"><form id="user-form">
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Login</label><input type="text" id="user-login" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required></div>
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Haslo</label><input type="password" id="user-password" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"></div>
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Rola</label><select id="user-role" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"><option value="kasjer">Kasjer</option><option value="admin">Administrator</option></select></div>
+                <div style="margin-bottom: 20px;"><input type="checkbox" id="user-active" checked> <label for="user-active">Aktywny</label></div>
+                <div style="display: flex; gap: 12px;"><button type="button" class="btn btn-outline" style="flex:1" onclick="closeUserModal()">Anuluj</button><button type="submit" class="btn btn-primary" style="flex:1">Zapisz</button></div>
+            </form></div>
+        </div>
+    </div>
+
+    <div id="modal-overlay-lift" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; place-items: center;">
+        <div class="card" style="width: 400px; margin-bottom: 0;">
+            <div class="card-header"><h3 id="modal-lift-title">Wyciag</h3></div>
+            <div class="card-body"><form id="lift-form">
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Nazwa</label><input type="text" id="lift-name" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required></div>
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Status</label><select id="lift-status" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"><option value="otwarty">Otwarty</option><option value="zamkniety">Zamkniety</option><option value="awaria">Awaria</option></select></div>
+                <div style="display:flex; gap:12px; margin-bottom:20px;">
+                    <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Otwarcie</label><input type="time" id="lift-opens" value="08:00" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"></div>
+                    <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Zamkniecie</label><input type="time" id="lift-closes" value="20:00" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"></div>
+                </div>
+                <div style="display: flex; gap: 12px;"><button type="button" class="btn btn-outline" style="flex:1" onclick="closeLiftModal()">Anuluj</button><button type="submit" class="btn btn-primary" style="flex:1">Zapisz</button></div>
+            </form></div>
+        </div>
+    </div>
+
+    <div id="modal-overlay-gate" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; place-items: center;">
+        <div class="card" style="width: 400px; margin-bottom: 0;">
+            <div class="card-header"><h3 id="modal-gate-title">Bramka</h3></div>
+            <div class="card-body"><form id="gate-form">
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Nazwa</label><input type="text" id="gate-name" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required></div>
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Wyciag</label><select id="gate-lift-id" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required></select></div>
+                <div style="margin-bottom: 20px;"><input type="checkbox" id="gate-active" checked> <label for="gate-active">Aktywna</label></div>
+                <div style="display: flex; gap: 12px;"><button type="button" class="btn btn-outline" style="flex:1" onclick="closeGateModal()">Anuluj</button><button type="submit" class="btn btn-primary" style="flex:1">Zapisz</button></div>
+            </form></div>
+        </div>
+    </div>
+
+    <div id="modal-overlay-tariff" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; place-items: center;">
+        <div class="card" style="width: 400px; margin-bottom: 0;">
+            <div class="card-header"><h3 id="modal-tariff-title">Taryfa</h3></div>
+            <div class="card-body"><form id="tariff-form">
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Nazwa</label><input type="text" id="tariff-name" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required></div>
+                <div style="display:flex; gap:12px; margin-bottom:12px;">
+                    <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Cena (zl)</label><input type="number" id="tariff-price" step="0.01" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required></div>
+                    <div style="flex:1"><label style="display:block; font-size:12px; color:var(--text-muted);">Limit punktow</label><input type="number" id="tariff-pool" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"></div>
+                </div>
+                <div style="margin-bottom: 12px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Sezon</label><select id="tariff-season" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"><option value="wysoki">Wysoki</option><option value="niski">Niski</option></select></div>
+                <div style="margin-bottom: 20px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">Typ karnetu</label><select id="tariff-type" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;"><option value="czasowy">Czasowy</option><option value="punktowy">Punktowy</option></select></div>
+                <div style="display: flex; gap: 12px;"><button type="button" class="btn btn-outline" style="flex:1" onclick="closeTariffModal()">Anuluj</button><button type="submit" class="btn btn-primary" style="flex:1">Zapisz</button></div>
+            </form></div>
+        </div>
+    </div>
+
+    <div id="modal-overlay-card" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; place-items: center;">
+        <div class="card" style="width: 400px; margin-bottom: 0;">
+            <div class="card-header"><h3>Dodaj nowa karte RFID</h3></div>
+            <div class="card-body"><form id="card-form">
+                <div style="margin-bottom: 20px;"><label style="display: block; font-size: 12px; color: var(--text-muted);">ID Karty (RFID)</label><input type="text" id="card-rfid" placeholder="np. A1:B2:C3:D4" style="width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white;" required></div>
+                <div style="display: flex; gap: 12px;"><button type="button" class="btn btn-outline" style="flex:1" onclick="closeCardModal()">Anuluj</button><button type="submit" class="btn btn-primary" style="flex:1">Dodaj</button></div>
+            </form></div>
+        </div>
+    </div>
+
+    <div id="modal-overlay-history" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; place-items: center;">
+        <div class="card" style="width: min(980px, calc(100vw - 32px)); max-height: 86vh; display: flex; flex-direction: column;">
+            <div class="card-header"><h3 id="modal-history-title">Historia</h3></div>
+            <div id="modal-history-content" class="card-body" style="overflow-y: auto; flex: 1;"></div>
+            <div class="card-header" style="border-top: 1px solid var(--border); border-bottom:0; justify-content: flex-end;"><button class="btn btn-primary" onclick="closeHistoryModal()">Zamknij</button></div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+    <script type="module" src="js/admin.js?v=soft-delete-1"></script>
+</body>
+</html>

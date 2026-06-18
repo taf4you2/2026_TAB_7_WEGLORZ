@@ -14,6 +14,7 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
 {
     // GET /api/karty?status=aktywna&search=A3:F2
     [HttpGet]
+    [Authorize(Roles = "admin,kasjer")]
     public async Task<IActionResult> GetAll([FromQuery] string? status, [FromQuery] string? search)
     {
         var query = db.Cards
@@ -40,6 +41,7 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
 
     // GET /api/karty/{rfid}/weryfikacja-wydania
     [HttpGet("{rfid}/weryfikacja-wydania")]
+    [Authorize(Roles = "admin,kasjer")]
     public async Task<IActionResult> VerifyForIssue(string rfid)
     {
         var card = await LoadCard(rfid).FirstOrDefaultAsync();
@@ -66,6 +68,7 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
 
     // GET /api/karty/{rfid}
     [HttpGet("{rfid}")]
+    [Authorize(Roles = "admin,kasjer")]
     public async Task<IActionResult> GetByRfid(string rfid)
     {
         var card = await LoadCard(rfid).FirstOrDefaultAsync();
@@ -78,6 +81,7 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
 
     // POST /api/karty
     [HttpPost]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> IssueCard([FromBody] IssueCardRequest req)
     {
         if (string.IsNullOrWhiteSpace(req.Id))
@@ -103,32 +107,32 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
         return CreatedAtAction(nameof(GetByRfid), new { rfid = card.Id }, new { card.Id });
     }
 
-    // DELETE /api/karty/{rfid}
+    // DELETE /api/karty/{rfid} - dezaktywuje karte bez usuwania historii skanow i karnetow.
     [HttpDelete("{rfid}")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> DeleteCard(string rfid)
     {
         var card = await db.Cards
             .Include(c => c.SkiPasses)
                 .ThenInclude(sp => sp.Status)
-            .Include(c => c.GateScans)
             .FirstOrDefaultAsync(c => c.Id == rfid);
 
         if (card == null)
             return NotFound(new { message = $"Karta {rfid} nie istnieje w systemie." });
 
-        if (GetActivePass(card) != null)
-            return Conflict(new { message = "Nie mozna usunac karty z aktywnym karnetem." });
+        var blockedId = await db.DictCardStatuses
+            .Where(s => s.Name == "zastrzezony")
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync();
 
-        db.GateScans.RemoveRange(card.GateScans);
-        foreach (var pass in card.SkiPasses)
-            pass.CardId = null;
-
-        db.Cards.Remove(card);
+        card.StatusId = blockedId;
+        card.BlockReason = "Dezaktywowana przez administratora";
         await db.SaveChangesAsync();
         return NoContent();
     }
 
     [HttpPost("{rfid}/blokuj")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> BlockCard(string rfid, [FromBody] BlockCardRequest req)
     {
         var card = await db.Cards.FirstOrDefaultAsync(c => c.Id == rfid);
@@ -142,6 +146,7 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
     }
 
     [HttpPost("{rfid}/odblokuj")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> UnblockCard(string rfid)
     {
         var card = await LoadCard(rfid).FirstOrDefaultAsync();
@@ -157,6 +162,7 @@ public class KartyController(SkiResortDbContext db) : ControllerBase
     }
 
     [HttpPost("{rfid}/zwrot")]
+    [Authorize(Roles = "admin,kasjer")]
     public async Task<IActionResult> ReturnCard(string rfid)
     {
         var card = await LoadCard(rfid).FirstOrDefaultAsync();

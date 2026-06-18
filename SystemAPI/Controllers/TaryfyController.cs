@@ -12,18 +12,23 @@ namespace SystemAPI.Controllers;
 public class TaryfyController(SkiResortDbContext db) : ControllerBase
 {
     // GET /api/taryfy
-    // Zwraca listę dostępnych taryf wraz z typem karnetu i sezonem.
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var taryfy = await db.Tariffs
+        var query = db.Tariffs
             .Include(t => t.Season)
             .Include(t => t.PassType)
+            .AsQueryable();
+
+        if (!User.IsInRole("admin"))
+            query = query.Where(t => t.IsActive == true || t.IsActive == null);
+
+        var tariffs = await query
             .OrderBy(t => t.PassTypeId)
             .ThenBy(t => t.Name)
             .ToListAsync();
 
-        var result = taryfy.Select(t => new TariffDto(
+        var result = tariffs.Select(t => new TariffDto(
             t.Id,
             t.Name,
             t.Season?.Name,
@@ -31,7 +36,8 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
             t.Price,
             t.RideCount,
             t.PoolLimit,
-            t.DiscountType
+            t.DiscountType,
+            t.IsActive ?? true
         ));
 
         return Ok(result);
@@ -39,7 +45,7 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
 
     // POST /api/taryfy
     [HttpPost]
-    [Authorize(Roles = "admin,kasjer")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Create([FromBody] TariffModifyRequest req)
     {
         var seasonId = await db.DictSeasons
@@ -59,7 +65,8 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
             PoolLimit = req.PoolLimit,
             SeasonId = seasonId,
             PassTypeId = passTypeId,
-            DiscountType = req.DiscountType
+            DiscountType = req.DiscountType,
+            IsActive = true
         };
 
         db.Tariffs.Add(tariff);
@@ -93,7 +100,8 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
                 Price = item.Price,
                 PoolLimit = req.PoolLimit,
                 SeasonId = seasonId,
-                PassTypeId = passTypeId
+                PassTypeId = passTypeId,
+                IsActive = true
             });
         }
 
@@ -105,7 +113,7 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
 
     // PUT /api/taryfy/{id}
     [HttpPut("{id}")]
-    [Authorize(Roles = "admin,kasjer")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Update(int id, [FromBody] TariffModifyRequest req)
     {
         var tariff = await db.Tariffs.FindAsync(id);
@@ -125,7 +133,8 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
         tariff.Price = req.Price;
         tariff.PoolLimit = req.PoolLimit;
         tariff.DiscountType = req.DiscountType;
-        
+        if (req.IsActive.HasValue) tariff.IsActive = req.IsActive.Value;
+
         if (req.Season != null) tariff.SeasonId = seasonId;
         if (req.PassType != null) tariff.PassTypeId = passTypeId;
 
@@ -134,20 +143,15 @@ public class TaryfyController(SkiResortDbContext db) : ControllerBase
         return Ok();
     }
 
-    // DELETE /api/taryfy/{id}
+    // DELETE /api/taryfy/{id} - dezaktywacja bez usuwania historii.
     [HttpDelete("{id}")]
-    [Authorize(Roles = "admin,kasjer")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Delete(int id)
     {
-        var tariff = await db.Tariffs.Include(t => t.SkiPasses).FirstOrDefaultAsync(t => t.Id == id);
+        var tariff = await db.Tariffs.FirstOrDefaultAsync(t => t.Id == id);
         if (tariff == null) return NotFound();
 
-        if (tariff.SkiPasses.Any())
-        {
-            return BadRequest("Nie można usunąć taryfy, ponieważ ma przypisane karnety.");
-        }
-
-        db.Tariffs.Remove(tariff);
+        tariff.IsActive = false;
         await db.SaveChangesAsync();
 
         return NoContent();
@@ -162,7 +166,8 @@ public record TariffDto(
     decimal? Price,
     int? RideCount,
     int? PoolLimit,
-    string? DiscountType
+    string? DiscountType,
+    bool IsActive
 );
 
 public record TariffModifyRequest(
@@ -171,7 +176,8 @@ public record TariffModifyRequest(
     string? PassType,
     decimal? Price,
     int? PoolLimit,
-    string? DiscountType
+    string? DiscountType,
+    bool? IsActive = null
 );
 
 public record TariffBulkCreateRequest(

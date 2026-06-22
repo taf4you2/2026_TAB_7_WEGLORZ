@@ -26,6 +26,35 @@ public class ApiService
         return await r.Content.ReadFromJsonAsync<List<TariffDto>>() ?? [];
     }
 
+    public async Task<List<LiftDto>> GetLiftsAsync()
+    {
+        var r = await _http.GetAsync("/api/wyciagi");
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<List<LiftDto>>() ?? [];
+    }
+
+    public async Task<DateTime> GetMinimumSaleDateAsync()
+    {
+        var today = DateTime.Today;
+
+        try
+        {
+            var closingTimes = (await GetLiftsAsync())
+                .Where(l => l.IsActive && l.ClosesAt.HasValue)
+                .Select(l => l.ClosesAt!.Value)
+                .ToList();
+
+            if (closingTimes.Count > 0 && DateTime.Now.TimeOfDay > closingTimes.Max())
+                return today.AddDays(1);
+        }
+        catch
+        {
+            return today;
+        }
+
+        return today;
+    }
+
     // â”€â”€ Karty RFID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public async Task<CardDto?> GetCardAsync(string rfid)
     {

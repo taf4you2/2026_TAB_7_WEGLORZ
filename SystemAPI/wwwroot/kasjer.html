@@ -641,7 +641,7 @@
           <div class="form-row cols-2">
             <div class="form-group">
               <label class="form-label">Data ważności biletu</label>
-              <input class="form-input" type="date" id="bilet-data" value="2026-04-16">
+              <input class="form-input" type="date" id="bilet-data" required>
             </div>
             <div class="form-group">
               <label class="form-label">Liczba biletów</label>
@@ -738,11 +738,11 @@
             </div>
             <div class="form-group">
               <label class="form-label">Data rozpoczęcia</label>
-              <input class="form-input" type="date" id="karnet-od" value="2026-04-16">
+              <input class="form-input" type="date" id="karnet-od" required onchange="syncKarnetDateLimits()">
             </div>
             <div class="form-group">
               <label class="form-label">Data zakończenia</label>
-              <input class="form-input" type="date" id="karnet-do" value="2026-04-19">
+              <input class="form-input" type="date" id="karnet-do" required>
             </div>
           </div>
         </div>
@@ -1027,6 +1027,73 @@
     }
   }
 
+  function dateValueFromLocal(date) {
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${date.getFullYear()}-${month}-${day}`;
+  }
+
+  function todayDateValue() {
+    return dateValueFromLocal(new Date());
+  }
+
+  function addDaysToDateValue(dateValue, days) {
+    const date = new Date(`${dateValue}T00:00:00`);
+    date.setDate(date.getDate() + days);
+    return dateValueFromLocal(date);
+  }
+
+  let saleMinimumDateValue = todayDateValue();
+
+  function timeValueToSeconds(value) {
+    if (!value) return NaN;
+    const [hours, minutes, seconds = 0] = value.split(':').map(Number);
+    if (![hours, minutes, seconds].every(Number.isFinite)) return NaN;
+    return hours * 3600 + minutes * 60 + seconds;
+  }
+
+  function currentTimeSeconds() {
+    const now = new Date();
+    return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+  }
+
+  async function refreshSaleDateLimit() {
+    saleMinimumDateValue = todayDateValue();
+
+    const lifts = await apiFetch('/api/wyciagi');
+    const closingTimes = (lifts ?? [])
+      .map(l => timeValueToSeconds(l.closesAt))
+      .filter(Number.isFinite);
+
+    if (closingTimes.length > 0 && currentTimeSeconds() > Math.max(...closingTimes)) {
+      saleMinimumDateValue = addDaysToDateValue(saleMinimumDateValue, 1);
+    }
+
+    syncBiletDateLimits();
+    syncKarnetDateLimits();
+  }
+
+  function syncBiletDateLimits() {
+    const ticketInput = document.getElementById('bilet-data');
+    if (!ticketInput) return;
+
+    ticketInput.min = saleMinimumDateValue;
+    if (!ticketInput.value || ticketInput.value < saleMinimumDateValue) ticketInput.value = saleMinimumDateValue;
+  }
+
+  function syncKarnetDateLimits() {
+    const startInput = document.getElementById('karnet-od');
+    const endInput = document.getElementById('karnet-do');
+    if (!startInput || !endInput) return;
+
+    startInput.min = saleMinimumDateValue;
+    if (!startInput.value || startInput.value < saleMinimumDateValue) startInput.value = saleMinimumDateValue;
+
+    const minEnd = addDaysToDateValue(startInput.value, 1);
+    endInput.min = minEnd;
+    if (!endInput.value || endInput.value <= startInput.value) endInput.value = minEnd;
+  }
+
   // Dashboard
   async function loadDashboard() {
     const data = await apiFetch('/api/statystyki/dzisiaj');
@@ -1155,6 +1222,8 @@
 
   // Sprzedaż karnetu
   async function sprzedajKarnet() {
+    await refreshSaleDateLimit();
+
     const alertEl  = document.getElementById('karnet-alert');
     const errorEl  = document.getElementById('karnet-error');
     const cardId   = document.getElementById('karnet-rfid')?.value?.trim();
@@ -1168,6 +1237,8 @@
     if (!cardId)       return showAlert(alertEl, errorEl, false, '⚠ Podaj numer karty RFID.');
     if (!tariffId || isNaN(tariffId)) return showAlert(alertEl, errorEl, false, '⚠ Wybierz taryfę z listy (taryfy ładują się z API).');
     if (!validFrom || !validTo) return showAlert(alertEl, errorEl, false, '⚠ Podaj daty ważności.');
+    if (validFrom < saleMinimumDateValue) return showAlert(alertEl, errorEl, false, '⚠ Na dzisiaj nie można już wystawić karnetu. Wybierz najwcześniej kolejny dostępny dzień.');
+    if (validTo <= validFrom) return showAlert(alertEl, errorEl, false, '⚠ Data zakończenia musi być późniejsza niż data rozpoczęcia.');
 
     const btn = document.getElementById('btnSprzedajKarnet');
     btn.disabled = true;
@@ -1205,6 +1276,8 @@
 
   // Sprzedaż biletu
   async function sprzedajBilet() {
+    await refreshSaleDateLimit();
+
     const alertEl  = document.getElementById('bilet-alert');
     const errorEl  = document.getElementById('bilet-error');
     const cardId   = document.getElementById('bilet-rfid')?.value?.trim();
@@ -1218,6 +1291,7 @@
     if (!cardId)      return showAlert(alertEl, errorEl, false, '⚠ Podaj numer karty RFID.');
     if (!tariffId || isNaN(tariffId)) return showAlert(alertEl, errorEl, false, '⚠ Wybierz taryfę z listy (taryfy ładują się z API).');
     if (!validOn)     return showAlert(alertEl, errorEl, false, '⚠ Podaj datę ważności.');
+    if (validOn < saleMinimumDateValue) return showAlert(alertEl, errorEl, false, '⚠ Na dzisiaj nie można już sprzedać biletu. Wybierz najwcześniej kolejny dostępny dzień.');
 
     const btn = document.getElementById('btnSprzedajBilet');
     btn.disabled = true;
@@ -1370,6 +1444,9 @@
   }
 
   // Ładuj przy starcie
+  syncBiletDateLimits();
+  syncKarnetDateLimits();
+  refreshSaleDateLimit();
   loadDashboard();
   loadTaryfy();
 

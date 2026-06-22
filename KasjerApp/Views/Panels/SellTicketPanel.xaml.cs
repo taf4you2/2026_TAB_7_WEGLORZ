@@ -14,9 +14,11 @@ public partial class SellTicketPanel : UserControl
     {
         InitializeComponent();
         _api = api;
-        ValidOnPicker.SelectedDate = DateTime.Today.AddYears(1);
         Loaded += async (_, _) =>
         {
+            var minimumSaleDate = await _api.GetMinimumSaleDateAsync();
+            ValidOnPicker.DisplayDateStart = minimumSaleDate;
+            ValidOnPicker.SelectedDate = minimumSaleDate;
             await LoadTariffsAsync();
             await LoadFreeCardsAsync();
         };
@@ -110,6 +112,9 @@ public partial class SellTicketPanel : UserControl
         if (string.IsNullOrEmpty(rfid)) { ShowError("Podaj RFID karty."); return; }
         if (TariffCombo.SelectedItem is not TariffItem tariff) { ShowError("Wybierz taryfę."); return; }
         if (ValidOnPicker.SelectedDate is not DateTime validOn) { ShowError("Wybierz datę ważności."); return; }
+        var minimumSaleDate = await _api.GetMinimumSaleDateAsync();
+        ValidOnPicker.DisplayDateStart = minimumSaleDate;
+        if (validOn.Date < minimumSaleDate) { ShowError("Na dzisiaj nie mozna juz sprzedac biletu. Wybierz najwczesniej kolejny dostepny dzien."); return; }
         if (!int.TryParse(QuantityBox.Text.Trim(), out int qty) || qty < 1 || qty > 50)
         {
             ShowError("Liczba zjazdów musi być liczbą całkowitą 1–50."); return;

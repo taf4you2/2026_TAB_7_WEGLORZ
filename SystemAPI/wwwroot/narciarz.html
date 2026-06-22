@@ -778,7 +778,7 @@
                         <div class="card-body">
                             <div class="form-group" style="margin-bottom:0">
                                 <label class="form-label">Data rozpoczęcia karnetu</label>
-                                <input class="form-input" type="date" id="zakup-from">
+                                <input class="form-input" type="date" id="zakup-from" required>
                             </div>
                         </div>
                     </div>
@@ -1330,6 +1330,50 @@
             return date.toISOString().slice(0, 10);
         }
 
+        function todayDateValue() {
+            const today = new Date();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${today.getFullYear()}-${month}-${day}`;
+        }
+
+        let saleMinimumDateValue = todayDateValue();
+
+        function timeValueToSeconds(value) {
+            if (!value) return NaN;
+            const [hours, minutes, seconds = 0] = value.split(':').map(Number);
+            if (![hours, minutes, seconds].every(Number.isFinite)) return NaN;
+            return hours * 3600 + minutes * 60 + seconds;
+        }
+
+        function currentTimeSeconds() {
+            const now = new Date();
+            return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+        }
+
+        async function refreshSaleDateLimit() {
+            saleMinimumDateValue = todayDateValue();
+
+            const lifts = await apiFetch('/api/wyciagi');
+            const closingTimes = (lifts ?? [])
+                .map(l => timeValueToSeconds(l.closesAt))
+                .filter(Number.isFinite);
+
+            if (closingTimes.length > 0 && currentTimeSeconds() > Math.max(...closingTimes)) {
+                saleMinimumDateValue = addDaysToDateValue(saleMinimumDateValue, 1);
+            }
+
+            syncZakupDateLimit();
+        }
+
+        function syncZakupDateLimit() {
+            const startInput = document.getElementById('zakup-from');
+            if (!startInput) return;
+
+            startInput.min = saleMinimumDateValue;
+            if (!startInput.value || startInput.value < saleMinimumDateValue) startInput.value = saleMinimumDateValue;
+        }
+
         async function zaladujTaryfy() {
             const data = await apiFetch('/api/zakup/taryfy');
             const lista = document.getElementById('zakup-taryfy-lista');
@@ -1349,10 +1393,9 @@
           </label>`).join('');
 
             // Ustaw domyślną datę rozpoczęcia.
-            const today = new Date();
-            const fmtDate = d => d.toISOString().split('T')[0];
-            document.getElementById('zakup-from').value = fmtDate(today);
-            document.getElementById('zakup-from').onchange = aktualizujPodsumowanie;
+            const startInput = document.getElementById('zakup-from');
+            await refreshSaleDateLimit();
+            startInput.onchange = aktualizujPodsumowanie;
         }
 
         function wybierzTaryfe(id, name, price, durationDays) {
@@ -1378,6 +1421,12 @@
                 return;
             }
 
+            if (fromVal < saleMinimumDateValue) {
+                summary.innerHTML = '<span style="color:var(--danger)">Na dzisiaj nie mozna juz kupic karnetu. Wybierz najwczesniej kolejny dostepny dzien.</span>';
+                if (btn) btn.disabled = true;
+                return;
+            }
+
             const from = new Date(fromVal);
             const days = selectedTariffDurationDays ?? 1;
             const lastValidDay = new Date(addDaysToDateValue(fromVal, days - 1));
@@ -1395,10 +1444,16 @@
         }
 
         async function zlozZamowienie() {
+            await refreshSaleDateLimit();
+
             const fromVal = document.getElementById('zakup-from')?.value;
             const result = document.getElementById('zakup-result');
             const btn = document.getElementById('zakup-btn');
             if (!selectedTariffId || !fromVal) return;
+            if (fromVal < saleMinimumDateValue) {
+                aktualizujPodsumowanie();
+                return;
+            }
 
             btn.disabled = true; btn.textContent = '⏳ Przetwarzanie płatności…';
             try {

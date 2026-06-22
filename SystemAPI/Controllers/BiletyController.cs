@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SystemAPI.Services;
 using SystemStacjiNarciarskiejDLL;
 using SystemStacjiNarciarskiejDLL.Models;
 
@@ -20,6 +21,10 @@ public class BiletyController(SkiResortDbContext db) : ControllerBase
     {
         if (req.Quantity < 1 || req.Quantity > 50)
             return BadRequest(new { message = "Liczba biletów musi być między 1 a 50." });
+
+        var saleWindow = await SalesDatePolicy.GetMinimumSaleDateAsync(db);
+        if (req.ValidOn.Date < saleWindow.MinimumDate)
+            return BadRequest(new { message = SalesDatePolicy.CreateTooEarlyMessage("bilet", saleWindow) });
 
         var card = await db.Cards.FindAsync(req.CardId);
         if (card == null)

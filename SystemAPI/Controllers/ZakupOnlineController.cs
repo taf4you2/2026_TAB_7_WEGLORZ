@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SystemAPI.Services;
 using SystemStacjiNarciarskiejDLL;
 using SystemStacjiNarciarskiejDLL.Models;
 
@@ -56,6 +57,10 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
         var durationDays = GetDurationDays(tariff.Name);
         var validFrom = req.ValidFrom.Date;
         var validTo = validFrom.AddDays(durationDays);
+        var saleWindow = await SalesDatePolicy.GetMinimumSaleDateAsync(db);
+
+        if (validFrom < saleWindow.MinimumDate)
+            return BadRequest(new { message = SalesDatePolicy.CreateTooEarlyMessage("karnet", saleWindow) });
 
         if (tariff.PoolLimit.HasValue)
         {

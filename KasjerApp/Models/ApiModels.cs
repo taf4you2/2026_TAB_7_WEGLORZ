@@ -24,6 +24,8 @@ public record ShiftReportDto(string CashierLogin, DateOnly Date, int TotalSalesC
     decimal TotalSalesAmount, int TotalReturnsCount, decimal TotalReturnsAmount,
     decimal NetRevenue, decimal CashAmount, decimal CardAmount);
 
+public record LiftDto(int Id, string Name, string Status, TimeSpan? OpensAt, TimeSpan? ClosesAt, bool IsActive);
+
 // ── Oczekujące zwroty ─────────────────────────────────────────────────────────
 public record PendingReturnDto(int PassId, string CardRfid, string? OwnerEmail, string? PassType,
     DateTime? ValidTo, int RemainingDays, decimal EstimatedRefund);

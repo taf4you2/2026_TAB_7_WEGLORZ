@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -30,12 +31,13 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
             t.Name,
             season = t.Season?.Name,
             t.Price ,
-            t.RideCount
+            t.RideCount,
+            durationDays = GetDurationDays(t.Name)
         }));
     }
 
     // POST /api/zakup/online — UC2: zakup online przez narciarza
-    // Body: { "tariffId": 5, "validFrom": "2026-05-10", "validTo": "2026-05-12" }
+    // Body: { "tariffId": 13, "validFrom": "2026-05-10" }
     [Authorize]
     [HttpPost("online")]
     public async Task<IActionResult> KupOnline([FromBody] ZakupOnlineRequest req)
@@ -51,8 +53,9 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
         if (tariff.PassType?.Name?.StartsWith("karnet") != true)
             return BadRequest(new { message = "Zakup online dotyczy wyłącznie karnetów." });
 
-        if (req.ValidFrom >= req.ValidTo)
-            return BadRequest(new { message = "Data końca musi być późniejsza niż data początku." });
+        var durationDays = GetDurationDays(tariff.Name);
+        var validFrom = req.ValidFrom.Date;
+        var validTo = validFrom.AddDays(durationDays);
 
         if (tariff.PoolLimit.HasValue)
         {
@@ -84,8 +87,8 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
             TariffId = req.TariffId,
             ReservationId = reservation.Id,
             StatusId = oczekujeNaOdbiórStatus?.Id,
-            ValidFrom = DateTime.SpecifyKind(req.ValidFrom, DateTimeKind.Utc),
-            ValidTo = DateTime.SpecifyKind(req.ValidTo, DateTimeKind.Utc),
+            ValidFrom = DateTime.SpecifyKind(validFrom, DateTimeKind.Utc),
+            ValidTo = DateTime.SpecifyKind(validTo, DateTimeKind.Utc),
             InitialRides = tariff.RideCount,
             RemainingRides = tariff.RideCount
         };
@@ -99,11 +102,26 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
             tariff = tariff.Name,
             price = tariff.Price,
             rideCount = tariff.RideCount,
+            durationDays,
             validFrom = pass.ValidFrom,
             validTo = pass.ValidTo,
             message = "Rezerwacja przyjęta. Odbierz karnet przy kasie, podając numer rezerwacji."
         });
     }
+
+    private static int GetDurationDays(string tariffName)
+    {
+        var match = Regex.Match(
+            tariffName,
+            @"\b(\d+)[-\s]*dniow",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+        return match.Success
+            && int.TryParse(match.Groups[1].Value, out var days)
+            && days > 0
+            ? days
+            : 1;
+    }
 }
 
-public record ZakupOnlineRequest(int TariffId, DateTime ValidFrom, DateTime ValidTo);
+public record ZakupOnlineRequest(int TariffId, DateTime ValidFrom);

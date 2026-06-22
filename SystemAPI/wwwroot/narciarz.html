@@ -771,18 +771,14 @@
                     </div>
                 </div>
 
-                <!-- KROK 2: daty + podsumowanie + płatność -->
+                <!-- KROK 2: data początkowa + podsumowanie + płatność -->
                 <div style="display:flex;flex-direction:column;gap:20px">
                     <div class="card" style="margin-bottom:0">
-                        <div class="card-header"><h3>2. Wybierz daty</h3></div>
+                        <div class="card-header"><h3>2. Wybierz datę rozpoczęcia</h3></div>
                         <div class="card-body">
-                            <div class="form-group">
-                                <label class="form-label">Data rozpoczęcia</label>
-                                <input class="form-input" type="date" id="zakup-from">
-                            </div>
                             <div class="form-group" style="margin-bottom:0">
-                                <label class="form-label">Data zakończenia</label>
-                                <input class="form-input" type="date" id="zakup-to">
+                                <label class="form-label">Data rozpoczęcia karnetu</label>
+                                <input class="form-input" type="date" id="zakup-from">
                             </div>
                         </div>
                     </div>
@@ -791,7 +787,7 @@
                         <div class="card-header"><h3>3. Podsumowanie i płatność</h3></div>
                         <div class="card-body">
                             <div id="zakup-summary" style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
-                                Wybierz karnet i daty, aby zobaczyć podsumowanie.
+                                Wybierz karnet i datę rozpoczęcia, aby zobaczyć podsumowanie.
                             </div>
                             <button class="btn btn-primary" id="zakup-btn" onclick="zlozZamowienie()" style="width:100%" disabled>
                                 💳 Zapłać i zarezerwuj
@@ -1326,6 +1322,13 @@
         let selectedTariffId = null;
         let selectedTariffName = '';
         let selectedTariffPrice = 0;
+        let selectedTariffDurationDays = null;
+
+        function addDaysToDateValue(dateValue, days) {
+            const date = new Date(`${dateValue}T00:00:00Z`);
+            date.setUTCDate(date.getUTCDate() + days);
+            return date.toISOString().slice(0, 10);
+        }
 
         async function zaladujTaryfy() {
             const data = await apiFetch('/api/zakup/taryfy');
@@ -1337,7 +1340,7 @@
             }
             lista.innerHTML = data.map(t => `
           <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px solid var(--border);border-radius:8px;cursor:pointer" id="taryfa-label-${t.id}">
-            <input type="radio" name="taryfa-zakup" style="accent-color:var(--primary)" value="${t.id}" onchange="wybierzTaryfe(${t.id},'${t.name}',${t.price})">
+            <input type="radio" name="taryfa-zakup" style="accent-color:var(--primary)" value="${t.id}" onchange="wybierzTaryfe(${t.id},'${t.name}',${t.price},${t.durationDays ?? 'null'})">
             <div style="flex:1">
               <div style="font-weight:600">${t.name}</div>
               <div style="font-size:12px;color:var(--text-muted)">${t.season ?? ''}</div>
@@ -1345,20 +1348,18 @@
             <div style="font-weight:700;color:var(--primary)">${t.price?.toFixed(2)} zł</div>
           </label>`).join('');
 
-            // Ustaw domyślne daty
+            // Ustaw domyślną datę rozpoczęcia.
             const today = new Date();
-            const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
             const fmtDate = d => d.toISOString().split('T')[0];
             document.getElementById('zakup-from').value = fmtDate(today);
-            document.getElementById('zakup-to').value = fmtDate(tomorrow);
-            document.getElementById('zakup-from').addEventListener('change', aktualizujPodsumowanie);
-            document.getElementById('zakup-to').addEventListener('change', aktualizujPodsumowanie);
+            document.getElementById('zakup-from').onchange = aktualizujPodsumowanie;
         }
 
-        function wybierzTaryfe(id, name, price) {
+        function wybierzTaryfe(id, name, price, durationDays) {
             selectedTariffId = id;
             selectedTariffName = name;
             selectedTariffPrice = price;
+            selectedTariffDurationDays = durationDays;
             document.querySelectorAll('#zakup-taryfy-lista label').forEach(l => l.style.borderColor = 'var(--border)');
             const lbl = document.getElementById(`taryfa-label-${id}`);
             if (lbl) lbl.style.borderColor = 'var(--primary)';
@@ -1367,31 +1368,25 @@
 
         function aktualizujPodsumowanie() {
             const fromVal = document.getElementById('zakup-from')?.value;
-            const toVal = document.getElementById('zakup-to')?.value;
             const summary = document.getElementById('zakup-summary');
             const btn = document.getElementById('zakup-btn');
             if (!summary) return;
 
-            if (!selectedTariffId || !fromVal || !toVal) {
-                summary.innerHTML = '<span style="color:var(--text-muted)">Wybierz karnet i daty.</span>';
+            if (!selectedTariffId || !fromVal) {
+                summary.innerHTML = '<span style="color:var(--text-muted)">Wybierz karnet i datę rozpoczęcia.</span>';
                 if (btn) btn.disabled = true;
                 return;
             }
 
             const from = new Date(fromVal);
-            const to = new Date(toVal);
-            if (from >= to) {
-                summary.innerHTML = '<span style="color:var(--danger)">Data końca musi być późniejsza niż data początku.</span>';
-                if (btn) btn.disabled = true;
-                return;
-            }
-
-            const days = Math.round((to - from) / 86400000);
+            const days = selectedTariffDurationDays ?? 1;
+            const lastValidDay = new Date(addDaysToDateValue(fromVal, days - 1));
+            const isOneDay = days === 1;
             summary.innerHTML = `
           <div style="display:flex;flex-direction:column;gap:8px">
             <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Karnet</span><span style="font-weight:600">${selectedTariffName}</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Od</span><span>${from.toLocaleDateString('pl-PL')}</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Do</span><span>${to.toLocaleDateString('pl-PL')}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">${isOneDay ? 'Dzień' : 'Od'}</span><span>${from.toLocaleDateString('pl-PL')}</span></div>
+            ${isOneDay ? '' : `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Ostatni dzień</span><span>${lastValidDay.toLocaleDateString('pl-PL')}</span></div>`}
             <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Liczba dni</span><span>${days}</span></div>
             <hr style="border:none;border-top:1px solid var(--border)">
             <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700"><span>Do zapłaty</span><span style="color:var(--primary)">${selectedTariffPrice?.toFixed(2)} zł</span></div>
@@ -1401,27 +1396,33 @@
 
         async function zlozZamowienie() {
             const fromVal = document.getElementById('zakup-from')?.value;
-            const toVal = document.getElementById('zakup-to')?.value;
             const result = document.getElementById('zakup-result');
             const btn = document.getElementById('zakup-btn');
-            if (!selectedTariffId || !fromVal || !toVal) return;
+            if (!selectedTariffId || !fromVal) return;
 
             btn.disabled = true; btn.textContent = '⏳ Przetwarzanie płatności…';
             try {
                 const res = await fetch('/api/zakup/online', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ tariffId: selectedTariffId, validFrom: fromVal, validTo: toVal })
+                    body: JSON.stringify({ tariffId: selectedTariffId, validFrom: fromVal })
                 });
                 const data = await res.json().catch(() => ({}));
 
                 if (res.ok) {
+                    const lastValidDay = new Date(data.validTo);
+                    lastValidDay.setDate(lastValidDay.getDate() - 1);
+                    const validity = data.durationDays === 1
+                        ? new Date(data.validFrom).toLocaleDateString('pl-PL')
+                        : data.durationDays > 1
+                            ? `${new Date(data.validFrom).toLocaleDateString('pl-PL')} – ${lastValidDay.toLocaleDateString('pl-PL')}`
+                            : `${new Date(data.validFrom).toLocaleDateString('pl-PL')} – ${new Date(data.validTo).toLocaleDateString('pl-PL')}`;
                     result.innerHTML = `<div style="padding:16px;background:var(--success-light);border-left:4px solid var(--success);border-radius:4px">
               <div style="font-weight:700;font-size:16px;color:var(--success);margin-bottom:8px">✅ Rezerwacja przyjęta!</div>
               <div style="display:flex;flex-direction:column;gap:4px;font-size:13px">
                 <div><strong>Nr rezerwacji:</strong> <code style="background:#fff;padding:2px 6px;border-radius:4px">${data.reservationNumber}</code></div>
                 <div><strong>Karnet:</strong> ${data.tariff}</div>
-                <div><strong>Ważny:</strong> ${new Date(data.validFrom).toLocaleDateString('pl-PL')} – ${new Date(data.validTo).toLocaleDateString('pl-PL')}</div>
+                <div><strong>Ważny:</strong> ${validity}</div>
                 <div><strong>Kwota:</strong> ${data.price?.toFixed(2)} zł</div>
               </div>
               <div style="margin-top:10px;font-size:12px;color:#555">${data.message}</div>
@@ -1429,9 +1430,10 @@
                     result.style.display = 'block';
                     selectedTariffId = null;
                     selectedTariffName = '';
+                    selectedTariffDurationDays = null;
                     document.querySelectorAll('input[name="taryfa-zakup"]').forEach(r => r.checked = false);
                     document.querySelectorAll('#zakup-taryfy-lista label').forEach(l => l.style.borderColor = 'var(--border)');
-                    document.getElementById('zakup-summary').innerHTML = '<span style="color:var(--text-muted)">Wybierz karnet i daty.</span>';
+                    document.getElementById('zakup-summary').innerHTML = '<span style="color:var(--text-muted)">Wybierz karnet i datę rozpoczęcia.</span>';
                 } else {
                     result.innerHTML = `<div style="padding:12px;background:var(--danger-light);border-left:4px solid var(--danger);border-radius:4px;color:var(--danger)">❌ ${data.message ?? 'Błąd podczas składania zamówienia.'}</div>`;
                     result.style.display = 'block';

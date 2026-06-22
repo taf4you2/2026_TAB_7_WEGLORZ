@@ -182,15 +182,12 @@
         // --- Zakup
         { id: 'zakup-from', selector: '#zakup-from', type: 'A', tour: 10, section: 'zakup',
           title: 'Data rozpoczęcia',
-          body: ['Pole <b>obowiązkowe</b>. Format kalendarza (DD.MM.RRRR).'] },
-        { id: 'zakup-to', selector: '#zakup-to', type: 'A', section: 'zakup',
-          title: 'Data zakończenia',
-          body: ['Pole <b>obowiązkowe</b>.',
-                 '<b>Nie może być wcześniejsza</b> niż data rozpoczęcia.'] },
+          body: ['Pole <b>obowiązkowe</b>. Format kalendarza (DD.MM.RRRR).',
+                 'Wybierasz tylko jeden dzień — początek ważności karnetu. Data końcowa jest obliczana automatycznie.'] },
         { id: 'zakup-btn', selector: '#zakup-btn', type: 'B', tour: 11, section: 'zakup',
           title: 'Zapłać i zarezerwuj',
           body: ['Rezerwuje i opłaca karnet online (UC2) — do odbioru przy kasie.',
-                 'Aktywny dopiero po wyborze <b>taryfy</b> oraz <b>dat</b>.'] },
+                 'Aktywny dopiero po wyborze <b>taryfy</b> oraz <b>daty rozpoczęcia</b>.'] },
         // --- Globalne
         { id: 'logout', selector: '[onclick="logout()"]', type: 'B',
           title: 'Wyloguj',
@@ -206,9 +203,7 @@
         { selector: '#zwrot-rfid', message: 'Najpierw <b>wybierz kartę RFID</b> z listy.', bad: emptyVal },
         { selector: '#zwrot-reason-select', message: '<b>Powód zwrotu jest wymagany</b> — wybierz z listy.', bad: emptyVal },
         { selector: '#zwrot-karnety-lista', message: 'Zaznacz <b>karnet do zwrotu</b> powyżej.',
-          bad: function (el) { return !el.querySelector('input[type=radio]:checked'); } },
-        { selector: '#zakup-to', message: 'Data zakończenia <b>nie może być wcześniejsza</b> niż rozpoczęcia.',
-          bad: function (el) { var f = document.getElementById('zakup-from'); return !!(f && f.value && el.value && el.value < f.value); } }
+          bad: function (el) { return !el.querySelector('input[type=radio]:checked'); } }
       ],
       submits: [
         { selector: '[onclick="zaladujMojeDane()"]', fields: ['#narciarz-rfid'] },

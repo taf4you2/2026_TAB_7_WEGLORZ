@@ -127,6 +127,7 @@ INSERT INTO "card" (id, status_id, user_id, deposit_paid, block_reason, physical
   ('F0:11:22:33', 1, NULL, false, NULL, 'dobry', NOW() - INTERVAL '3 days'),
   ('AA:BB:CC:DD', 1, NULL, false, NULL, 'dobry', NOW() - INTERVAL '1 day'),
   ('11:22:33:44', 1, NULL, false, NULL, 'nowy',  NOW()),
+  ('33:44:55:66', 1, 4, true, NULL, 'nowy',  NOW()),
   ('55:66:77:88', 1, NULL, false, NULL, 'nowy',  NOW());
 
 -- ========== REZERWACJE, KARNETY I TRANSAKCJE ==========

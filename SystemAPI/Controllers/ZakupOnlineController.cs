@@ -44,6 +44,7 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
     public async Task<IActionResult> KupOnline([FromBody] ZakupOnlineRequest req)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var requestedCardId = req.CardId?.Trim();
 
         var tariff = await db.Tariffs.Include(t => t.PassType).FirstOrDefaultAsync(t => t.Id == req.TariffId);
         if (tariff == null)
@@ -62,6 +63,25 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
         if (validFrom < saleWindow.MinimumDate)
             return BadRequest(new { message = SalesDatePolicy.CreateTooEarlyMessage("karnet", saleWindow) });
 
+        Card? assignedCard = null;
+        if (!string.IsNullOrWhiteSpace(requestedCardId))
+        {
+            assignedCard = await db.Cards
+                .Include(c => c.Status)
+                .Include(c => c.SkiPasses)
+                    .ThenInclude(sp => sp.Status)
+                .FirstOrDefaultAsync(c => c.Id == requestedCardId);
+
+            if (assignedCard == null)
+                return BadRequest(new { message = $"Karta {requestedCardId} nie istnieje." });
+
+            if (string.Equals(assignedCard.Status?.Name, "zastrzezony", StringComparison.OrdinalIgnoreCase))
+                return Conflict(new { message = "Karta jest zastrzezona." });
+
+            if (HasBlockingPassInPeriod(assignedCard, validFrom, validTo))
+                return Conflict(new { message = "Karta RFID ma juz przypisany karnet w wybranym okresie." });
+        }
+
         if (tariff.PoolLimit.HasValue)
         {
             //TODO(Nalezy sprawdzic czy zablokowane karnety powinny sie zaliczac do puli biletów!!!)
@@ -75,11 +95,21 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
             .FirstOrDefaultAsync(s => s.Name == "oczekuje_na_odbior");
 
         
+        var potwierdzonaStatus = await db.DictReservationStatuses
+            .FirstOrDefaultAsync(s => s.Name == "potwierdzona");
+        var aktywnyStatus = await db.DictPassStatuses
+            .FirstOrDefaultAsync(s => s.Name == "aktywny");
+        var zajetaStatus = await db.DictCardStatuses
+            .FirstOrDefaultAsync(s => s.Name == "zajeta");
+
+        if (assignedCard != null && (aktywnyStatus == null || zajetaStatus == null))
+            return BadRequest(new { message = "Brakuje statusu aktywny lub zajeta w slowniku." });
+
         var reservation = new Reservation
         {
             ReservationNumber = $"ONL-{DateTime.UtcNow:yyyyMMddHHmmssfff}",
             ReservationDate = DateTime.UtcNow,
-            StatusId = oczekujacaStatus?.Id,
+            StatusId = assignedCard == null ? oczekujacaStatus?.Id : potwierdzonaStatus?.Id,
             UserId = userId
         };
         db.Reservations.Add(reservation);
@@ -89,6 +119,7 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
     
         var pass = new SkiPass
         {
+            CardId = assignedCard?.Id,
             TariffId = req.TariffId,
             ReservationId = reservation.Id,
             StatusId = oczekujeNaOdbiórStatus?.Id,
@@ -98,6 +129,15 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
             RemainingRides = tariff.RideCount
         };
         db.SkiPasses.Add(pass);
+
+        if (assignedCard != null)
+        {
+            pass.StatusId = aktywnyStatus?.Id;
+            assignedCard.UserId = userId;
+            assignedCard.DepositPaid = true;
+            assignedCard.StatusId = zajetaStatus?.Id;
+        }
+
         await db.SaveChangesAsync();
 
         return Ok(new
@@ -108,9 +148,13 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
             price = tariff.Price,
             rideCount = tariff.RideCount,
             durationDays,
+            cardId = pass.CardId,
+            passStatus = assignedCard == null ? "oczekuje_na_odbior" : aktywnyStatus?.Name,
             validFrom = pass.ValidFrom,
             validTo = pass.ValidTo,
-            message = "Rezerwacja przyjęta. Odbierz karnet przy kasie, podając numer rezerwacji."
+            message = assignedCard == null
+                ? "Rezerwacja przyjęta. Odbierz karnet przy kasie, podając numer rezerwacji."
+                : "Karnet zostal przypisany do podanej karty RFID."
         });
     }
 
@@ -127,6 +171,17 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
             ? days
             : 1;
     }
+
+    private static bool HasBlockingPassInPeriod(Card card, DateTime validFrom, DateTime validTo)
+    {
+        return card.SkiPasses.Any(sp =>
+            sp.ValidFrom.HasValue &&
+            sp.ValidTo.HasValue &&
+            sp.ValidFrom.Value < validTo &&
+            sp.ValidTo.Value > validFrom &&
+            !string.Equals(sp.Status?.Name, "wygasly", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(sp.Status?.Name, "zwrocony", StringComparison.OrdinalIgnoreCase));
+    }
 }
 
-public record ZakupOnlineRequest(int TariffId, DateTime ValidFrom);
+public record ZakupOnlineRequest(int TariffId, DateTime ValidFrom, string? CardId = null);

@@ -1,0 +1,32 @@
+@startuml 04_odbicie_karty_weryfikacja
+title Odbicie karty i weryfikacja ważności (Bramka wyciągu)
+
+actor "Narciarz" as N
+participant "Bramka / czytnik RFID\n(klient: projekt Bramka)" as Gate
+participant "BramkaAPI" as API
+database "PostgreSQL\n(ski_resort)" as DB
+
+N -> Gate : przykłada kartę RFID
+Gate -> API : GET /api/bramka/sprawdz-karte/{id}
+API -> DB : SELECT card WHERE id = ?
+DB --> API : rekord karty (lub brak)
+
+alt karta nie istnieje
+  API --> Gate : 404 NotFound\n{ "Karta o podanym ID nie istnieje." }
+  Gate --> N : Odmowa dostępu (czerwone światło)
+else karta aktywna (StatusId = 1)
+  API --> Gate : 200 OK\n{ Aktywna = true, "Dostęp przyznany." }
+  Gate -> Gate : otwarcie bramki, rejestracja przejazdu
+  Gate --> N : Dostęp przyznany (zielone światło)
+else karta nieaktywna / zablokowana
+  API --> Gate : 200 OK\n{ Aktywna = false, "Odmowa dostępu." }
+  Gate --> N : Odmowa dostępu (czerwone światło)
+end
+
+note over Gate, API
+  Sprawdzenie puli aktywnych nośników:
+  GET /api/bramka/aktywne-karty
+  (zwraca karty StatusId = 1 wraz z datą ważności karnetu).
+end note
+
+@enduml

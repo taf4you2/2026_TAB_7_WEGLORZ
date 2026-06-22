@@ -776,9 +776,18 @@
                     <div class="card" style="margin-bottom:0">
                         <div class="card-header"><h3>2. Wybierz datę rozpoczęcia</h3></div>
                         <div class="card-body">
-                            <div class="form-group" style="margin-bottom:0">
+                            <div class="form-group">
                                 <label class="form-label">Data rozpoczęcia karnetu</label>
                                 <input class="form-input" type="date" id="zakup-from">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0">
+                                <label class="form-label">Karta (opcjonalnie)</label>
+                                <select class="form-input" id="zakup-rfid">
+                                    <option value="">— Odbiór przy kasie (bez karty) —</option>
+                                </select>
+                                <div style="font-size:12px;color:var(--text-muted);margin-top:4px">
+                                    Wybierz swoją kartę, aby karnet był od razu aktywny. Bez karty — odbiór przy kasie.
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1295,8 +1304,12 @@
                     .map(p => {
                         const from = p.validFrom ? new Date(p.validFrom).toLocaleDateString('pl-PL') : '—';
                         const to = p.validTo ? new Date(p.validTo).toLocaleDateString('pl-PL') : '—';
-                        return `<div style="font-size:13px;color:var(--text-muted);margin-top:4px">
-                📋 ${p.tariff ?? '—'} · ${from} – ${to} · <strong>${p.price?.toFixed(2) ?? '—'} zł</strong>
+                        return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px">
+                <div style="font-size:13px;color:var(--text-muted)">
+                  📋 ${p.tariff ?? '—'} · ${from} – ${to} · <strong>${p.price?.toFixed(2) ?? '—'} zł</strong>
+                </div>
+                <button class="btn btn-outline" style="padding:6px 12px;font-size:12px;white-space:nowrap"
+                        onclick="anulujRezerwacje(${p.id})">↩️ Zwróć / anuluj</button>
               </div>`;
                     }).join('');
 
@@ -1316,6 +1329,26 @@
             </div>
           </div>`;
             }).join('');
+        }
+
+        async function anulujRezerwacje(passId) {
+            if (!confirm('Czy na pewno wycofać tę oczekującą rezerwację? Środki zostaną zwrócone w pełnej wysokości.')) return;
+            try {
+                const res = await fetch(`${API}/api/karnety/${passId}/anuluj`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    alert(`✅ Rezerwacja anulowana. Do zwrotu: ${Number(data.refund).toFixed(2)} zł.`);
+                    zaladujRezerwacje();
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert(`❌ Błąd: ${err.message ?? res.status}`);
+                }
+            } catch (e) {
+                alert('❌ Brak połączenia z API.');
+            }
         }
 
         // ========== ZAKUP ONLINE (UC2) ==========
@@ -1400,16 +1433,23 @@
             const btn = document.getElementById('zakup-btn');
             if (!selectedTariffId || !fromVal) return;
 
+            const cardId = document.getElementById('zakup-rfid')?.value || null;
+
             btn.disabled = true; btn.textContent = '⏳ Przetwarzanie płatności…';
             try {
                 const res = await fetch('/api/zakup/online', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ tariffId: selectedTariffId, validFrom: fromVal })
+                    body: JSON.stringify({ tariffId: selectedTariffId, validFrom: fromVal, cardId })
                 });
                 const data = await res.json().catch(() => ({}));
 
                 if (res.ok) {
+                    const active = data.status === 'aktywny';
+                    const heading = active ? '✅ Karnet aktywny na karcie!' : '✅ Rezerwacja przyjęta!';
+                    const idLine = active
+                        ? `<div><strong>Karta:</strong> <code style="background:#fff;padding:2px 6px;border-radius:4px">${data.cardId}</code></div>`
+                        : `<div><strong>Nr rezerwacji:</strong> <code style="background:#fff;padding:2px 6px;border-radius:4px">${data.reservationNumber}</code></div>`;
                     const lastValidDay = new Date(data.validTo);
                     lastValidDay.setDate(lastValidDay.getDate() - 1);
                     const validity = data.durationDays === 1
@@ -1418,9 +1458,9 @@
                             ? `${new Date(data.validFrom).toLocaleDateString('pl-PL')} – ${lastValidDay.toLocaleDateString('pl-PL')}`
                             : `${new Date(data.validFrom).toLocaleDateString('pl-PL')} – ${new Date(data.validTo).toLocaleDateString('pl-PL')}`;
                     result.innerHTML = `<div style="padding:16px;background:var(--success-light);border-left:4px solid var(--success);border-radius:4px">
-              <div style="font-weight:700;font-size:16px;color:var(--success);margin-bottom:8px">✅ Rezerwacja przyjęta!</div>
+              <div style="font-weight:700;font-size:16px;color:var(--success);margin-bottom:8px">${heading}</div>
               <div style="display:flex;flex-direction:column;gap:4px;font-size:13px">
-                <div><strong>Nr rezerwacji:</strong> <code style="background:#fff;padding:2px 6px;border-radius:4px">${data.reservationNumber}</code></div>
+                ${idLine}
                 <div><strong>Karnet:</strong> ${data.tariff}</div>
                 <div><strong>Ważny:</strong> ${validity}</div>
                 <div><strong>Kwota:</strong> ${data.price?.toFixed(2)} zł</div>
@@ -1428,6 +1468,7 @@
               <div style="margin-top:10px;font-size:12px;color:#555">${data.message}</div>
             </div>`;
                     result.style.display = 'block';
+                    if (active) { zaladujKarnety(); }
                     selectedTariffId = null;
                     selectedTariffName = '';
                     selectedTariffDurationDays = null;
@@ -1509,6 +1550,13 @@
 
             // wypełnij listy kart wszystkimi kartami użytkownika
             wypelnijListeKart(me.cardIds);
+
+            // lista kart w sekcji zakupu — opcjonalna (pozwala kupić karnet od razu na własną kartę)
+            const zakupSel = document.getElementById('zakup-rfid');
+            if (zakupSel) {
+                zakupSel.innerHTML = '<option value="">— Odbiór przy kasie (bez karty) —</option>'
+                    + me.cardIds.map(cid => `<option value="${cid}">${cid}</option>`).join('');
+            }
 
             // domyślnie wybierz pierwszą
             myRfid = me.cardIds[0];

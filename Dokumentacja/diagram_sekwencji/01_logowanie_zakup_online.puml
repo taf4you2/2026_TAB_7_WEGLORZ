@@ -1,0 +1,45 @@
+@startuml 01_logowanie_zakup_online
+title Logowanie i zakup online (Portal narciarza)
+
+actor "Narciarz" as U
+participant "Portal narciarza\n(login.html / narciarz.html)" as Web
+participant "SystemAPI" as API
+database "PostgreSQL\n(ski_resort)" as DB
+
+== Logowanie (JWT) ==
+U -> Web : podaje e-mail i hasło
+Web -> API : POST /api/auth/login\n{ email, password, role: "narciarz" }
+API -> DB : SELECT user WHERE email = ?
+DB --> API : rekord użytkownika (PasswordHash)
+API -> API : BCrypt.Verify(password, hash)
+alt dane poprawne
+  API -> API : GenerateToken(userId, "narciarz")
+  API --> Web : 200 OK { userId, role, token (JWT) }
+  Web -> Web : zapis tokenu w localStorage
+else dane błędne
+  API --> Web : 401 Unauthorized { message }
+end
+
+== Przegląd oferty ==
+Web -> API : GET /api/zakup/taryfy
+API -> DB : SELECT taryfy (typ = karnet)
+DB --> API : lista taryf
+API --> Web : 200 OK [ taryfy ]
+U -> Web : wybiera taryfę i zakres dat
+
+== Zakup online (rezerwacja karnetu) ==
+Web -> API : POST /api/zakup/online\nAuthorization: Bearer <JWT>\n{ tariffId, validFrom, validTo }
+API -> API : odczyt userId z claimów JWT
+API -> DB : SELECT tariff (Include PassType)
+DB --> API : taryfa
+alt taryfa nie jest karnetem / błędne daty / pula wyczerpana
+  API --> Web : 400 Bad Request { message }
+else dane poprawne
+  API -> DB : INSERT reservation (status "oczekujaca")
+  API -> DB : INSERT ski_pass (status "oczekuje_na_odbior")
+  DB --> API : reservationNumber, passId
+  API --> Web : 200 OK\n{ reservationNumber, passId, price, validFrom, validTo,\n  message: "Odbierz karnet przy kasie" }
+end
+Web --> U : potwierdzenie + numer rezerwacji do odbioru
+
+@enduml

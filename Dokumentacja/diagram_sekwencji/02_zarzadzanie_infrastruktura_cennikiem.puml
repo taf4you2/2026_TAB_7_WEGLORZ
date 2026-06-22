@@ -1,0 +1,47 @@
+@startuml 02_zarzadzanie_infrastruktura_cennikiem
+title Zarządzanie infrastrukturą i cennikiem (Panel administratora)
+
+actor "Administrator" as A
+participant "Panel administratora" as Web
+participant "SystemAPI" as API
+database "PostgreSQL\n(ski_resort)" as DB
+
+== Logowanie administratora ==
+A -> Web : login + hasło
+Web -> API : POST /api/auth/login { email, password, role: "admin" }
+API -> DB : SELECT administrator WHERE login = ? AND is_active
+DB --> API : rekord (PasswordHash)
+API -> API : BCrypt.Verify -> GenerateToken(adminId, "admin")
+API --> Web : 200 OK { token (JWT) }
+
+== Polityka cenowa (taryfy) ==
+A -> Web : definiuje / edytuje taryfę
+Web -> API : POST /api/taryfy (lub PUT /api/taryfy/{id})\nBearer <JWT>
+API -> DB : INSERT / UPDATE tariff
+DB --> API : OK
+API --> Web : 200/201 { taryfa }
+note right of API : Masowe ceny: POST /api/taryfy/bulk
+
+== Infrastruktura — wyciągi ==
+A -> Web : dodaje wyciąg / zmienia status / harmonogram
+Web -> API : POST /api/wyciagi\nPUT /api/wyciagi/{id}/status\nPUT /api/wyciagi/{id}/harmonogram
+API -> DB : INSERT/UPDATE lift, lift_schedule
+DB --> API : OK
+API --> Web : 200 OK
+
+== Infrastruktura — trasy ==
+A -> Web : dodaje / zamyka trasę
+Web -> API : POST /api/trasy\nPUT /api/trasy/{id}/status
+API -> DB : INSERT/UPDATE trail (Include trudność, status)
+DB --> API : OK
+API --> Web : 200 OK
+
+== Pula kart i bramki ==
+A -> Web : zarządza pulą kart i bramkami
+Web -> API : POST /api/karty/partia\nPOST /api/bramki
+API -> DB : INSERT card (partia), INSERT gate
+DB --> API : OK
+API --> Web : 200/201 OK
+Web --> A : potwierdzenie zmian w systemie
+
+@enduml

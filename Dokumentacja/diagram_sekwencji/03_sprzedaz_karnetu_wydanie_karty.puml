@@ -1,0 +1,45 @@
+@startuml 03_sprzedaz_karnetu_wydanie_karty
+title Sprzedaż karnetu i wydanie karty (Panel kasjera / KasjerApp)
+
+actor "Kasjer" as K
+participant "KasjerApp (WPF)\n/ mockup kasjer.html" as App
+participant "SystemAPI" as API
+database "PostgreSQL\n(ski_resort)" as DB
+
+== Logowanie kasjera ==
+K -> App : login + hasło
+App -> API : POST /api/auth/login { email, password, role: "kasjer" }
+API -> DB : SELECT cashier WHERE login = ? AND is_active
+DB --> API : rekord (PasswordHash)
+API -> API : BCrypt.Verify -> GenerateToken(cashierId, "kasjer")
+API --> App : 200 OK { token (JWT) }
+
+alt A) Sprzedaż karnetu w kasie (UC2)
+  K -> App : skanuje kartę RFID, wybiera taryfę i daty
+  App -> API : GET /api/karty/{rfid}/weryfikacja-wydania
+  API -> DB : SELECT card + status
+  DB --> API : karta (status "wolna"?)
+  API --> App : 200 OK { możliwa do wydania }
+  App -> API : POST /api/karnety\n{ cardId, tariffId, validFrom, validTo }
+  API -> DB : INSERT reservation + ski_pass (status "aktywny")
+  API -> DB : UPDATE card (status "wydana"), pobranie kaucji
+  DB --> API : OK
+  API --> App : 201 Created { passId, status "aktywny", tariff }
+else B) Wydanie karty z rezerwacji online (odbiór)
+  K -> App : podaje numer rezerwacji + RFID karty
+  App -> API : POST /api/karnety/zatwierdz-odbior\n{ reservationNumber, cardRFID }
+  API -> DB : SELECT reservation + pending ski_pass\n(status "oczekuje_na_odbior")
+  DB --> API : rezerwacja + karnet
+  API -> API : walidacja: karta "wolna",\nbrak aktywnego karnetu, karnet nie wygasł
+  alt walidacja OK
+    API -> DB : UPDATE ski_pass.card = RFID, status "aktywny"
+    API -> DB : UPDATE card (status "wydana"), pobranie kaucji
+    DB --> API : OK
+    API --> App : 200 OK { karnet aktywowany }
+  else konflikt (karta zajęta / aktywny karnet)
+    API --> App : 409 Conflict { message }
+  end
+end
+App --> K : wydruk/wydanie karty + potwierdzenie kaucji
+
+@enduml

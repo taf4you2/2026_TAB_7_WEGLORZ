@@ -412,9 +412,28 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         var preview = CalculateRefund(pass.ValidFrom, pass.ValidTo, pass.Tariff?.Price ?? 0,
             req.ReturnCard, depositPaid, cardEligible, cardBlockReason);
 
+        // Narciarz (samoobsluga) sklada WNIOSEK o zwrot -> karnet trafia do kolejki kasjera
+        // (ZwrotyController / panel "oczekujace"). Nie tworzymy transakcji ani nie zwalniamy karty,
+        // bo to robi kasjer przy zatwierdzeniu. Dzieki temu nie pisemy cashier_id narciarza
+        // (brak go w tabeli cashier -> wczesniej FK transaction_cashier_id_fkey rzucal 500).
+        var isStaff = User.IsInRole("kasjer") || User.IsInRole("admin");
+        if (!isStaff)
+        {
+            var pendingReturnStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "oczekuje_na_zwrot");
+            pass.StatusId = pendingReturnStatus?.Id;
+            pass.BlockReason = req.Reason;
+            await db.SaveChangesAsync();
+            return Ok(preview);
+        }
+
+        // Kasjer/admin: finalizacja zwrotu od reki przy kasie.
         var returnedStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "zwrocony");
         var refundOpType = await db.DictOperationTypes.FirstOrDefaultAsync(o => o.Name == "zwrot_karnetu");
-        var cashierId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        // cashier_id ustawiamy tylko dla kasjera (jego id istnieje w tabeli cashier);
+        // dla admina zostawiamy NULL, by nie naruszyc FK na cashier(id).
+        int? cashierId = User.IsInRole("kasjer")
+            ? int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)
+            : null;
 
         pass.StatusId = returnedStatus?.Id;
         pass.BlockReason = req.Reason;
@@ -458,6 +477,65 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
         await db.SaveChangesAsync();
 
         return Ok(preview);
+    }
+
+    // POST /api/karnety/{id}/anuluj - samoobslugowe wycofanie oczekujacej rezerwacji online (narciarz).
+    // Karnet "oczekuje_na_odbior" nie ma jeszcze karty RFID, wiec wyszukiwany jest po zalogowanym uzytkowniku.
+    [HttpPost("{id:int}/anuluj")]
+    public async Task<IActionResult> CancelPendingPass(int id)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var pass = await db.SkiPasses
+            .Include(sp => sp.Tariff)
+            .Include(sp => sp.Status)
+            .Include(sp => sp.Reservation)
+            .FirstOrDefaultAsync(sp => sp.Id == id);
+
+        if (pass == null) return NotFound();
+
+        // Karnet musi nalezec do zalogowanego narciarza.
+        if (pass.Reservation?.UserId != userId)
+            return Forbid();
+
+        // Wycofac mozna tylko karnet oczekujacy na odbior (kupiony online, jeszcze nie wydany na karte).
+        if (pass.Status?.Name != "oczekuje_na_odbior")
+            return BadRequest(new { message = "Wycofac mozna tylko karnet oczekujacy na odbior." });
+
+        var returnedStatusId = await db.DictPassStatuses
+            .Where(s => s.Name == "zwrocony").Select(s => (int?)s.Id).FirstOrDefaultAsync();
+        var refundOpTypeId = await db.DictOperationTypes
+            .Where(o => o.Name == "zwrot_karnetu").Select(o => (int?)o.Id).FirstOrDefaultAsync();
+
+        pass.StatusId = returnedStatusId;
+        pass.BlockReason = "Wycofanie rezerwacji online przez narciarza.";
+
+        var refundAmount = pass.Tariff?.Price ?? 0; // pelny zwrot, bez oplaty manipulacyjnej (karnet nieodebrany)
+
+        // Operacja samoobslugowa -> bez kasjera (cashier_id = NULL).
+        db.Transactions.Add(new Transaction
+        {
+            ReservationId = pass.ReservationId,
+            CashierId = null,
+            OperationTypeId = refundOpTypeId,
+            Amount = -refundAmount,
+            TransactionDate = DateTime.UtcNow
+        });
+
+        // Jesli rezerwacja nie ma juz innych oczekujacych karnetow -> ustaw ja na "anulowana".
+        var pendingStatusId = await db.DictPassStatuses
+            .Where(s => s.Name == "oczekuje_na_odbior").Select(s => (int?)s.Id).FirstOrDefaultAsync();
+        var hasOtherPending = await db.SkiPasses
+            .AnyAsync(p => p.ReservationId == pass.ReservationId && p.Id != pass.Id && p.StatusId == pendingStatusId);
+        if (!hasOtherPending && pass.Reservation != null)
+        {
+            pass.Reservation.StatusId = await db.DictReservationStatuses
+                .Where(s => s.Name == "anulowana").Select(s => (int?)s.Id).FirstOrDefaultAsync();
+        }
+
+        await db.SaveChangesAsync();
+
+        return Ok(new { passId = pass.Id, refund = refundAmount, message = "Rezerwacja anulowana. Srodki zostana zwrocone." });
     }
 
     // GET /api/karnety/{id}/symulacja-zwrotu

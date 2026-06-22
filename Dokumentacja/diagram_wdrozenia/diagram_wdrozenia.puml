@@ -1,0 +1,53 @@
+@startuml diagram_wdrozenia
+' Diagram wdrożenia systemu stacji narciarskiej.
+' Pokazuje rozmieszczenie aplikacji na węzłach oraz kanały komunikacji.
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+node "Przeglądarka narciarza" as Browser {
+  artifact "login.html / register.html" as WebLogin
+  artifact "narciarz.html" as WebNarciarz
+  artifact "walkthrough.js" as Walk
+}
+
+node "Stanowisko kasjera / Administrator" as Desk {
+  artifact "kasjer.html (mockup)" as WebKasjer
+  artifact "Panel admina (mockup)" as WebAdmin
+}
+
+node "Bramka wyciągu (czytnik RFID)" as GateNode {
+  artifact "Bramka (konsola, klient testowy)" as BramkaClient
+}
+
+node "Serwer aplikacyjny (Docker host)" as Server {
+  node "Kontener: system-api" as C1 {
+    component "SystemAPI\n(ASP.NET Core, .NET 10)\nport 8080" as SystemAPI
+  }
+  node "Kontener: bramka-api" as C2 {
+    component "BramkaAPI\n(ASP.NET Core, .NET 10)\nport 8080" as BramkaAPI
+  }
+  node "Kontener: postgres:17" as C3 {
+    database "ski_resort\n(PostgreSQL 17)\nport 5432" as DB
+  }
+}
+
+' Komunikacja
+WebLogin --> SystemAPI : HTTPS / REST + JWT
+WebNarciarz --> SystemAPI : HTTPS / REST + JWT
+WebKasjer --> SystemAPI : HTTP / REST + JWT
+WebAdmin --> SystemAPI : HTTP / REST + JWT
+BramkaClient --> BramkaAPI : HTTP / REST
+
+SystemAPI --> DB : Npgsql / EF Core (5432)
+BramkaAPI --> DB : Npgsql / EF Core (5432)
+
+note bottom of Server
+  Porty publikowane na hoście:
+  system-api 5000->8080,
+  bramka-api 49226->8080,
+  postgres 5432->5432.
+  Inicjalizacja DB: schemat -> sekwencje -> dane testowe.
+end note
+
+@enduml

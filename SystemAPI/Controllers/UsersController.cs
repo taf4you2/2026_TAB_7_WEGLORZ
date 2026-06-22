@@ -32,8 +32,15 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
             .Where(id => id != null)
             .Distinct()
             .ToList();
-        
-        return Ok(new { userId = user.Id, email = user.Email, cardIds });
+
+        // Karty REALNIE posiadane (przypisane do usera) — do zakupu karnetu na własną kartę.
+        // cardIds to historia (z karnetów) i może zawierać karty już oddane/zwrócone.
+        var ownedCardIds = await db.Cards
+            .Where(c => c.UserId == userId)
+            .Select(c => c.Id)
+            .ToListAsync();
+
+        return Ok(new { userId = user.Id, email = user.Email, cardIds, ownedCardIds });
     }
 
     [HttpGet("my-rfid")]

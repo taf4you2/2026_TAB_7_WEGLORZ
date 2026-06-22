@@ -57,6 +57,11 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
         var validFrom = DateTime.SpecifyKind(req.ValidFrom.Date, DateTimeKind.Utc);
         var validTo = validFrom.AddDays(durationDays);
 
+        // Nie pozwalamy kupić karnetu z datą rozpoczęcia wcześniejszą niż dzisiaj.
+        var today = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
+        if (validFrom < today)
+            return BadRequest(new { message = "Data rozpoczęcia nie może być wcześniejsza niż dzisiejsza." });
+
         if (tariff.PoolLimit.HasValue)
         {
             //TODO(Nalezy sprawdzic czy zablokowane karnety powinny sie zaliczac do puli biletów!!!)

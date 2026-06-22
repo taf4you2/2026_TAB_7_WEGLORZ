@@ -1551,11 +1551,13 @@
             // wypełnij listy kart wszystkimi kartami użytkownika
             wypelnijListeKart(me.cardIds);
 
-            // lista kart w sekcji zakupu — opcjonalna (pozwala kupić karnet od razu na własną kartę)
+            // lista kart w sekcji zakupu — TYLKO realnie posiadane karty (Card.UserId == user).
+            // Dzięki temu nie da się wybrać karty oddanej/zwróconej, na którą backend i tak by nie pozwolił.
+            const ownedCards = me.ownedCardIds ?? [];
             const zakupSel = document.getElementById('zakup-rfid');
             if (zakupSel) {
                 zakupSel.innerHTML = '<option value="">— Odbiór przy kasie (bez karty) —</option>'
-                    + me.cardIds.map(cid => `<option value="${cid}">${cid}</option>`).join('');
+                    + ownedCards.map(cid => `<option value="${cid}">${cid}</option>`).join('');
             }
 
             // domyślnie wybierz pierwszą

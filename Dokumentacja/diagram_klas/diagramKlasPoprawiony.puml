@@ -1,0 +1,295 @@
+@startuml
+hide circle
+skinparam linetype ortho
+
+' ==========================================
+' SŁOWNIKI
+' ==========================================
+
+entity "slownik_status_karty" as dict_card_status {
+    * id : integer
+    --
+    nazwa : varchar
+  }
+
+entity "slownik_status_karnetu" as dict_pass_status {
+    * id : integer
+    --
+    nazwa : varchar
+  }
+
+entity "slownik_typ_produktu" as dict_pass_type {
+    * id : integer
+    --
+    nazwa : varchar
+  }
+
+entity "slownik_typ_operacji" as dict_operation_type {
+    * id : integer
+    --
+    nazwa : varchar
+  }
+
+entity "slownik_sezon" as dict_season {
+    * id : integer
+    --
+    nazwa : varchar
+  }
+
+entity "slownik_trudnosc_trasy" as dict_trail_difficulty {
+    * id : integer
+    --
+    nazwa : varchar
+  }
+
+entity "slownik_status_rezerwacji" as dict_reservation_status {
+    * id : integer
+    --
+    nazwa : varchar
+  }
+
+entity "slownik_wynik_weryfikacji" as dict_verification_result {
+    * id : integer
+    --
+    nazwa : varchar
+  }
+
+entity "rodzaj_raportu" as dict_report_type {
+    * id : integer
+    --
+    nazwa : varchar
+    opis : text
+  }
+
+' ==========================================
+' UŻYTKOWNICY I PRACOWNICY
+' ==========================================
+
+entity "uzytkownik" as user_table {
+    * id : integer
+    --
+    email : varchar
+    haslo_hash : varchar
+    data_utworzenia : timestamp
+  }
+
+entity "kasjer" as cashier {
+    * id : integer
+    --
+    login : varchar
+    haslo_hash : varchar
+    czy_aktywny : boolean
+  }
+
+entity "administrator" as administrator_table {
+    * id : integer
+    --
+    login : varchar
+    haslo_hash : varchar
+    czy_aktywny : boolean
+  }
+
+entity "planista_tras" as trail_planner {
+    * id : integer
+    --
+    login : varchar
+    haslo_hash : varchar
+    czy_aktywny : boolean
+  }
+
+' ==========================================
+' INFRASTRUKTURA
+' ==========================================
+
+entity "wyciag" as lift {
+    * id : integer
+    --
+    nazwa : varchar
+    lokalizacja : varchar
+    dlugosc : decimal
+    planista_id : integer
+    czy_aktywny : boolean
+  }
+
+entity "trasa" as trail {
+    * id : integer
+    --
+    nazwa : varchar
+    lokalizacja : varchar
+    dlugosc : decimal
+    trudnosc_id : integer
+    planista_id : integer
+    czy_aktywna : boolean
+  }
+
+entity "wyciag_trasa" as lift_trail {
+    * wyciag_id : integer
+    * trasa_id : integer
+  }
+
+entity "harmonogram_wyciagu" as lift_schedule {
+    * id : integer
+    --
+    wyciag_id : integer
+    dzien_tygodnia : integer
+    godzina_otwarcia : time
+    godzina_zamkniecia : time
+  }
+
+entity "harmonogram_trasy" as trail_schedule {
+    * id : integer
+    --
+    trasa_id : integer
+    czy_otwarta : boolean
+    powod_zamkniecia : varchar
+    data_zmiany : timestamp
+  }
+
+entity "bramka" as gate {
+    * id : integer
+    --
+    wyciag_id : integer
+    nazwa : varchar
+    czy_aktywna : boolean
+  }
+
+' ==========================================
+' KARTY, KARNETY I SPRZEDAŻ
+' ==========================================
+
+entity "karta" as card {
+    * id : varchar
+    --
+    status_id : integer
+    uzytkownik_id : integer
+    kaucja_oplacona : boolean
+    powod_blokady : text
+    stan_fizyczny : varchar
+    data_dodania_do_puli : timestamp
+  }
+
+entity "taryfa" as tariff {
+    * id : integer
+    --
+    nazwa : varchar
+    sezon_id : integer
+    typ_id : integer
+    cena : decimal
+    liczba_zjazdow : integer
+    limit_puli : integer
+    czy_aktywna : boolean
+  }
+
+entity "rezerwacja" as reservation {
+    * id : integer
+    --
+    numer_rezerwacji : varchar
+    uzytkownik_id : integer
+    data_rezerwacji : timestamp
+    status_id : integer
+  }
+
+entity "transakcja" as transaction_table {
+    * id : integer
+    --
+    rezerwacja_id : integer
+    kasjer_id : integer
+    typ_operacji_id : integer
+    kwota : decimal
+    data_transakcji : timestamp
+  }
+
+entity "karnet" as ski_pass {
+    * id : integer
+    --
+    karta_id : varchar
+    taryfa_id : integer
+    rezerwacja_id : integer
+    status_id : integer
+    data_waznosci_od : timestamp
+    data_waznosci_do : timestamp
+    poczatkowa_liczba_zjazdow : integer
+    pozostale_zjazdy : integer
+    powod_blokady : text
+  }
+
+' ==========================================
+' BRAMKI I KONTROLA DOSTĘPU
+' ==========================================
+
+entity "odbicie_bramka" as gate_scan {
+    * id : integer
+    --
+    karta_id : varchar
+    bramka_id : integer
+    typ_produktu_id : integer
+    czas_odbicia : timestamp
+    blokada_czasowa_do : timestamp
+    wynik_weryfikacji_id : integer
+  }
+
+' ==========================================
+' RAPORTOWANIE
+' ==========================================
+
+entity "raport_zmianowy" as shift_report {
+    * id : integer
+    --
+    kasjer_id : integer
+    data_rozpoczecia : timestamp
+    data_zakonczenia : timestamp
+    przychod_netto : decimal
+    suma_zwrotow : decimal
+    liczba_wydanych_kart : integer
+  }
+
+entity "raport_administratora" as admin_report {
+    * id : integer
+    --
+    administrator_id : integer
+    rodzaj_raportu_id : integer
+    data_wygenerowania : timestamp
+    parametry_raportu : text
+  }
+
+' ==========================================
+' RELACJE
+' ==========================================
+
+' Wiąże słowniki z głównymi tabelami.
+dict_card_status ||--o{ card
+dict_pass_status ||--o{ ski_pass
+dict_pass_type ||--o{ tariff
+dict_pass_type ||--o{ gate_scan
+dict_operation_type ||--o{ transaction_table
+dict_season ||--o{ tariff
+dict_trail_difficulty ||--o{ trail
+dict_reservation_status ||--o{ reservation
+dict_verification_result ||--o{ gate_scan
+dict_report_type ||--o{ admin_report
+
+' Buduje powiązania logiki sprzedażowej.
+user_table ||--o{ card
+user_table ||--o{ reservation
+cashier ||--o{ transaction_table
+cashier ||--o{ shift_report
+administrator_table ||--o{ admin_report
+reservation ||--o{ transaction_table
+reservation ||--o{ ski_pass
+card ||--o{ ski_pass
+tariff ||--o{ ski_pass
+
+' Ustanawia zależności w architekturze ośrodka.
+trail_planner ||--o{ lift
+trail_planner ||--o{ trail
+lift ||--o{ lift_trail
+trail ||--o{ lift_trail
+lift ||--o{ lift_schedule
+trail ||--o{ trail_schedule
+lift ||--o{ gate
+
+' Organizuje kontrolę dostępu.
+card ||--o{ gate_scan
+gate ||--o{ gate_scan
+
+@enduml

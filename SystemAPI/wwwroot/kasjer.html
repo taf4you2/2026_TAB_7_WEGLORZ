@@ -242,6 +242,7 @@
     }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: #FAFAFA; }
+    tr.is-selected td { background: var(--primary-light); }
 
     .badge {
       display: inline-block;
@@ -277,6 +278,7 @@
     .btn-sm { padding: 6px 12px; font-size: 12px; }
     .btn-danger { background: var(--danger); color: white; }
     .btn-danger:hover { background: #B71C1C; }
+    .btn:disabled { cursor: not-allowed; opacity: 0.55; }
 
     /* ---- FORMULARZE ---- */
     .form-row { display: grid; gap: 16px; margin-bottom: 16px; }
@@ -407,32 +409,35 @@
 
   <nav class="sidebar-nav">
     <div class="nav-section-label">Główne</div>
-    <button class="nav-item active" onclick="showSection('dashboard', this)">
+    <button class="nav-item active" data-section="dashboard" onclick="showSection('dashboard', this)">
       <span class="nav-icon">📊</span> Dashboard
     </button>
 
     <div class="nav-section-label">Sprzedaż</div>
-    <button class="nav-item" onclick="showSection('sprzedaj-bilet', this)">
+    <button class="nav-item" data-section="sprzedaj-bilet" onclick="showSection('sprzedaj-bilet', this)">
       <span class="nav-icon">🎫</span> Sprzedaj bilet
     </button>
-    <button class="nav-item" onclick="showSection('sprzedaj-karnet', this)">
+    <button class="nav-item" data-section="sprzedaj-karnet" onclick="showSection('sprzedaj-karnet', this)">
       <span class="nav-icon">🃏</span> Sprzedaj karnet
     </button>
-    <button class="nav-item" onclick="showSection('blokuj', this)">
+    <button class="nav-item" data-section="rezerwacje" onclick="showSection('rezerwacje', this)">
+      <span class="nav-icon">📦</span> Rezerwacje
+    </button>
+    <button class="nav-item" data-section="blokuj" onclick="showSection('blokuj', this)">
       <span class="nav-icon">🔒</span> Blokuj / Zwróć
       <span class="nav-badge">2</span>
     </button>
 
     <div class="nav-section-label">Dane</div>
-    <button class="nav-item" onclick="showSection('karty', this)">
+    <button class="nav-item" data-section="karty" onclick="showSection('karty', this)">
       <span class="nav-icon">💳</span> Karty RFID
     </button>
-    <button class="nav-item" onclick="showSection('transakcje', this)">
+    <button class="nav-item" data-section="transakcje" onclick="showSection('transakcje', this)">
       <span class="nav-icon">📋</span> Transakcje
     </button>
 
     <div class="nav-section-label">Zmiana</div>
-    <button class="nav-item" onclick="showSection('raport', this)">
+    <button class="nav-item" data-section="raport" onclick="showSection('raport', this)">
       <span class="nav-icon">📄</span> Raport zmiany
     </button>
   </nav>
@@ -490,16 +495,19 @@
       </div>
 
       <div class="quick-actions">
-        <button class="btn btn-primary" onclick="showSection('sprzedaj-bilet', document.querySelectorAll('.nav-item')[1])">
+        <button class="btn btn-primary" onclick="showSection('sprzedaj-bilet', navItem('sprzedaj-bilet'))">
           🎫 Sprzedaj bilet
         </button>
-        <button class="btn btn-success" onclick="showSection('sprzedaj-karnet', document.querySelectorAll('.nav-item')[2])">
+        <button class="btn btn-success" onclick="showSection('sprzedaj-karnet', navItem('sprzedaj-karnet'))">
           🃏 Sprzedaj karnet
         </button>
-        <button class="btn btn-outline" onclick="showSection('blokuj', document.querySelectorAll('.nav-item')[3])">
+        <button class="btn btn-outline" onclick="showSection('rezerwacje', navItem('rezerwacje'))">
+          📦 Zrealizuj rezerwację
+        </button>
+        <button class="btn btn-outline" onclick="showSection('blokuj', navItem('blokuj'))">
           🔒 Blokada / zwrot
         </button>
-        <button class="btn btn-outline" onclick="showSection('karty', document.querySelectorAll('.nav-item')[5])">
+        <button class="btn btn-outline" onclick="showSection('karty', navItem('karty'))">
           💳 Karty RFID
         </button>
       </div>
@@ -510,7 +518,7 @@
             <h3>Ostatnie transakcje</h3>
             <p>Dzisiejsza zmiana · 48 transakcji</p>
           </div>
-          <button class="btn btn-outline btn-sm" onclick="showSection('transakcje', document.querySelectorAll('.nav-item')[6])">
+          <button class="btn btn-outline btn-sm" onclick="showSection('transakcje', navItem('transakcje'))">
             Wszystkie →
           </button>
         </div>
@@ -764,6 +772,68 @@
       </div>
     </div>
 
+    <!-- ========== REALIZACJA REZERWACJI ========== -->
+    <div class="section" id="sec-rezerwacje">
+      <div class="section-title">Realizacja rezerwacji online</div>
+      <div class="section-sub">Wyszukaj opłaconą rezerwację, przypisz wolną kartę RFID i wydaj karnet</div>
+
+      <div id="rezerwacje-alert" class="alert alert-success" style="display:none"></div>
+      <div id="rezerwacje-error" class="alert alert-warning" style="display:none;background:var(--danger-light);color:var(--danger);border:1px solid #EF9A9A"></div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3>1. Znajdź rezerwację</h3>
+            <p>Wpisz pełny adres e-mail podany podczas zakupu online</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="form-row cols-2">
+            <div class="form-group">
+              <label class="form-label" for="rezerwacje-email">E-mail narciarza</label>
+              <div class="rfid-input-wrap">
+                <input class="form-input" type="email" id="rezerwacje-email"
+                       placeholder="narciarz@example.com"
+                       onkeydown="if(event.key === 'Enter') szukajRezerwacji()">
+                <button class="btn btn-primary" id="btnSzukajRezerwacji" onclick="szukajRezerwacji()">Szukaj</button>
+              </div>
+            </div>
+          </div>
+          <div id="rezerwacje-lista">
+            <div style="color:var(--text-muted);font-size:13px">Podaj e-mail, aby wyświetlić rezerwacje klienta.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="rezerwacje-realizacja" style="display:none">
+        <div class="card-header">
+          <div>
+            <h3>2. Wybierz karnet do wydania</h3>
+            <p id="rezerwacje-wybrana">Nie wybrano rezerwacji</p>
+          </div>
+        </div>
+        <div id="rezerwacje-karnety"></div>
+        <div class="card-body" style="border-top:1px solid var(--border)">
+          <div class="form-row cols-2">
+            <div class="form-group">
+              <label class="form-label" for="rezerwacje-karta">Wolna karta RFID</label>
+              <select class="form-select" id="rezerwacje-karta" onchange="ustawRfidRezerwacji(this.value)">
+                <option value="">Ładowanie wolnych kart…</option>
+              </select>
+              <span class="form-hint">Możesz wybrać kartę z puli lub wpisać jej RFID ręcznie.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rezerwacje-rfid">RFID wydawanej karty</label>
+              <input class="form-input" type="text" id="rezerwacje-rfid" placeholder="np. 11:22:33:44">
+            </div>
+          </div>
+          <button class="btn btn-success" id="btnWydajRezerwacje" onclick="wydajKarnetZRezerwacji()" disabled>
+            Wydaj kartę i aktywuj karnet
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ========== BLOKUJ / ZWRÓĆ ========== -->
     <div class="section" id="sec-blokuj">
       <div class="section-title">Blokada i zwroty</div>
@@ -947,11 +1017,16 @@
     'dashboard':       { title: 'Dashboard',            sub: 'Wtorek, 15 kwietnia 2026 · Zmiana poranna 07:00–15:00' },
     'sprzedaj-bilet':  { title: 'Sprzedaj bilet',       sub: 'UC1 · Bilet jednorazowy' },
     'sprzedaj-karnet': { title: 'Sprzedaj karnet',      sub: 'UC2 · Karnet narciarski' },
+    'rezerwacje':      { title: 'Rezerwacje',           sub: 'Realizacja odbioru karnetów online' },
     'blokuj':          { title: 'Blokada / Zwrot',      sub: 'UC3 · UC11' },
     'karty':           { title: 'Karty RFID',            sub: 'Zarządzanie pulą kart' },
     'transakcje':      { title: 'Transakcje',            sub: 'Historia bieżącej zmiany' },
     'raport':          { title: 'Raport zmiany',         sub: 'Podsumowanie i zamknięcie kasy' },
   };
+
+  function navItem(id) {
+    return document.querySelector(`.nav-item[data-section="${id}"]`);
+  }
 
   function showSection(id, navEl) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -1220,6 +1295,253 @@
     catch { return `HTTP ${res.status}`; }
   }
 
+  let znalezioneRezerwacje = [];
+  let wybranaRezerwacja = null;
+  let wybranyKarnetRezerwacji = null;
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function statusBadge(status) {
+    if (status === 'aktywny' || status === 'potwierdzona') return 'badge-success';
+    if (status === 'oczekuje_na_odbior' || status === 'oczekujaca') return 'badge-warning';
+    if (status === 'zablokowany' || status === 'anulowana') return 'badge-danger';
+    return 'badge-info';
+  }
+
+  function czyOczekujeNaOdbior(pass) {
+    return pass?.status?.toLowerCase() === 'oczekuje_na_odbior';
+  }
+
+  async function loadWolneKartyRezerwacji() {
+    const select = document.getElementById('rezerwacje-karta');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">Ładowanie wolnych kart…</option>';
+    const cards = await apiFetch('/api/karty?status=wolna');
+    if (!cards) {
+      select.innerHTML = '<option value="">Nie udało się pobrać kart</option>';
+      return;
+    }
+
+    select.innerHTML = '<option value="">Wybierz wolną kartę</option>' +
+      cards.map(card => `<option value="${escapeHtml(card.id)}">${escapeHtml(card.id)}</option>`).join('');
+  }
+
+  function ustawRfidRezerwacji(rfid) {
+    const input = document.getElementById('rezerwacje-rfid');
+    if (input && rfid) input.value = rfid;
+  }
+
+  async function szukajRezerwacji(preferredReservationNumber = null) {
+    const emailInput = document.getElementById('rezerwacje-email');
+    const list = document.getElementById('rezerwacje-lista');
+    const realization = document.getElementById('rezerwacje-realizacja');
+    const alertEl = document.getElementById('rezerwacje-alert');
+    const errorEl = document.getElementById('rezerwacje-error');
+    const btn = document.getElementById('btnSzukajRezerwacji');
+    const email = emailInput?.value.trim() ?? '';
+
+    if (!preferredReservationNumber) {
+      alertEl.style.display = 'none';
+      errorEl.style.display = 'none';
+      wybranaRezerwacja = null;
+      wybranyKarnetRezerwacji = null;
+      realization.style.display = 'none';
+    }
+
+    if (!email || !emailInput.checkValidity()) {
+      showAlert(alertEl, errorEl, false, 'Podaj poprawny, pełny adres e-mail.');
+      emailInput?.focus();
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Szukanie…';
+    list.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Pobieranie rezerwacji…</div>';
+
+    try {
+      const res = await fetch(`${API}/api/karnety/rezerwacje/${encodeURIComponent(email)}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.status === 404) {
+        znalezioneRezerwacje = [];
+        wybranaRezerwacja = null;
+        wybranyKarnetRezerwacji = null;
+        realization.style.display = 'none';
+        list.innerHTML = '<div class="alert alert-warning">Nie znaleziono rezerwacji dla podanego adresu e-mail.</div>';
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error(await parseError(res));
+      }
+
+      znalezioneRezerwacje = await res.json();
+      renderRezerwacje();
+
+      if (preferredReservationNumber) {
+        const preferred = znalezioneRezerwacje.find(r => r.reservationNumber === preferredReservationNumber);
+        if (preferred?.passes?.some(czyOczekujeNaOdbior)) wybierzRezerwacje(preferred.id);
+        else {
+          wybranaRezerwacja = null;
+          wybranyKarnetRezerwacji = null;
+          realization.style.display = 'none';
+          renderRezerwacje();
+        }
+      }
+    } catch (e) {
+      list.innerHTML = '';
+      realization.style.display = 'none';
+      showAlert(alertEl, errorEl, false, `Nie udało się pobrać rezerwacji: ${e.message}`);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Szukaj';
+    }
+  }
+
+  function renderRezerwacje() {
+    const list = document.getElementById('rezerwacje-lista');
+    if (znalezioneRezerwacje.length === 0) {
+      list.innerHTML = '<div class="alert alert-warning">Klient nie ma rezerwacji.</div>';
+      return;
+    }
+
+    list.innerHTML = `<table>
+      <thead><tr><th>Numer</th><th>Data</th><th>Status</th><th>Do wydania</th><th>Akcja</th></tr></thead>
+      <tbody>${znalezioneRezerwacje.map(r => {
+        const pendingCount = (r.passes ?? []).filter(czyOczekujeNaOdbior).length;
+        const date = r.reservationDate
+          ? new Date(r.reservationDate).toLocaleString('pl-PL', { dateStyle: 'short', timeStyle: 'short' })
+          : '—';
+        return `<tr class="${wybranaRezerwacja?.id === r.id ? 'is-selected' : ''}">
+          <td><strong>${escapeHtml(r.reservationNumber)}</strong></td>
+          <td>${escapeHtml(date)}</td>
+          <td><span class="badge ${statusBadge(r.status)}">${escapeHtml(r.status ?? '—')}</span></td>
+          <td>${pendingCount}</td>
+          <td><button class="btn btn-primary btn-sm" onclick="wybierzRezerwacje(${r.id})" ${pendingCount === 0 ? 'disabled' : ''}>
+            ${pendingCount > 0 ? 'Realizuj' : 'Zrealizowana'}
+          </button></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+
+  function wybierzRezerwacje(reservationId) {
+    wybranaRezerwacja = znalezioneRezerwacje.find(r => r.id === reservationId) ?? null;
+    wybranyKarnetRezerwacji = wybranaRezerwacja?.passes?.find(czyOczekujeNaOdbior) ?? null;
+    renderRezerwacje();
+    renderKarnetyRezerwacji();
+  }
+
+  function wybierzKarnetRezerwacji(passId) {
+    wybranyKarnetRezerwacji = wybranaRezerwacja?.passes?.find(p => p.id === passId) ?? null;
+    renderKarnetyRezerwacji();
+  }
+
+  function renderKarnetyRezerwacji() {
+    const realization = document.getElementById('rezerwacje-realizacja');
+    const selectedText = document.getElementById('rezerwacje-wybrana');
+    const passesEl = document.getElementById('rezerwacje-karnety');
+    const issueBtn = document.getElementById('btnWydajRezerwacje');
+
+    if (!wybranaRezerwacja) {
+      realization.style.display = 'none';
+      return;
+    }
+
+    realization.style.display = 'block';
+    selectedText.textContent = `Rezerwacja ${wybranaRezerwacja.reservationNumber}`;
+    passesEl.innerHTML = `<table>
+      <thead><tr><th>ID</th><th>Taryfa</th><th>Cena</th><th>Ważny od</th><th>Ważny do</th><th>Status</th><th>Akcja</th></tr></thead>
+      <tbody>${(wybranaRezerwacja.passes ?? []).map(p => {
+        const pending = czyOczekujeNaOdbior(p);
+        const from = p.validFrom ? new Date(p.validFrom).toLocaleDateString('pl-PL') : '—';
+        const to = p.validTo ? new Date(p.validTo).toLocaleDateString('pl-PL') : '—';
+        return `<tr class="${wybranyKarnetRezerwacji?.id === p.id ? 'is-selected' : ''}">
+          <td>#${p.id}</td>
+          <td>${escapeHtml(p.tariff ?? '—')}</td>
+          <td>${p.price == null ? '—' : `${Number(p.price).toFixed(2)} zł`}</td>
+          <td>${escapeHtml(from)}</td>
+          <td>${escapeHtml(to)}</td>
+          <td><span class="badge ${statusBadge(p.status)}">${escapeHtml(p.status ?? '—')}</span></td>
+          <td><button class="btn btn-outline btn-sm" onclick="wybierzKarnetRezerwacji(${p.id})" ${pending ? '' : 'disabled'}>
+            ${pending ? 'Wybierz' : 'Wydany'}
+          </button></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+    issueBtn.disabled = !wybranyKarnetRezerwacji || !czyOczekujeNaOdbior(wybranyKarnetRezerwacji);
+  }
+
+  async function wydajKarnetZRezerwacji() {
+    const alertEl = document.getElementById('rezerwacje-alert');
+    const errorEl = document.getElementById('rezerwacje-error');
+    const rfid = document.getElementById('rezerwacje-rfid')?.value.trim();
+    const btn = document.getElementById('btnWydajRezerwacje');
+
+    alertEl.style.display = 'none';
+    errorEl.style.display = 'none';
+
+    if (!wybranaRezerwacja || !wybranyKarnetRezerwacji) {
+      return showAlert(alertEl, errorEl, false, 'Wybierz rezerwację i karnet oczekujący na odbiór.');
+    }
+    if (!rfid) {
+      return showAlert(alertEl, errorEl, false, 'Wybierz lub wpisz RFID wydawanej karty.');
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Wydawanie…';
+
+    try {
+      const verificationRes = await fetch(`${API}/api/karty/${encodeURIComponent(rfid)}/weryfikacja-wydania`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!verificationRes.ok) throw new Error(await parseError(verificationRes));
+
+      const verification = await verificationRes.json();
+      if (!verification.canIssue) {
+        showAlert(alertEl, errorEl, false, verification.message ?? 'Karta nie jest gotowa do wydania.');
+        return;
+      }
+
+      const res = await fetch(`${API}/api/karnety/zatwierdz-odbior`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          reservationNumber: wybranaRezerwacja.reservationNumber,
+          cardRFID: rfid,
+          passId: wybranyKarnetRezerwacji.id
+        })
+      });
+      if (!res.ok) throw new Error(await parseError(res));
+
+      const data = await res.json();
+      document.getElementById('rezerwacje-rfid').value = '';
+      document.getElementById('rezerwacje-karta').value = '';
+      showAlert(alertEl, errorEl, true,
+        `Wydano kartę ${data.cardId} dla karnetu #${data.passId}. Taryfa: ${data.tariff ?? '—'}.`);
+
+      await Promise.all([
+        loadWolneKartyRezerwacji(),
+        szukajRezerwacji(data.reservationNumber),
+        loadDashboard()
+      ]);
+    } catch (e) {
+      showAlert(alertEl, errorEl, false, `Nie udało się wydać karnetu: ${e.message}`);
+    } finally {
+      btn.textContent = 'Wydaj kartę i aktywuj karnet';
+      btn.disabled = !wybranyKarnetRezerwacji || !czyOczekujeNaOdbior(wybranyKarnetRezerwacji);
+    }
+  }
+
   // Sprzedaż karnetu
   async function sprzedajKarnet() {
     await refreshSaleDateLimit();
@@ -1458,6 +1780,7 @@
     if (id === 'raport')     loadRaport();
     if (id === 'karty')      loadKarty();
     if (id === 'blokuj')     loadZwroty();
+    if (id === 'rezerwacje') loadWolneKartyRezerwacji();
   };
 </script>
 </body>

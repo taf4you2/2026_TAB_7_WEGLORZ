@@ -63,7 +63,12 @@ public partial class SellPassPanel : UserControl
                 .Select(c => new CardItem(c))
                 .ToList();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            FreeCardCombo.ItemsSource = null;
+            ShowCardInfo($"Nie udalo sie pobrac listy wolnych kart. Wpisz RFID recznie. Szczegoly: {ex.Message}",
+                Brushes.LemonChiffon, Brushes.SaddleBrown);
+        }
     }
 
     private async void FreeCardCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -90,12 +95,6 @@ public partial class SellPassPanel : UserControl
         try
         {
             var verification = await _api.VerifyCardForIssueAsync(rfid);
-            if (verification == null)
-            {
-                ShowCardInfo("Brak odpowiedzi z API.", Brushes.MistyRose, Brushes.DarkRed);
-                return false;
-            }
-
             var card = verification.Card;
             var details = card == null
                 ? verification.Message
@@ -182,12 +181,6 @@ public partial class SellPassPanel : UserControl
                 }
 
                 var created = await _api.CreateUserAsync(email);
-                if (created == null)
-                {
-                    ShowUserInfo("Nie udalo sie utworzyc klienta.", Brushes.MistyRose, Brushes.DarkRed);
-                    return;
-                }
-
                 SelectUser(created, $"Utworzono klienta: {created.Email} (ID: {created.Id})");
             }
             else if (users.Count == 1)
@@ -261,7 +254,6 @@ public partial class SellPassPanel : UserControl
         {
             var req = new CreatePassRequest(rfid, tariff.Id, _validFrom, _validTo, _foundUserId);
             var res = await _api.SellPassAsync(req);
-            if (res == null) { ShowError("Brak odpowiedzi z API."); return; }
             ConfirmText.Text = $"ID karnetu: {res.Id} | Status: {res.Status} | Od: {res.ValidFrom:dd.MM.yyyy HH:mm} Do: {res.ValidTo:dd.MM.yyyy HH:mm}" +
                 (res.RemainingRides.HasValue ? $" | Pozostale zjazdy: {res.RemainingRides}" : "");
             ConfirmBorder.Visibility = Visibility.Visible;
@@ -323,13 +315,6 @@ public partial class SellPassPanel : UserControl
             }
 
             var created = await _api.CreateUserAsync(email);
-            if (created == null)
-            {
-                ShowUserInfo("Nie udalo sie utworzyc klienta.", Brushes.MistyRose, Brushes.DarkRed);
-                ShowError("Nie udalo sie utworzyc klienta.");
-                return false;
-            }
-
             SelectUser(created, $"Utworzono klienta: {created.Email} (ID: {created.Id})");
             return true;
         }

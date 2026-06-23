@@ -54,35 +54,6 @@ public partial class DashboardWindow : Window
         Close();
     }
 
-    private void HelpBtn_Click(object sender, RoutedEventArgs e)
-    {
-        var helpPath = Path.Combine(AppContext.BaseDirectory, HelpDocumentRelativePath);
-        if (!File.Exists(helpPath))
-        {
-            MessageBox.Show(
-                this,
-                $"Nie znaleziono instrukcji obsługi. Oczekiwany plik:\n{helpPath}",
-                "Pomoc",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-            return;
-        }
-
-        try
-        {
-            Process.Start(new ProcessStartInfo(helpPath) { UseShellExecute = true });
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(
-                this,
-                $"Nie udało się otworzyć instrukcji. Sprawdź, czy w systemie jest zainstalowany program obsługujący pliki DOCX.\n\nSzczegóły: {ex.Message}",
-                "Pomoc",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-        }
-    }
-
     private void TooltipsToggle_Changed(object sender, RoutedEventArgs e)
     {
         SetTooltipsEnabled(TooltipsToggle.IsChecked == true);

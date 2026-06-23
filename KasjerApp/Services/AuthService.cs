@@ -24,7 +24,7 @@ public class AuthService
         if (response.StatusCode == HttpStatusCode.Unauthorized)
             return null;
 
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<LoginResponse>();
+        await ApiResponse.EnsureSuccessOrThrowApiMessageAsync(response);
+        return await ApiResponse.ReadRequiredJsonAsync<LoginResponse>(response);
     }
 }

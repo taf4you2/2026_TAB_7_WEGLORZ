@@ -71,7 +71,7 @@
 
             <Border Grid.Row="0" Padding="18,18,18,14" BorderBrush="#243B5A" BorderThickness="0,0,0,1">
                 <StackPanel>
-                    <TextBlock Text="STACJA ERP"
+                    <TextBlock Text="STACJA"
                                Foreground="White"
                                FontSize="15"
                                FontWeight="SemiBold"
@@ -108,12 +108,6 @@
                               Foreground="#DCE8F5"
                               Margin="0,0,0,10"
                               ToolTip="Włącza lub wyłącza krótkie podpowiedzi wyświetlane po zatrzymaniu kursora nad elementem."/>
-                    <Button Content="Pomoc"
-                            Click="HelpBtn_Click"
-                            Style="{StaticResource SecondaryButton}"
-                            HorizontalContentAlignment="Center"
-                            Margin="0,0,0,8"
-                            ToolTip="Otwiera pełną instrukcję obsługi KasjerApp w domyślnej aplikacji do plików DOCX."/>
                     <Button Content="Wyloguj"
                             Click="LogoutBtn_Click"
                             Style="{StaticResource DangerButton}"

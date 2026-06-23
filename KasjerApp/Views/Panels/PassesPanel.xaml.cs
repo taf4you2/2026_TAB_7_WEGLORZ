@@ -86,7 +86,7 @@ public partial class PassesPanel : UserControl
         try
         {
             var result = await _api.ReturnCardAsync(_selected.CardId);
-            ActionMsg.Text = $"Karta {_selected.CardId} odebrana. Kaucja: {result?.DepositReturn ?? 0:N2} PLN.";
+            ActionMsg.Text = $"Karta {_selected.CardId} odebrana. Kaucja: {result.DepositReturn:N2} PLN.";
             await LoadAsync(SearchBox.Text.Trim());
         }
         catch (Exception ex)

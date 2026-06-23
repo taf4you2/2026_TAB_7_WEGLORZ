@@ -11,8 +11,7 @@ public partial class LoginWindow : Window
     {
         InitializeComponent();
         LoadSavedCredentials();
-
-        // Enter zatwierdza formularz
+        
         PasswordBox.KeyDown += (_, e) =>
         {
             if (e.Key == System.Windows.Input.Key.Enter)

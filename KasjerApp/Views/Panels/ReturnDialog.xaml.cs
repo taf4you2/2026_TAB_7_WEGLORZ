@@ -30,8 +30,6 @@ public partial class ReturnDialog : Window
         try
         {
             var p = await _api.GetReturnPreviewAsync(_passId, ReturnCard);
-            if (p == null) { PreviewText.Text = "Brak danych."; return; }
-
             var cardLine = ReturnCard
                 ? p.CardReturnEligible
                     ? $"Zwrot karty: TAK, kaucja: {p.DepositReturn:N2} PLN"

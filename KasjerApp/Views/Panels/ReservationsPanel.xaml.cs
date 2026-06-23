@@ -295,8 +295,8 @@ public partial class ReservationsPanel : UserControl
 
             var response = await _api.ActivateReservedPassAsync(
                 new ActivatePassRequest(_activeReservation.ReservationNumber, rfid, _selectedPass.Id));
-            var cardId = response?.CardId ?? rfid;
-            var tariff = response?.Tariff ?? _selectedPass.Tariff ?? "brak nazwy";
+            var cardId = response.CardId;
+            var tariff = response.Tariff ?? _selectedPass.Tariff ?? "brak nazwy";
             ShowStatus($"Wydano kartę {cardId} dla karnetu {_selectedPass.Id}. Taryfa: {tariff}.", Brushes.Honeydew, Brushes.DarkGreen);
 
             RfidBox.Clear();

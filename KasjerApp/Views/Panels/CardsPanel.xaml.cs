@@ -119,7 +119,7 @@ public partial class CardsPanel : UserControl
         try
         {
             var result = await _api.ReturnCardAsync(_selectedCard.Id);
-            ShowMsg($"Karta {_selectedCard.Id} zwrocona. Kaucja: {result?.DepositReturn ?? 0:N2} zl.", true);
+            ShowMsg($"Karta {_selectedCard.Id} zwrocona. Kaucja: {result.DepositReturn:N2} zl.", true);
             await LoadAsync();
         }
         catch (Exception ex)

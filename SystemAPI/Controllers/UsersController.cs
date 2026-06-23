@@ -29,7 +29,8 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
         var cardIds = user.Reservations
             .SelectMany(r => r.SkiPasses)
             .Select(sp => sp.CardId)
-            .Where(id => id != null)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(id => id!)
             .Distinct()
             .ToList();
         

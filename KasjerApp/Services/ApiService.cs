@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -17,30 +17,81 @@ public class ApiService
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
     }
 
+    // â”€â”€ Statystyki â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â”€â”€ Taryfy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public async Task<List<TariffDto>> GetTariffsAsync()
     {
-        var response = await _http.GetAsync("/api/taryfy");
-        await EnsureSuccessOrThrowApiMessageAsync(response);
-        return await response.Content.ReadFromJsonAsync<List<TariffDto>>() ?? [];
+        var r = await _http.GetAsync("/api/taryfy");
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<List<TariffDto>>() ?? [];
     }
 
+    public async Task<List<LiftDto>> GetLiftsAsync()
+    {
+        var r = await _http.GetAsync("/api/wyciagi");
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<List<LiftDto>>() ?? [];
+    }
+
+    public async Task<DateTime> GetMinimumSaleDateAsync()
+    {
+        var today = DateTime.Today;
+
+        try
+        {
+            var closingTimes = (await GetLiftsAsync())
+                .Where(l => l.IsActive && l.ClosesAt.HasValue)
+                .Select(l => l.ClosesAt!.Value)
+                .ToList();
+
+            if (closingTimes.Count > 0 && DateTime.Now.TimeOfDay > closingTimes.Max())
+                return today.AddDays(1);
+        }
+        catch
+        {
+            return today;
+        }
+
+        return today;
+    }
+
+    // â”€â”€ Karty RFID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public async Task<CardDto?> GetCardAsync(string rfid)
     {
-        var response = await _http.GetAsync($"/api/karty/{Uri.EscapeDataString(rfid)}");
-        if (response.StatusCode == HttpStatusCode.NotFound) return null;
-
-        await EnsureSuccessOrThrowApiMessageAsync(response);
-        return await response.Content.ReadFromJsonAsync<CardDto>();
+        var r = await _http.GetAsync($"/api/karty/{Uri.EscapeDataString(rfid)}");
+        if (r.StatusCode == HttpStatusCode.NotFound) return null;
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<CardDto>();
     }
 
     public async Task<CardIssueVerificationDto?> VerifyCardForIssueAsync(string rfid)
     {
-        var response = await _http.GetAsync($"/api/karty/{Uri.EscapeDataString(rfid)}/weryfikacja-wydania");
-        if (response.StatusCode == HttpStatusCode.NotFound)
-            throw new InvalidOperationException("Endpoint weryfikacji karty nie jest dostępny w API.");
+        var r = await _http.GetAsync($"/api/karty/{Uri.EscapeDataString(rfid)}/weryfikacja-wydania");
+        if (r.StatusCode == HttpStatusCode.NotFound)
+        {
+            return await VerifyCardForIssueFallbackAsync(rfid);
+        }
 
-        await EnsureSuccessOrThrowApiMessageAsync(response);
-        return await response.Content.ReadFromJsonAsync<CardIssueVerificationDto>();
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<CardIssueVerificationDto>();
+    }
+
+    private async Task<CardIssueVerificationDto> VerifyCardForIssueFallbackAsync(string rfid)
+    {
+        var card = await GetCardAsync(rfid);
+        if (card == null)
+            return new CardIssueVerificationDto(false, $"Karta {rfid} nie istnieje w systemie.", null);
+
+        if (card.ActivePassId.HasValue)
+            return new CardIssueVerificationDto(false, $"Karta ma aktywny karnet: {card.ActivePassType ?? $"ID {card.ActivePassId.Value}"}.", card);
+
+        var canIssue = card.Status.Equals("wolna", StringComparison.OrdinalIgnoreCase) ||
+                       card.Status.Equals("free", StringComparison.OrdinalIgnoreCase) ||
+                       card.Status.Equals("available", StringComparison.OrdinalIgnoreCase);
+
+        return canIssue
+            ? new CardIssueVerificationDto(true, "Karta jest wolna i gotowa do wydania.", card)
+            : new CardIssueVerificationDto(false, $"Karta ma status '{card.Status}'.", card);
     }
 
     public async Task<List<CardDto>> GetCardsAsync(string? status = null, string? search = null)
@@ -48,64 +99,98 @@ public class ApiService
         var qs = new List<string>();
         if (!string.IsNullOrWhiteSpace(status)) qs.Add($"status={Uri.EscapeDataString(status)}");
         if (!string.IsNullOrWhiteSpace(search)) qs.Add($"search={Uri.EscapeDataString(search)}");
-
         var url = "/api/karty" + (qs.Count > 0 ? "?" + string.Join("&", qs) : "");
-        var response = await _http.GetAsync(url);
-        await EnsureSuccessOrThrowApiMessageAsync(response);
-        return await response.Content.ReadFromJsonAsync<List<CardDto>>() ?? [];
+        var r = await _http.GetAsync(url);
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<List<CardDto>>() ?? [];
     }
 
     public async Task IssueCardAsync(string rfid)
     {
-        var response = await _http.PostAsJsonAsync("/api/karty", new IssueCardRequest(rfid));
-        await EnsureSuccessOrThrowApiMessageAsync(response);
+        var r = await _http.PostAsJsonAsync("/api/karty", new IssueCardRequest(rfid));
+        r.EnsureSuccessStatusCode();
     }
 
     public async Task DeleteCardAsync(string rfid)
     {
-        var response = await _http.DeleteAsync($"/api/karty/{Uri.EscapeDataString(rfid)}");
-        await EnsureSuccessOrThrowApiMessageAsync(response);
+        var r = await _http.DeleteAsync($"/api/karty/{Uri.EscapeDataString(rfid)}");
+        r.EnsureSuccessStatusCode();
     }
 
     public async Task BlockCardAsync(string rfid, string reason)
     {
-        var response = await _http.PostAsJsonAsync($"/api/karty/{Uri.EscapeDataString(rfid)}/blokuj", new BlockCardRequest(reason));
-        await EnsureSuccessOrThrowApiMessageAsync(response);
+        var r = await _http.PostAsJsonAsync($"/api/karty/{Uri.EscapeDataString(rfid)}/blokuj", new BlockCardRequest(reason));
+        r.EnsureSuccessStatusCode();
     }
 
     public async Task UnblockCardAsync(string rfid)
     {
-        var response = await _http.PostAsync($"/api/karty/{Uri.EscapeDataString(rfid)}/odblokuj", null);
-        await EnsureSuccessOrThrowApiMessageAsync(response);
+        var r = await _http.PostAsync($"/api/karty/{Uri.EscapeDataString(rfid)}/odblokuj", null);
+        r.EnsureSuccessStatusCode();
     }
 
     public async Task<CardReturnDto?> ReturnCardAsync(string rfid)
     {
-        var response = await _http.PostAsync($"/api/karty/{Uri.EscapeDataString(rfid)}/zwrot", null);
-        await EnsureSuccessOrThrowApiMessageAsync(response);
-        return await response.Content.ReadFromJsonAsync<CardReturnDto>();
+        var r = await _http.PostAsync($"/api/karty/{Uri.EscapeDataString(rfid)}/zwrot", null);
+        await EnsureSuccessOrThrowApiMessageAsync(r);
+        return await r.Content.ReadFromJsonAsync<CardReturnDto>();
     }
 
+    private static async Task EnsureSuccessOrThrowApiMessageAsync(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode) return;
+
+        var body = await response.Content.ReadAsStringAsync();
+        string? message = null;
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(body);
+                if (doc.RootElement.ValueKind == JsonValueKind.Object &&
+                    doc.RootElement.TryGetProperty("message", out var msg) &&
+                    msg.ValueKind == JsonValueKind.String)
+                {
+                    message = msg.GetString();
+                }
+            }
+            catch (JsonException)
+            {
+                // body nie jest JSON-em — zostawiamy null
+            }
+        }
+
+        throw new InvalidOperationException(message ?? $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}");
+    }
+
+    // â”€â”€ Karnety â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public async Task<List<PassDto>> GetPassesByCardAsync(string rfid)
     {
-        var response = await _http.GetAsync($"/api/karnety?cardId={Uri.EscapeDataString(rfid)}");
-        await EnsureSuccessOrThrowApiMessageAsync(response);
-        return await response.Content.ReadFromJsonAsync<List<PassDto>>() ?? [];
+        var r = await _http.GetAsync($"/api/karnety?cardId={Uri.EscapeDataString(rfid)}");
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<List<PassDto>>() ?? [];
+    }
+
+    public async Task<PassDto?> GetPassAsync(int id)
+    {
+        var r = await _http.GetAsync($"/api/karnety/{id}");
+        if (r.StatusCode == HttpStatusCode.NotFound) return null;
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<PassDto>();
     }
 
     public async Task<PassDto?> SellPassAsync(CreatePassRequest req)
     {
-        var response = await _http.PostAsJsonAsync("/api/karnety", req);
-        await EnsureSuccessOrThrowApiMessageAsync(response);
-        return await response.Content.ReadFromJsonAsync<PassDto>();
+        var r = await _http.PostAsJsonAsync("/api/karnety", req);
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<PassDto>();
     }
 
     public async Task<ReservedPassActivationResponse?> ActivateReservedPassAsync(ActivatePassRequest req)
     {
-        var response = await _http.PostAsJsonAsync("/api/karnety/zatwierdz-odbior", req);
-        await EnsureSuccessOrThrowApiMessageAsync(response);
-
-        var body = await response.Content.ReadAsStringAsync();
+        var r = await _http.PostAsJsonAsync("/api/karnety/zatwierdz-odbior", req);
+        r.EnsureSuccessStatusCode();
+        var body = await r.Content.ReadAsStringAsync();
         return string.IsNullOrWhiteSpace(body)
             ? null
             : JsonSerializer.Deserialize<ReservedPassActivationResponse>(body, new JsonSerializerOptions(JsonSerializerDefaults.Web));
@@ -113,80 +198,93 @@ public class ApiService
 
     public async Task<List<ReservationSearchDto>> GetReservationsByEmailAsync(string email)
     {
-        var response = await _http.GetAsync($"/api/karnety/rezerwacje/{Uri.EscapeDataString(email)}");
-        if (response.StatusCode == HttpStatusCode.NotFound) return [];
+        var r = await _http.GetAsync($"/api/karnety/rezerwacje/{Uri.EscapeDataString(email)}");
+        if (r.StatusCode == HttpStatusCode.NotFound) return [];
 
-        await EnsureSuccessOrThrowApiMessageAsync(response);
-        return await response.Content.ReadFromJsonAsync<List<ReservationSearchDto>>() ?? [];
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<List<ReservationSearchDto>>() ?? [];
+    }
+
+    public async Task BlockPassAsync(int id, string reason)
+    {
+        var r = await _http.PostAsJsonAsync($"/api/karnety/{id}/blokuj", new BlockPassRequest(reason));
+        r.EnsureSuccessStatusCode();
+    }
+
+    public async Task UnblockPassAsync(int id)
+    {
+        var r = await _http.PostAsync($"/api/karnety/{id}/odblokuj", null);
+        r.EnsureSuccessStatusCode();
     }
 
     public async Task<ReturnPreviewDto?> GetReturnPreviewAsync(int id, bool returnCard)
     {
-        var response = await _http.GetAsync($"/api/karnety/{id}/symulacja-zwrotu?returnCard={returnCard}");
-        await EnsureSuccessOrThrowApiMessageAsync(response);
-        return await response.Content.ReadFromJsonAsync<ReturnPreviewDto>();
+        var r = await _http.GetAsync($"/api/karnety/{id}/symulacja-zwrotu?returnCard={returnCard}");
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<ReturnPreviewDto>();
     }
 
     public async Task<ReturnPreviewDto?> ReturnPassAsync(int id, ReturnPassRequest req)
     {
-        var response = await _http.PostAsJsonAsync($"/api/karnety/{id}/zwrot", req);
-        await EnsureSuccessOrThrowApiMessageAsync(response);
-        return await response.Content.ReadFromJsonAsync<ReturnPreviewDto>();
+        var r = await _http.PostAsJsonAsync($"/api/karnety/{id}/zwrot", req);
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<ReturnPreviewDto>();
     }
 
+    // â”€â”€ UĹĽytkownicy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public async Task<List<UserDto>> SearchUsersAsync(string email)
     {
-        var response = await _http.GetAsync($"/api/uzytkownicy?email={Uri.EscapeDataString(email)}");
-        await EnsureSuccessOrThrowApiMessageAsync(response);
-        return await response.Content.ReadFromJsonAsync<List<UserDto>>() ?? [];
+        var r = await _http.GetAsync($"/api/uzytkownicy?email={Uri.EscapeDataString(email)}");
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<List<UserDto>>() ?? [];
     }
 
     public async Task<UserDto?> CreateUserAsync(string email)
     {
-        var response = await _http.PostAsJsonAsync("/api/uzytkownicy", new CreateUserRequest(email));
-        await EnsureSuccessOrThrowApiMessageAsync(response);
-        return await response.Content.ReadFromJsonAsync<UserDto>();
+        var r = await _http.PostAsJsonAsync("/api/uzytkownicy", new CreateUserRequest(email));
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<UserDto>();
     }
 
-    public async Task<List<TransactionDto>> GetTransactionsAsync(DateOnly? date = null)
+    // â”€â”€ Bilety (UC1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    public async Task<SellTicketResponse?> SellTicketAsync(SellTicketRequest req)
+    {
+        var r = await _http.PostAsJsonAsync("/api/bilety", req);
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<SellTicketResponse>();
+    }
+
+    // â”€â”€ Transakcje â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    public async Task<List<TransactionDto>> GetTransactionsAsync(DateOnly? date = null, int? cashierId = null)
     {
         var qs = new List<string>();
         if (date.HasValue) qs.Add($"date={date.Value:yyyy-MM-dd}");
-
+        if (cashierId.HasValue) qs.Add($"cashierId={cashierId.Value}");
         var url = "/api/transakcje" + (qs.Count > 0 ? "?" + string.Join("&", qs) : "");
-        var response = await _http.GetAsync(url);
-        await EnsureSuccessOrThrowApiMessageAsync(response);
-        return await response.Content.ReadFromJsonAsync<List<TransactionDto>>() ?? [];
+        var r = await _http.GetAsync(url);
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<List<TransactionDto>>() ?? [];
     }
 
-    private static async Task EnsureSuccessOrThrowApiMessageAsync(HttpResponseMessage response)
+    // â”€â”€ Raport zmiany â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â”€â”€ OczekujÄ…ce zwroty â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    public async Task<ShiftReportDto?> GetShiftReportAsync()
     {
-        if (response.IsSuccessStatusCode) return;
-
-        var message = await TryReadApiMessageAsync(response);
-        throw new InvalidOperationException(message ?? $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}");
+        var r = await _http.GetAsync("/api/raport-zmiany");
+        if (r.StatusCode == HttpStatusCode.NotFound) return null;
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<ShiftReportDto>();
     }
 
-    private static async Task<string?> TryReadApiMessageAsync(HttpResponseMessage response)
+    public async Task CloseShiftAsync()
     {
-        var body = await response.Content.ReadAsStringAsync();
-        if (string.IsNullOrWhiteSpace(body)) return null;
-
-        try
-        {
-            using var doc = JsonDocument.Parse(body);
-            if (doc.RootElement.ValueKind == JsonValueKind.Object &&
-                doc.RootElement.TryGetProperty("message", out var message) &&
-                message.ValueKind == JsonValueKind.String)
-            {
-                return message.GetString();
-            }
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-
-        return null;
+        var r = await _http.PostAsync("/api/raport-zmiany/zamknij", null);
+        r.EnsureSuccessStatusCode();
+    }
+    public async Task<List<PendingReturnDto>> GetPendingReturnsAsync()
+    {
+        var r = await _http.GetAsync("/api/zwroty/oczekujace");
+        r.EnsureSuccessStatusCode();
+        return await r.Content.ReadFromJsonAsync<List<PendingReturnDto>>() ?? [];
     }
 }

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SystemAPI.Services;
 using SystemStacjiNarciarskiejDLL;
 using SystemStacjiNarciarskiejDLL.Models;
 
@@ -58,6 +59,16 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
     public async Task<IActionResult> CreatePass([FromBody] CreatePassRequest req)
     {
         var now = DateTime.UtcNow;
+        var validFrom = DateTime.SpecifyKind(req.ValidFrom, DateTimeKind.Utc);
+        var validTo = DateTime.SpecifyKind(req.ValidTo, DateTimeKind.Utc);
+        var saleWindow = await SalesDatePolicy.GetMinimumSaleDateAsync(db);
+
+        if (validFrom.Date < saleWindow.MinimumDate)
+            return BadRequest(new { message = SalesDatePolicy.CreateTooEarlyMessage("karnet", saleWindow) });
+
+        if (validTo <= validFrom)
+            return BadRequest(new { message = "Data zakonczenia musi byc pozniejsza niz data rozpoczecia." });
+
         var card = await db.Cards
             .Include(c => c.Status)
             .Include(c => c.SkiPasses)
@@ -90,12 +101,8 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
             return BadRequest(new { message = $"Uzytkownik {req.UserId} nie istnieje." });
 
         var activeStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "aktywny");
-        var expiredStatus = await db.DictPassStatuses.FirstOrDefaultAsync(s => s.Name == "wygasly");
         var reservationStatus = await db.DictReservationStatuses.FirstOrDefaultAsync(s => s.Name == "potwierdzona");
         var opType = await db.DictOperationTypes.FirstOrDefaultAsync(o => o.Name == "sprzedaz_karnetu");
-        var passStatusId = req.ValidTo <= now && expiredStatus != null
-            ? expiredStatus.Id
-            : activeStatus?.Id;
 
         var reservation = new Reservation
         {
@@ -112,9 +119,9 @@ public class KarnetyController(SkiResortDbContext db) : ControllerBase
             CardId = req.CardId,
             TariffId = req.TariffId,
             ReservationId = reservation.Id,
-            StatusId = passStatusId,
-            ValidFrom = DateTime.SpecifyKind(req.ValidFrom, DateTimeKind.Utc),
-            ValidTo = DateTime.SpecifyKind(req.ValidTo, DateTimeKind.Utc),
+            StatusId = activeStatus?.Id,
+            ValidFrom = validFrom,
+            ValidTo = validTo,
             InitialRides = tariff.RideCount,
             RemainingRides = tariff.RideCount
         };

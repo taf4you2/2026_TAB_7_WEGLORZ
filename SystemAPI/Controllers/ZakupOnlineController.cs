@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SystemAPI.Services;
 using SystemStacjiNarciarskiejDLL;
 using SystemStacjiNarciarskiejDLL.Models;
 
@@ -43,6 +44,7 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
     public async Task<IActionResult> KupOnline([FromBody] ZakupOnlineRequest req)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var requestedCardId = req.CardId?.Trim();
 
         var tariff = await db.Tariffs.Include(t => t.PassType).FirstOrDefaultAsync(t => t.Id == req.TariffId);
         if (tariff == null)
@@ -54,13 +56,31 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
             return BadRequest(new { message = "Zakup online dotyczy wyłącznie karnetów." });
 
         var durationDays = GetDurationDays(tariff.Name);
-        var validFrom = DateTime.SpecifyKind(req.ValidFrom.Date, DateTimeKind.Utc);
+        var validFrom = req.ValidFrom.Date;
         var validTo = validFrom.AddDays(durationDays);
+        var saleWindow = await SalesDatePolicy.GetMinimumSaleDateAsync(db);
 
-        // Nie pozwalamy kupić karnetu z datą rozpoczęcia wcześniejszą niż dzisiaj.
-        var today = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
-        if (validFrom < today)
-            return BadRequest(new { message = "Data rozpoczęcia nie może być wcześniejsza niż dzisiejsza." });
+        if (validFrom < saleWindow.MinimumDate)
+            return BadRequest(new { message = SalesDatePolicy.CreateTooEarlyMessage("karnet", saleWindow) });
+
+        Card? assignedCard = null;
+        if (!string.IsNullOrWhiteSpace(requestedCardId))
+        {
+            assignedCard = await db.Cards
+                .Include(c => c.Status)
+                .Include(c => c.SkiPasses)
+                    .ThenInclude(sp => sp.Status)
+                .FirstOrDefaultAsync(c => c.Id == requestedCardId);
+
+            if (assignedCard == null)
+                return BadRequest(new { message = $"Karta {requestedCardId} nie istnieje." });
+
+            if (string.Equals(assignedCard.Status?.Name, "zastrzezony", StringComparison.OrdinalIgnoreCase))
+                return Conflict(new { message = "Karta jest zastrzezona." });
+
+            if (HasBlockingPassInPeriod(assignedCard, validFrom, validTo))
+                return Conflict(new { message = "Karta RFID ma juz przypisany karnet w wybranym okresie." });
+        }
 
         if (tariff.PoolLimit.HasValue)
         {
@@ -69,99 +89,27 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
             if (totalReservationsForTarrif + 1 > tariff.PoolLimit.Value)
                 return BadRequest(new { message = "Wszystkie miejsca zostaly wyczerpane" });
         }
-
-        // ── Wariant A: zakup na WŁASNĄ kartę narciarza → karnet od razu aktywny (bez odbioru przy kasie) ──
-        if (!string.IsNullOrWhiteSpace(req.CardId))
-        {
-            var card = await db.Cards.Include(c => c.Status).FirstOrDefaultAsync(c => c.Id == req.CardId);
-            if (card == null)
-                return BadRequest(new { message = "Wskazana karta nie istnieje." });
-            if (card.UserId != userId)
-                return BadRequest(new { message = "Ta karta nie należy do Ciebie." });
-
-            var hasOverlap = await db.SkiPasses
-                .Include(p => p.Status)
-                .AnyAsync(p => p.CardId == card.Id
-                    && p.Status != null && p.Status.Name == "aktywny"
-                    && p.ValidFrom < validTo && p.ValidTo > validFrom);
-            if (hasOverlap)
-                return Conflict(new { message = "Na tej karcie istnieje już aktywny karnet w wybranym terminie." });
-
-            var potwierdzonaId = await db.DictReservationStatuses
-                .Where(s => s.Name == "potwierdzona").Select(s => (int?)s.Id).FirstOrDefaultAsync();
-            var aktywnyId = await db.DictPassStatuses
-                .Where(s => s.Name == "aktywny").Select(s => (int?)s.Id).FirstOrDefaultAsync();
-
-            var ownReservation = new Reservation
-            {
-                ReservationNumber = $"ONL-{DateTime.UtcNow:yyyyMMddHHmmssfff}",
-                ReservationDate = DateTime.UtcNow,
-                StatusId = potwierdzonaId,
-                UserId = userId
-            };
-            db.Reservations.Add(ownReservation);
-            await db.SaveChangesAsync();
-
-            var activePass = new SkiPass
-            {
-                CardId = card.Id,
-                TariffId = req.TariffId,
-                ReservationId = ownReservation.Id,
-                StatusId = aktywnyId,
-                ValidFrom = validFrom,
-                ValidTo = validTo,
-                InitialRides = tariff.RideCount,
-                RemainingRides = tariff.RideCount
-            };
-            db.SkiPasses.Add(activePass);
-
-            // Karta staje się zajęta; kaucja była już opłacona przy pierwszym wydaniu karty.
-            var zajetaId = await db.DictCardStatuses
-                .Where(s => s.Name == "zajeta").Select(s => (int?)s.Id).FirstOrDefaultAsync();
-            if (zajetaId.HasValue) card.StatusId = zajetaId.Value;
-
-            // Sprzedaż online — bez kasjera (cashier_id = NULL, inaczej FK transaction_cashier_id_fkey).
-            var saleOpId = await db.DictOperationTypes
-                .Where(o => o.Name == "sprzedaz_karnetu").Select(o => (int?)o.Id).FirstOrDefaultAsync();
-            db.Transactions.Add(new Transaction
-            {
-                ReservationId = ownReservation.Id,
-                CashierId = null,
-                OperationTypeId = saleOpId,
-                Amount = tariff.Price ?? 0,
-                TransactionDate = DateTime.UtcNow
-            });
-
-            await db.SaveChangesAsync();
-
-            return Ok(new
-            {
-                reservationNumber = ownReservation.ReservationNumber,
-                passId = activePass.Id,
-                cardId = card.Id,
-                tariff = tariff.Name,
-                price = tariff.Price,
-                rideCount = tariff.RideCount,
-                durationDays,
-                validFrom = activePass.ValidFrom,
-                validTo = activePass.ValidTo,
-                status = "aktywny",
-                message = "Karnet został kupiony i jest już aktywny na Twojej karcie."
-            });
-        }
-
-        // ── Wariant B: brak karty → rezerwacja do odbioru przy kasie (dotychczasowy przepływ) ──
         var oczekujacaStatus = await db.DictReservationStatuses
             .FirstOrDefaultAsync(s => s.Name == "oczekujaca");
         var oczekujeNaOdbiórStatus = await db.DictPassStatuses
             .FirstOrDefaultAsync(s => s.Name == "oczekuje_na_odbior");
 
         
+        var potwierdzonaStatus = await db.DictReservationStatuses
+            .FirstOrDefaultAsync(s => s.Name == "potwierdzona");
+        var aktywnyStatus = await db.DictPassStatuses
+            .FirstOrDefaultAsync(s => s.Name == "aktywny");
+        var zajetaStatus = await db.DictCardStatuses
+            .FirstOrDefaultAsync(s => s.Name == "zajeta");
+
+        if (assignedCard != null && (aktywnyStatus == null || zajetaStatus == null))
+            return BadRequest(new { message = "Brakuje statusu aktywny lub zajeta w slowniku." });
+
         var reservation = new Reservation
         {
             ReservationNumber = $"ONL-{DateTime.UtcNow:yyyyMMddHHmmssfff}",
             ReservationDate = DateTime.UtcNow,
-            StatusId = oczekujacaStatus?.Id,
+            StatusId = assignedCard == null ? oczekujacaStatus?.Id : potwierdzonaStatus?.Id,
             UserId = userId
         };
         db.Reservations.Add(reservation);
@@ -171,15 +119,25 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
     
         var pass = new SkiPass
         {
+            CardId = assignedCard?.Id,
             TariffId = req.TariffId,
             ReservationId = reservation.Id,
             StatusId = oczekujeNaOdbiórStatus?.Id,
-            ValidFrom = validFrom,
-            ValidTo = validTo,
+            ValidFrom = DateTime.SpecifyKind(validFrom, DateTimeKind.Utc),
+            ValidTo = DateTime.SpecifyKind(validTo, DateTimeKind.Utc),
             InitialRides = tariff.RideCount,
             RemainingRides = tariff.RideCount
         };
         db.SkiPasses.Add(pass);
+
+        if (assignedCard != null)
+        {
+            pass.StatusId = aktywnyStatus?.Id;
+            assignedCard.UserId = userId;
+            assignedCard.DepositPaid = true;
+            assignedCard.StatusId = zajetaStatus?.Id;
+        }
+
         await db.SaveChangesAsync();
 
         return Ok(new
@@ -190,9 +148,13 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
             price = tariff.Price,
             rideCount = tariff.RideCount,
             durationDays,
+            cardId = pass.CardId,
+            passStatus = assignedCard == null ? "oczekuje_na_odbior" : aktywnyStatus?.Name,
             validFrom = pass.ValidFrom,
             validTo = pass.ValidTo,
-            message = "Rezerwacja przyjęta. Odbierz karnet przy kasie, podając numer rezerwacji."
+            message = assignedCard == null
+                ? "Rezerwacja przyjęta. Odbierz karnet przy kasie, podając numer rezerwacji."
+                : "Karnet zostal przypisany do podanej karty RFID."
         });
     }
 
@@ -208,6 +170,17 @@ public class ZakupOnlineController(SkiResortDbContext db) : ControllerBase
             && days > 0
             ? days
             : 1;
+    }
+
+    private static bool HasBlockingPassInPeriod(Card card, DateTime validFrom, DateTime validTo)
+    {
+        return card.SkiPasses.Any(sp =>
+            sp.ValidFrom.HasValue &&
+            sp.ValidTo.HasValue &&
+            sp.ValidFrom.Value < validTo &&
+            sp.ValidTo.Value > validFrom &&
+            !string.Equals(sp.Status?.Name, "wygasly", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(sp.Status?.Name, "zwrocony", StringComparison.OrdinalIgnoreCase));
     }
 }
 

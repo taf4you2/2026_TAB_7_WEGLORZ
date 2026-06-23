@@ -29,18 +29,12 @@ public class UsersController(SkiResortDbContext db) : ControllerBase
         var cardIds = user.Reservations
             .SelectMany(r => r.SkiPasses)
             .Select(sp => sp.CardId)
-            .Where(id => id != null)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(id => id!)
             .Distinct()
             .ToList();
-
-        // Karty REALNIE posiadane (przypisane do usera) — do zakupu karnetu na własną kartę.
-        // cardIds to historia (z karnetów) i może zawierać karty już oddane/zwrócone.
-        var ownedCardIds = await db.Cards
-            .Where(c => c.UserId == userId)
-            .Select(c => c.Id)
-            .ToListAsync();
-
-        return Ok(new { userId = user.Id, email = user.Email, cardIds, ownedCardIds });
+        
+        return Ok(new { userId = user.Id, email = user.Email, cardIds });
     }
 
     [HttpGet("my-rfid")]

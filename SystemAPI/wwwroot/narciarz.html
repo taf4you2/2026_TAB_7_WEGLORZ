@@ -776,18 +776,13 @@
                     <div class="card" style="margin-bottom:0">
                         <div class="card-header"><h3>2. Wybierz datę rozpoczęcia</h3></div>
                         <div class="card-body">
-                            <div class="form-group">
-                                <label class="form-label">Data rozpoczęcia karnetu</label>
-                                <input class="form-input" type="date" id="zakup-from">
-                            </div>
                             <div class="form-group" style="margin-bottom:0">
-                                <label class="form-label">Karta (opcjonalnie)</label>
-                                <select class="form-input" id="zakup-rfid">
-                                    <option value="">— Odbiór przy kasie (bez karty) —</option>
-                                </select>
-                                <div style="font-size:12px;color:var(--text-muted);margin-top:4px">
-                                    Wybierz swoją kartę, aby karnet był od razu aktywny. Bez karty — odbiór przy kasie.
-                                </div>
+                                <label class="form-label">Data rozpoczęcia karnetu</label>
+                                <input class="form-input" type="date" id="zakup-from" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;margin-top:14px">
+                                <label class="form-label">Karta RFID (opcjonalnie)</label>
+                                <input class="form-input" type="text" id="zakup-card-id" placeholder="Wpisz numer RFID" autocomplete="off">
                             </div>
                         </div>
                     </div>
@@ -850,6 +845,15 @@
                 console.warn('API error:', path, e.message);
                 return null;
             }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
         }
 
         function statusBadge(status) {
@@ -1363,6 +1367,50 @@
             return date.toISOString().slice(0, 10);
         }
 
+        function todayDateValue() {
+            const today = new Date();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${today.getFullYear()}-${month}-${day}`;
+        }
+
+        let saleMinimumDateValue = todayDateValue();
+
+        function timeValueToSeconds(value) {
+            if (!value) return NaN;
+            const [hours, minutes, seconds = 0] = value.split(':').map(Number);
+            if (![hours, minutes, seconds].every(Number.isFinite)) return NaN;
+            return hours * 3600 + minutes * 60 + seconds;
+        }
+
+        function currentTimeSeconds() {
+            const now = new Date();
+            return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+        }
+
+        async function refreshSaleDateLimit() {
+            saleMinimumDateValue = todayDateValue();
+
+            const lifts = await apiFetch('/api/wyciagi');
+            const closingTimes = (lifts ?? [])
+                .map(l => timeValueToSeconds(l.closesAt))
+                .filter(Number.isFinite);
+
+            if (closingTimes.length > 0 && currentTimeSeconds() > Math.max(...closingTimes)) {
+                saleMinimumDateValue = addDaysToDateValue(saleMinimumDateValue, 1);
+            }
+
+            syncZakupDateLimit();
+        }
+
+        function syncZakupDateLimit() {
+            const startInput = document.getElementById('zakup-from');
+            if (!startInput) return;
+
+            startInput.min = saleMinimumDateValue;
+            if (!startInput.value || startInput.value < saleMinimumDateValue) startInput.value = saleMinimumDateValue;
+        }
+
         async function zaladujTaryfy() {
             const data = await apiFetch('/api/zakup/taryfy');
             const lista = document.getElementById('zakup-taryfy-lista');
@@ -1382,10 +1430,10 @@
           </label>`).join('');
 
             // Ustaw domyślną datę rozpoczęcia.
-            const today = new Date();
-            const fmtDate = d => d.toISOString().split('T')[0];
-            document.getElementById('zakup-from').value = fmtDate(today);
-            document.getElementById('zakup-from').onchange = aktualizujPodsumowanie;
+            const startInput = document.getElementById('zakup-from');
+            await refreshSaleDateLimit();
+            startInput.onchange = aktualizujPodsumowanie;
+            document.getElementById('zakup-card-id').oninput = aktualizujPodsumowanie;
         }
 
         function wybierzTaryfe(id, name, price, durationDays) {
@@ -1401,12 +1449,19 @@
 
         function aktualizujPodsumowanie() {
             const fromVal = document.getElementById('zakup-from')?.value;
+            const cardId = document.getElementById('zakup-card-id')?.value.trim();
             const summary = document.getElementById('zakup-summary');
             const btn = document.getElementById('zakup-btn');
             if (!summary) return;
 
             if (!selectedTariffId || !fromVal) {
                 summary.innerHTML = '<span style="color:var(--text-muted)">Wybierz karnet i datę rozpoczęcia.</span>';
+                if (btn) btn.disabled = true;
+                return;
+            }
+
+            if (fromVal < saleMinimumDateValue) {
+                summary.innerHTML = '<span style="color:var(--danger)">Na dzisiaj nie mozna juz kupic karnetu. Wybierz najwczesniej kolejny dostepny dzien.</span>';
                 if (btn) btn.disabled = true;
                 return;
             }
@@ -1418,6 +1473,7 @@
             summary.innerHTML = `
           <div style="display:flex;flex-direction:column;gap:8px">
             <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Karnet</span><span style="font-weight:600">${selectedTariffName}</span></div>
+            ${cardId ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Karta RFID</span><span>${escapeHtml(cardId)}</span></div>` : ''}
             <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">${isOneDay ? 'Dzień' : 'Od'}</span><span>${from.toLocaleDateString('pl-PL')}</span></div>
             ${isOneDay ? '' : `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Ostatni dzień</span><span>${lastValidDay.toLocaleDateString('pl-PL')}</span></div>`}
             <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Liczba dni</span><span>${days}</span></div>
@@ -1428,50 +1484,57 @@
         }
 
         async function zlozZamowienie() {
+            await refreshSaleDateLimit();
+
             const fromVal = document.getElementById('zakup-from')?.value;
+            const cardId = document.getElementById('zakup-card-id')?.value.trim();
             const result = document.getElementById('zakup-result');
             const btn = document.getElementById('zakup-btn');
             if (!selectedTariffId || !fromVal) return;
-
-            const cardId = document.getElementById('zakup-rfid')?.value || null;
+            if (fromVal < saleMinimumDateValue) {
+                aktualizujPodsumowanie();
+                return;
+            }
 
             btn.disabled = true; btn.textContent = '⏳ Przetwarzanie płatności…';
             try {
                 const res = await fetch('/api/zakup/online', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ tariffId: selectedTariffId, validFrom: fromVal, cardId })
+                    body: JSON.stringify({ tariffId: selectedTariffId, validFrom: fromVal, cardId: cardId || null })
                 });
                 const data = await res.json().catch(() => ({}));
 
                 if (res.ok) {
-                    const active = data.status === 'aktywny';
-                    const heading = active ? '✅ Karnet aktywny na karcie!' : '✅ Rezerwacja przyjęta!';
-                    const idLine = active
-                        ? `<div><strong>Karta:</strong> <code style="background:#fff;padding:2px 6px;border-radius:4px">${data.cardId}</code></div>`
-                        : `<div><strong>Nr rezerwacji:</strong> <code style="background:#fff;padding:2px 6px;border-radius:4px">${data.reservationNumber}</code></div>`;
                     const lastValidDay = new Date(data.validTo);
                     lastValidDay.setDate(lastValidDay.getDate() - 1);
+                    const assignment = data.cardId
+                        ? `<div><strong>Karta RFID:</strong> ${escapeHtml(data.cardId)}</div><div><strong>Status:</strong> ${escapeHtml(data.passStatus ?? 'aktywny')}</div>`
+                        : '';
+                    const resultMessage = data.cardId
+                        ? 'Karnet zostal przypisany do podanej karty RFID.'
+                        : data.message;
                     const validity = data.durationDays === 1
                         ? new Date(data.validFrom).toLocaleDateString('pl-PL')
                         : data.durationDays > 1
                             ? `${new Date(data.validFrom).toLocaleDateString('pl-PL')} – ${lastValidDay.toLocaleDateString('pl-PL')}`
                             : `${new Date(data.validFrom).toLocaleDateString('pl-PL')} – ${new Date(data.validTo).toLocaleDateString('pl-PL')}`;
                     result.innerHTML = `<div style="padding:16px;background:var(--success-light);border-left:4px solid var(--success);border-radius:4px">
-              <div style="font-weight:700;font-size:16px;color:var(--success);margin-bottom:8px">${heading}</div>
+              <div style="font-weight:700;font-size:16px;color:var(--success);margin-bottom:8px">✅ Rezerwacja przyjęta!</div>
               <div style="display:flex;flex-direction:column;gap:4px;font-size:13px">
-                ${idLine}
+                <div><strong>Nr rezerwacji:</strong> <code style="background:#fff;padding:2px 6px;border-radius:4px">${data.reservationNumber}</code></div>
                 <div><strong>Karnet:</strong> ${data.tariff}</div>
+                ${assignment}
                 <div><strong>Ważny:</strong> ${validity}</div>
                 <div><strong>Kwota:</strong> ${data.price?.toFixed(2)} zł</div>
               </div>
-              <div style="margin-top:10px;font-size:12px;color:#555">${data.message}</div>
+              <div style="margin-top:10px;font-size:12px;color:#555">${resultMessage}</div>
             </div>`;
                     result.style.display = 'block';
-                    if (active) { zaladujKarnety(); }
                     selectedTariffId = null;
                     selectedTariffName = '';
                     selectedTariffDurationDays = null;
+                    document.getElementById('zakup-card-id').value = '';
                     document.querySelectorAll('input[name="taryfa-zakup"]').forEach(r => r.checked = false);
                     document.querySelectorAll('#zakup-taryfy-lista label').forEach(l => l.style.borderColor = 'var(--border)');
                     document.getElementById('zakup-summary').innerHTML = '<span style="color:var(--text-muted)">Wybierz karnet i datę rozpoczęcia.</span>';
@@ -1542,26 +1605,18 @@
             const greeting = document.getElementById('hero-greeting');
             if (greeting) greeting.textContent = `Dzień dobry, ${email.split('@')[0]} 👋`;
 
-            if (!me.cardIds || me.cardIds.length === 0) {
+            const cardIds = me.cardIds ?? [];
+            if (cardIds.length === 0) {
                 // brak kart — zablokuj selecty z komunikatem
                 wypelnijListeKart([]);
                 return;
             }
 
             // wypełnij listy kart wszystkimi kartami użytkownika
-            wypelnijListeKart(me.cardIds);
-
-            // lista kart w sekcji zakupu — TYLKO realnie posiadane karty (Card.UserId == user).
-            // Dzięki temu nie da się wybrać karty oddanej/zwróconej, na którą backend i tak by nie pozwolił.
-            const ownedCards = me.ownedCardIds ?? [];
-            const zakupSel = document.getElementById('zakup-rfid');
-            if (zakupSel) {
-                zakupSel.innerHTML = '<option value="">— Odbiór przy kasie (bez karty) —</option>'
-                    + ownedCards.map(cid => `<option value="${cid}">${cid}</option>`).join('');
-            }
+            wypelnijListeKart(cardIds);
 
             // domyślnie wybierz pierwszą
-            myRfid = me.cardIds[0];
+            myRfid = cardIds[0];
             ['narciarz-rfid', 'historia-rfid', 'zwrot-rfid'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.value = myRfid;

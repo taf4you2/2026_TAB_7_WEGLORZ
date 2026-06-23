@@ -24,7 +24,9 @@ public partial class SellPassPanel : UserControl
         _api = api;
         Loaded += async (_, _) =>
         {
-            ValidFromPicker.SelectedDate = DateTime.Today;
+            var minimumSaleDate = await _api.GetMinimumSaleDateAsync();
+            ValidFromPicker.DisplayDateStart = minimumSaleDate;
+            ValidFromPicker.SelectedDate = minimumSaleDate;
             ValidFromTimeBox.Text = DateTime.Now.ToString("HH:mm");
             await LoadTariffsAsync();
             await LoadFreeCardsAsync();
@@ -249,6 +251,9 @@ public partial class SellPassPanel : UserControl
         var rfid = RfidBox.Text.Trim();
         if (string.IsNullOrEmpty(rfid)) { ShowError("Podaj RFID karty."); return; }
         if (TariffCombo.SelectedItem is not TariffItem tariff) { ShowError("Wybierz taryfe."); return; }
+        var minimumSaleDate = await _api.GetMinimumSaleDateAsync();
+        ValidFromPicker.DisplayDateStart = minimumSaleDate;
+        if (_validFrom.Date < minimumSaleDate) { ShowError("Na dzisiaj nie mozna juz wydac karnetu. Wybierz najwczesniej kolejny dostepny dzien."); return; }
         if (!await ResolveUserBeforeIssueAsync()) return;
         if (!await VerifyCardAsync(false)) { ShowError("Karta nie jest gotowa do wydania."); return; }
 
